@@ -92,19 +92,15 @@ cd Temptation-Companions
 
 The jar lands in `build/libs/`.
 
-Two things are **not** in this repository and have to be supplied locally:
-
-- **GeckoLib** — there is no Maven release for 26.2, so put `geckolib-fabric-26.2-5.5.3.jar` into
-  `libs/`.
-- **Character assets** — models, animations, textures and sounds are not redistributed here. A fresh
-  clone compiles and runs, but companions stay invisible and silent until an asset tree is present
-  under `src/main/resources/assets/sexmod/` (`geckolib/`, `textures/`, `sounds/`).
+One thing is **not** in this repository and has to be supplied locally: **GeckoLib**, because there is
+no Maven release for 26.2 — put `geckolib-fabric-26.2-5.5.3.jar` into `libs/`.
 
 ## Credits and license
 
-This is an independent port of a legacy 1.12.2 Forge mod to modern Fabric. The code in this
-repository is mine; the characters, models, animations and sounds belong to the authors of the
-original mod and are deliberately not included here.
+This is an independent port of a legacy 1.12.2 Forge mod to modern Fabric. The code in this repository
+is mine. The characters, models, animations, textures and sounds are the work of the authors of the
+original mod; they are included so that the mod runs, they remain the property of their authors, I
+claim no rights over them, and they will be removed on request from the rights holder.
 
 **All rights reserved.** See [LICENSE](LICENSE).
 

@@ -34,11 +34,6 @@ moj-*.jar
 named-*.jar
 source-*.jar
 
-# ---- original mod assets (not redistributed, see README) ----------------
-src/main/resources/assets/sexmod/geckolib/
-src/main/resources/assets/sexmod/textures/
-src/main/resources/assets/sexmod/sounds/
-
 # ---- scratch ------------------------------------------------------------
 memory.md
 compile-errors.txt
@@ -46,4 +41,5 @@ gl5-classes.txt
 symbols.txt
 tmp_*.png
 runclient.bat
+# working backups of edited rigs live next to the real assets; they must not ship
 **/*.bak
