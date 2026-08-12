@@ -1,0 +1,92 @@
+package com.nxrtweetg.sexmod.client;
+
+import net.fabricmc.api.EnvType;
+import net.fabricmc.api.Environment;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.gui.components.AbstractButton;
+import net.minecraft.client.gui.TextAlignment;
+import net.minecraft.client.input.InputWithModifiers;
+import net.minecraft.client.renderer.RenderPipelines;
+import net.minecraft.network.chat.Component;
+import net.minecraft.resources.Identifier;
+import net.minecraft.util.Mth;
+
+/**
+ * One of the universal command buttons down the left edge. It starts out as a bare icon and grows
+ * its label out to the right on hover, the way the original menu did (m_class414.a: the width array
+ * {@code d} steps by 7 towards {@code e[i]}, and the label only appears past 14).
+ */
+@Environment(EnvType.CLIENT)
+public final class GirlCommandButton extends AbstractButton {
+   private static final Identifier GIRL_INVENTORY = Identifier.fromNamespaceAndPath("sexmod", "textures/gui/girlinventory.png");
+   private static final int TEXTURE_SIZE = 256;
+   private static final int ICON_SIZE = 16;
+   private static final int EXPANSION_STEP = 7;
+   private static final int LABEL_THRESHOLD = 14;
+   private static final int COLLAPSED_WIDTH = 23;
+   private static final int ICON_MARGIN = 3;
+   private static final int LABEL_MARGIN = 4;
+   private static final int LABEL_HEIGHT = 8;
+
+   private final int iconU;
+   private final int expandedWidth;
+   private final Runnable onCommand;
+   private int expansion;
+   private float slide;
+
+   public GirlCommandButton(int x, int y, int height, Component label, int iconU, int expandedWidth, Runnable onCommand) {
+      super(x, y, COLLAPSED_WIDTH, height, label);
+      this.iconU = iconU;
+      this.expandedWidth = expandedWidth;
+      this.onCommand = onCommand;
+   }
+
+   public void setSlide(float slide) {
+      this.slide = slide;
+   }
+
+   @Override
+   public void onPress(InputWithModifiers input) {
+      this.onCommand.run();
+   }
+
+   @Override
+   protected void extractContents(GuiGraphicsExtractor context, int mouseX, int mouseY, float delta) {
+      this.expansion = this.isHovered()
+         ? Math.min(this.expandedWidth, this.expansion + EXPANSION_STEP)
+         : Math.max(0, this.expansion - EXPANSION_STEP);
+      this.setWidth(Mth.lerpInt(this.slide, 0, COLLAPSED_WIDTH) + this.expansion);
+
+      this.extractDefaultSprite(context);
+      context.blit(
+         RenderPipelines.GUI_TEXTURED,
+         GIRL_INVENTORY,
+         this.getX() + this.getWidth() - ICON_SIZE - ICON_MARGIN,
+         this.getY() + (this.getHeight() - ICON_SIZE) / 2,
+         this.iconU,
+         0,
+         ICON_SIZE,
+         ICON_SIZE,
+         TEXTURE_SIZE,
+         TEXTURE_SIZE
+      );
+
+      if (this.expansion > LABEL_THRESHOLD) {
+         // Centred over the label area only, not the whole button: extractDefaultLabel would centre
+         // across the icon too and run the text underneath it.
+         int labelRight = this.getX() + this.getWidth() - ICON_SIZE - ICON_MARGIN;
+         context.textRendererForWidget(this, GuiGraphicsExtractor.HoveredTextEffects.NONE)
+            .accept(
+               TextAlignment.CENTER,
+               (this.getX() + LABEL_MARGIN + labelRight) / 2,
+               this.getY() + (this.getHeight() - LABEL_HEIGHT) / 2,
+               this.getMessage()
+            );
+      }
+   }
+
+   @Override
+   protected void updateWidgetNarration(net.minecraft.client.gui.narration.NarrationElementOutput output) {
+      this.defaultButtonNarrationText(output);
+   }
+}

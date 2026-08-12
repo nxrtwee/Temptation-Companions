@@ -1,0 +1,16 @@
+{
+  "required": true,
+  "package": "com.nxrtweetg.sexmod.mixin.client",
+  "compatibilityLevel": "JAVA_25",
+  "client": [
+    "CameraMixin",
+    "EntityTurnMixin",
+    "ItemInHandRendererMixin",
+    "KeyboardInputMixin",
+    "MinecraftMixin",
+    "OptionsMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}
