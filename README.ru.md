@@ -86,8 +86,8 @@ Temptation Companions.
 ## Сборка из исходников
 
 ```bash
-git clone https://github.com/nxrtwee/temptation-companions
-cd temptation-companions
+git clone https://github.com/nxrtwee/Temptation-Companions
+cd Temptation-Companions
 ./gradlew build
 ```
 
