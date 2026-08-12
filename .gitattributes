@@ -11,3 +11,8 @@ gradlew  text eol=lf
 *.jar    binary
 *.png    binary
 *.ogg    binary
+
+# The character models and animations are Blockbench exports: machine-written
+# JSON that would otherwise dwarf the real source in diffs and in the language
+# statistics.
+src/main/resources/assets/sexmod/geckolib/** linguist-generated=true
