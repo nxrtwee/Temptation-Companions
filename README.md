@@ -16,8 +16,8 @@ proportions are still being tuned, and only part of the original roster is switc
 - **Animated scenes** with an approach, a payment animation, an intro, a paced active phase and a
   finish, driven server-side so they stay in sync in multiplayer.
 - **Directed camera** — every scene has its own framing per phase, with fades over the cuts.
-- **Interaction menu** in the style of the original: scene buttons grouped into Oral, Foreplay, Sex
-  and Tease, each with its price shown next to it, plus the universal commands on the left edge.
+- **Interaction menu** in the style of the original: scene buttons grouped into categories, each with
+  its price shown next to it, plus the universal commands on the left edge.
 - **Companion commands** — follow me, stop following, go home, set new home, and an equipment panel;
   armour and held items render on the companion.
 - **Free camera** you can fly around during a scene.
@@ -49,23 +49,9 @@ proportions are still being tuned, and only part of the original roster is switc
 Companions do not spawn naturally — use the command (`jenny`, `ellie`, `bia`, `luna`). Right-click
 one to open her menu, pick a category, then pick a scene; you need the price in your inventory.
 
-Each companion offers her own scenes:
-
-| Companion | Scenes | Price |
-|---|---|---|
-| Jenny | Blowjob | 3 emeralds |
-| | Boobjob | 2 ender pearls |
-| | Doggy | 2 diamonds |
-| | Strip | 1 gold ingot |
-| Ellie | Facefuck | 3 emeralds |
-| | Missionary, Cowgirl | 2 diamonds |
-| | Strip | 1 gold ingot |
-| Bia | Anal, Anal 2, Prone Doggy, Sitting 2 | 2 diamonds |
-| | Strip | 1 gold ingot |
-| Luna | Touch Boobs | 2 ender pearls |
-| | Sitting | 2 diamonds |
-
-Scenes that happen on a bed need one within reach — she will walk to it and take you along.
+Each companion has her own set of scenes; her menu shows what she offers and what it costs — prices
+run from a single gold ingot up to three emeralds, paid in gold, diamonds, emeralds or ender pearls.
+Some scenes happen on a bed and need one within reach; she will walk to it and take you along.
 
 `/sexmod scene <name>` starts a scene with the nearest companion within 8 blocks, which is handy for
 testing.
