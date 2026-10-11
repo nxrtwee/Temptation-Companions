@@ -52,3 +52,6 @@ all\ memory/
 *.txt
 src/main/resources/assets/eggs.png
 src/main/resources/assets/lamp.png
+scratch_download/
+*.jar
+!gradle/wrapper/gradle-wrapper.jar
