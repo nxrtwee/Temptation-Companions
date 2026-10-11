@@ -47,8 +47,8 @@ runclient.bat
 # ---- agent / dev scratch & decompiled donor resources ---------------------
 .antigravity/
 all\ memory/
-chota/
-com/
+/chota/
+/com/
 *.txt
 src/main/resources/assets/eggs.png
 src/main/resources/assets/lamp.png

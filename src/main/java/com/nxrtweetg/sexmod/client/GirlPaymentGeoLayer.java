@@ -74,7 +74,7 @@ public final class GirlPaymentGeoLayer extends GeoRenderLayer<SceneGirlEntity, V
                poseStack.pushPose();
                // fan the coins apart so a stack of three reads as three items, as in the original
                poseStack.translate(0.0F, 0.0F, (i - (amount - 1) / 2.0F) * 0.025F);
-               poseStack.mulPose(com.mojang.math.Axis.ZP.rotationDegrees((i - (amount - 1) / 2.0F) * -15.0F));
+               poseStack.rotateDegrees(com.mojang.math.Axis.ZP, (i - (amount - 1) / 2.0F) * -15.0F);
                poseStack.scale(SCALE, SCALE, SCALE);
                stackState.submit(poseStack, renderTasks, pass.packedLight(), OverlayTexture.NO_OVERLAY, renderState.outlineColor);
                poseStack.popPose();

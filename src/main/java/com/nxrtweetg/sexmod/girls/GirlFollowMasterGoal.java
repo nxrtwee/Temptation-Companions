@@ -117,7 +117,7 @@ public final class GirlFollowMasterGoal extends Goal {
       for (int attempt = 0; attempt < TELEPORT_ATTEMPTS; attempt++) {
          int x = masterPos.getX() + this.girl.getRandom().nextInt(TELEPORT_SPREAD);
          int z = masterPos.getZ() + this.girl.getRandom().nextInt(TELEPORT_SPREAD);
-         if (this.girl.randomTeleport(x, masterPos.getY(), z, true)) {
+         if (this.girl.randomTeleport(x, masterPos.getY(), z, true, state -> false)) {
             this.girl.getNavigation().stop();
             return;
          }

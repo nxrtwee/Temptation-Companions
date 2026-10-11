@@ -19,7 +19,7 @@ dependencies {
     implementation "net.fabricmc:fabric-loader:${project.loader_version}"
     implementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_api_version}"
 
-    implementation files("libs/geckolib-fabric-26.2-5.5.3.jar")
+    implementation files("libs/geckolib-fabric-${project.minecraft_version}-${project.geckolib_version}.jar")
 
     compileOnly "org.jetbrains:annotations:26.0.2-1"
 }
