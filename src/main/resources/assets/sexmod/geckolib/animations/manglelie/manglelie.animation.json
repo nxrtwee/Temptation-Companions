@@ -1876,23 +1876,23 @@
           "position": {
             "0.0": {
               "vector": [
-                "0.275+easeInOutSine",
-                "-0.625+easeInOutSine",
-                "1.4+easeInOutSine"
+                0.275,
+                -0.625,
+                1.4
               ]
             },
             "0.1667": {
               "vector": [
-                "0.275+easeInOutSine",
-                "-0.625+easeInOutSine",
-                "1.4+easeInOutSine"
+                0.275,
+                -0.625,
+                1.4
               ]
             },
             "1.1667": {
               "vector": [
-                "0.275+easeInOutSine",
-                "-0.625+easeInOutSine",
-                "1.4+easeInOutSine"
+                0.275,
+                -0.625,
+                1.4
               ]
             }
           },
@@ -8161,16 +8161,16 @@
           "position": {
             "0.0": {
               "vector": [
-                "0.275+easeInOutSine",
-                "-0.625+easeInOutSine",
-                "1.4+easeInOutSine"
+                0.275,
+                -0.625,
+                1.4
               ]
             },
             "0.1667": {
               "vector": [
-                "0.275+easeInOutSine",
-                "-0.625+easeInOutSine",
-                "1.4+easeInOutSine"
+                0.275,
+                -0.625,
+                1.4
               ]
             }
           },
@@ -16458,16 +16458,16 @@
           "position": {
             "0.0": {
               "vector": [
-                "0.275+easeInOutSine",
-                "-0.625+easeInOutSine",
-                "1.4+easeInOutSine"
+                0.275,
+                -0.625,
+                1.4
               ]
             },
             "0.1667": {
               "vector": [
-                "0.275+easeInOutSine",
-                "-0.625+easeInOutSine",
-                "1.4+easeInOutSine"
+                0.275,
+                -0.625,
+                1.4
               ]
             }
           },
@@ -22595,9 +22595,9 @@
         "ballL": {
           "rotation": {
             "vector": [
-              "easeInOutSine",
-              "easeInOutSine",
-              "easeInOutSine"
+              0.0,
+              0.0,
+              0.0
             ]
           },
           "position": {
@@ -22618,9 +22618,9 @@
         "ballR": {
           "rotation": {
             "vector": [
-              "easeInOutSine",
-              "easeInOutSine",
-              "easeInOutSine"
+              0.0,
+              0.0,
+              0.0
             ]
           },
           "position": {
@@ -27572,9 +27572,9 @@
         "ballL": {
           "rotation": {
             "vector": [
-              "easeInOutSine",
-              "easeInOutSine",
-              "easeInOutSine"
+              0.0,
+              0.0,
+              0.0
             ]
           },
           "position": {
@@ -27595,9 +27595,9 @@
         "ballR": {
           "rotation": {
             "vector": [
-              "easeInOutSine",
-              "easeInOutSine",
-              "easeInOutSine"
+              0.0,
+              0.0,
+              0.0
             ]
           },
           "position": {
@@ -30111,9 +30111,9 @@
         "ballL": {
           "rotation": {
             "vector": [
-              "easeInOutSine",
-              "easeInOutSine",
-              "easeInOutSine"
+              0.0,
+              0.0,
+              0.0
             ]
           },
           "position": {
@@ -30134,9 +30134,9 @@
         "ballR": {
           "rotation": {
             "vector": [
-              "easeInOutSine",
-              "easeInOutSine",
-              "easeInOutSine"
+              0.0,
+              0.0,
+              0.0
             ]
           },
           "position": {
@@ -38095,9 +38095,9 @@
         "ballL": {
           "rotation": {
             "vector": [
-              "easeInOutSine",
-              "easeInOutSine",
-              "easeInOutSine"
+              0.0,
+              0.0,
+              0.0
             ]
           },
           "position": {
@@ -38118,9 +38118,9 @@
         "ballR": {
           "rotation": {
             "vector": [
-              "easeInOutSine",
-              "easeInOutSine",
-              "easeInOutSine"
+              0.0,
+              0.0,
+              0.0
             ]
           },
           "position": {
@@ -42043,9 +42043,9 @@
             },
             "0.1667": {
               "vector": [
-                "0.275+easeInOutSine",
-                "-0.625+easeInOutSine",
-                "1.4+easeInOutSine"
+                0.275,
+                -0.625,
+                1.4
               ]
             },
             "0.5": {
@@ -45339,9 +45339,9 @@
             },
             "0.1667": {
               "vector": [
-                "0.275+easeInOutSine",
-                "-0.625+easeInOutSine",
-                "1.4+easeInOutSine"
+                0.275,
+                -0.625,
+                1.4
               ]
             }
           },

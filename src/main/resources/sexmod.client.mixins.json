@@ -3,10 +3,12 @@
   "package": "com.nxrtweetg.sexmod.mixin.client",
   "compatibilityLevel": "JAVA_25",
   "client": [
+    "AnimationPointMixin",
     "CameraMixin",
     "EntityTurnMixin",
     "ItemInHandRendererMixin",
     "KeyboardInputMixin",
+    "MathParserMixin",
     "MinecraftMixin",
     "OptionsMixin",
     "RenderPassMixin",
