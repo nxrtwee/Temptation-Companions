@@ -3,6 +3,8 @@ package com.nxrtweetg.sexmod.girls.luna;
 import com.nxrtweetg.sexmod.girls.SceneGirlEntity;
 import com.nxrtweetg.sexmod.girls.anim.GirlAnimationSet;
 import com.nxrtweetg.sexmod.girls.anim.GirlSoundSet;
+import com.nxrtweetg.sexmod.girls.scene.GirlCustomPhase;
+import com.nxrtweetg.sexmod.girls.scene.GirlEdgeApproach;
 import com.nxrtweetg.sexmod.girls.scene.GirlInteractionService;
 import com.nxrtweetg.sexmod.girls.scene.GirlPayment;
 import com.nxrtweetg.sexmod.girls.scene.GirlSceneAction;
@@ -13,24 +15,17 @@ import java.util.Map;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
-import net.minecraft.util.Mth;
 import net.minecraft.network.chat.Component;
-import net.minecraft.network.syncher.EntityDataAccessor;
-import net.minecraft.network.syncher.EntityDataSerializers;
-import net.minecraft.network.syncher.SynchedEntityData;
-import net.minecraft.network.syncher.SynchedEntityData.Builder;
-import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.storage.ValueInput;
-import net.minecraft.world.level.storage.ValueOutput;
-import net.minecraft.world.phys.Vec3;
 
 public final class LunaEntity extends SceneGirlEntity {
-   private static final int HEAD_PAT_APPROACH_TICKS = 40;
-   // animation.cat.head_pat is 8.12 s × 20 ticks/s = 162 ticks
+   /** Her one custom interaction; the shared machine in {@link SceneGirlEntity} runs it. */
+   private static final String HEAD_PAT = "headpat";
+   // animation.cat.head_pat is 8.12 s x 20 ticks/s = 162 ticks, and its resetGirl keyframe sits at 8.04 s.
+   // The length is only the watchdog: the keyframe is what normally ends the take.
    private static final int HEAD_PAT_DURATION_TICKS = 162;
    /** The animation names in cat.animation.json; everything else is borrowed from Jenny. */
    private static final Set<String> OWN_ANIMATIONS = Set.of(
@@ -57,20 +52,10 @@ public final class LunaEntity extends SceneGirlEntity {
    );
    private static final GirlAnimationSet ANIMATIONS = new GirlAnimationSet("cat", OWN_ANIMATIONS);
    private static final GirlSoundSet SOUNDS = new GirlSoundSet("luna", OWN_SOUNDS, SOUND_SUBSTITUTES);
-   private static final EntityDataAccessor<String> TRACKED_CUSTOM_ACTION = SynchedEntityData.defineId(LunaEntity.class, EntityDataSerializers.STRING);
-   private static final EntityDataAccessor<String> TRACKED_CUSTOM_PHASE = SynchedEntityData.defineId(LunaEntity.class, EntityDataSerializers.STRING);
-   private int customTicks;
    private boolean clientIdle2;
 
    public LunaEntity(EntityType<? extends LunaEntity> entityType, Level world) {
       super(entityType, world, "Luna");
-   }
-
-   @Override
-   protected void defineSynchedData(Builder builder) {
-      super.defineSynchedData(builder);
-      builder.define(TRACKED_CUSTOM_ACTION, LunaCustomAction.NONE.id());
-      builder.define(TRACKED_CUSTOM_PHASE, LunaCustomPhase.IDLE.id());
    }
 
    @Override
@@ -91,6 +76,15 @@ public final class LunaEntity extends SceneGirlEntity {
    @Override
    protected Set<GirlSceneAction> sceneActions() {
       return EnumSet.of(GirlSceneAction.TOUCH_BOOBS, GirlSceneAction.SITTING);
+   }
+
+   /**
+    * She ships no sit-down take, only the standing hold (original fp.WAIT_CAT), so she walks to the
+    * end of the bed and waits there on her feet until he closes the distance.
+    */
+   @Override
+   protected GirlEdgeApproach edgeApproach() {
+      return GirlEdgeApproach.HOLD_ONLY;
    }
 
    /**
@@ -124,16 +118,16 @@ public final class LunaEntity extends SceneGirlEntity {
       };
    }
 
+   /** {@code eb.b(EntityPlayer)}: a headpat is the one row of hers that is not a scene. */
    @Override
    protected List<InteractionSection> extraInteractionSections() {
-      return List.of(this.section("action.section.affection", ItemStack.EMPTY, List.of(this.option("headpat", "action.names.headpat", ItemStack.EMPTY))));
+      return List.of(this.row(this.option("headpat", "action.names.headpat", ItemStack.EMPTY)));
    }
 
    @Override
    protected RawAnimation selectCustomMovementAnimation(boolean moving) {
-      LunaCustomAction action = this.customAction();
-      if (action != LunaCustomAction.NONE) {
-         return this.customPhase() == LunaCustomPhase.APPROACH ? this.selectNamedAnimation("walk", true) : this.selectNamedAnimation("null", true);
+      if (!this.customActionId().isEmpty()) {
+         return this.customPhase() == GirlCustomPhase.APPROACH ? this.selectNamedAnimation("walk", true) : this.selectNamedAnimation("null", true);
       }
 
       if (this.level().isClientSide() && !moving && this.resolvedActivity() == GirlActivity.NONE && this.clientIdle2) {
@@ -145,7 +139,7 @@ public final class LunaEntity extends SceneGirlEntity {
 
    @Override
    protected RawAnimation selectCustomActionAnimation() {
-      return this.customAction() == LunaCustomAction.HEAD_PAT && this.customPhase() == LunaCustomPhase.ACTIVE
+      return HEAD_PAT.equals(this.customActionId()) && this.customPhase() == GirlCustomPhase.ACTIVE
          ? this.selectNamedAnimation("head_pat", true)
          : null;
    }
@@ -176,43 +170,53 @@ public final class LunaEntity extends SceneGirlEntity {
    }
 
    @Override
-   protected boolean hasCustomSceneLock() {
-      return this.customAction() != LunaCustomAction.NONE;
+   protected boolean customShowsPartner(String actionId) {
+      return HEAD_PAT.equals(actionId);
+   }
+
+   /**
+    * The pat is an in-place bind, not a walk-up: {@code ed}'s dispatch is the two lines
+    * {@code b(fp.HEAD_PAT); b(uUID);}, and the second reaches {@code ei.b(UUID)}, which places the
+    * player itself instead of sending her the approach packet the talk-style interactions use.
+    */
+   @Override
+   protected boolean customApproachesPlayer(String actionId) {
+      return false;
+   }
+
+   /**
+    * {@code ei.b(UUID)} puts him a block out along her axis and {@code j(UUID)} pulls him 0.35 back,
+    * which is the gap {@code animation.cat.head_pat} is posed around.
+    */
+   @Override
+   protected double customPartnerDistance(String actionId) {
+      return HEAD_PAT.equals(actionId) ? 0.65 : 0.0;
    }
 
    @Override
-   protected void tickCustomServer() {
-      LunaCustomAction action = this.customAction();
-      if (action == LunaCustomAction.NONE) {
-         return;
-      }
+   protected int customDurationTicks(String actionId, GirlCustomPhase phase) {
+      return HEAD_PAT.equals(actionId) && phase == GirlCustomPhase.ACTIVE ? HEAD_PAT_DURATION_TICKS : 0;
+   }
 
-      ServerPlayer player = this.level() instanceof ServerLevel serverLevel && this.coreState().activePlayerId() != null
-         ? serverLevel.getServer().getPlayerList().getPlayer(this.coreState().activePlayerId())
-         : null;
-      if (player == null || !player.isAlive() || player.distanceToSqr(this) > 64.0) {
+   /** {@code resetGirl} at 8.04 s in animation.cat.head_pat is what ends the pat in the original. */
+   @Override
+   protected boolean isCustomStructuralKeyframe(String keyframe) {
+      return "resetGirl".equals(keyframe);
+   }
+
+   @Override
+   protected boolean applyCustomSceneKeyframe(ServerPlayer player, String keyframe) {
+      if ("resetGirl".equals(keyframe)) {
          this.stopCustomInteraction();
-         return;
+         return true;
       }
 
-      LunaCustomPhase phase = this.customPhase();
-      if (action == LunaCustomAction.HEAD_PAT && phase == LunaCustomPhase.APPROACH) {
-         this.tickHeadPatApproach(player);
-         return;
-      }
-
-      // Partner visible in ACTIVE but not while approaching
-      this.setRenderPlayer(action == LunaCustomAction.HEAD_PAT && phase == LunaCustomPhase.ACTIVE);
-
-      this.customTicks++;
-      if (action == LunaCustomAction.HEAD_PAT && phase == LunaCustomPhase.ACTIVE && this.customTicks >= HEAD_PAT_DURATION_TICKS) {
-         this.stopCustomInteraction();
-      }
+      return false;
    }
 
    @Override
    public boolean tryBeginCustomInteraction(ServerPlayer player, String actionId) {
-      if (!"headpat".equals(actionId)) {
+      if (!HEAD_PAT.equals(actionId)) {
          return false;
       }
 
@@ -225,142 +229,8 @@ public final class LunaEntity extends SceneGirlEntity {
          return true;
       }
 
-      this.beginHeadPat(player);
-      player.sendSystemMessage(Component.literal("Started " + this.getName().getString() + " action: headpat"));
+      this.beginCustomInteraction(player, HEAD_PAT);
+      player.sendSystemMessage(Component.literal("Started " + this.getName().getString() + " action: " + HEAD_PAT));
       return true;
-   }
-
-   @Override
-   public void resetScene() {
-      super.resetScene();
-      this.stopCustomInteraction();
-   }
-
-   @Override
-   protected void addAdditionalSaveData(ValueOutput output) {
-      super.addAdditionalSaveData(output);
-      output.putString("LunaCustomAction", this.customAction().id());
-      output.putString("LunaCustomPhase", this.customPhase().id());
-   }
-
-   @Override
-   protected void readAdditionalSaveData(ValueInput input) {
-      super.readAdditionalSaveData(input);
-      this.setCustomAction(LunaCustomAction.fromId(input.getStringOr("LunaCustomAction", LunaCustomAction.NONE.id())));
-      this.setCustomPhase(LunaCustomPhase.fromId(input.getStringOr("LunaCustomPhase", LunaCustomPhase.IDLE.id())));
-      this.customTicks = 0;
-   }
-
-   private void beginHeadPat(ServerPlayer player) {
-      this.stopCustomInteraction();
-      this.setCustomAction(LunaCustomAction.HEAD_PAT);
-      this.setCustomPhase(LunaCustomPhase.APPROACH);
-      this.customTicks = 0;
-      this.coreState().setActivePlayerId(player.getUUID());
-      this.getNavigation().stop();
-      this.setNoGravity(false);
-      this.syncTrackedState();
-   }
-
-   private void stopCustomInteraction() {
-      this.setCustomAction(LunaCustomAction.NONE);
-      this.setCustomPhase(LunaCustomPhase.IDLE);
-      this.customTicks = 0;
-      this.setRenderPlayer(false);
-      this.coreState().clearInteraction();
-      this.setNoGravity(false);
-      this.syncTrackedState();
-   }
-
-   private void tickHeadPatApproach(ServerPlayer player) {
-      this.customTicks++;
-      float playerYaw = player.getYRot();
-      Vec3 meetingPoint = player.position().add(horizontalForward(playerYaw));
-      double dx = this.getX() - meetingPoint.x;
-      double dz = this.getZ() - meetingPoint.z;
-      if (dx * dx + dz * dz <= 0.01 || this.customTicks > HEAD_PAT_APPROACH_TICKS) {
-         this.getNavigation().stop();
-         this.setNoGravity(false);
-         float facing = Mth.wrapDegrees(playerYaw + 180.0F);
-         this.setYRot(facing);
-         this.setYBodyRot(facing);
-         this.setYHeadRot(facing);
-         this.coreState().setTargetYaw(facing);
-         this.setCustomPhase(LunaCustomPhase.ACTIVE);
-         this.customTicks = 0;
-      } else {
-         int remaining = HEAD_PAT_APPROACH_TICKS - this.customTicks;
-         Vec3 step = remaining <= 0 ? meetingPoint : this.position().add(meetingPoint.subtract(this.position()).scale(1.0 / remaining));
-         float travelYaw = (float)(Mth.atan2(meetingPoint.z - this.getZ(), meetingPoint.x - this.getX()) * 180.0 / Math.PI) - 90.0F;
-         this.setYRot(travelYaw);
-         this.setYBodyRot(travelYaw);
-         this.setYHeadRot(travelYaw);
-         this.setPos(step.x, step.y, step.z);
-         this.setDeltaMovement(Vec3.ZERO);
-      }
-   }
-
-   private static Vec3 horizontalForward(float yaw) {
-      float radians = (yaw + 90.0F) * (float)(Math.PI / 180.0);
-      return new Vec3(Math.cos(radians), 0.0, Math.sin(radians));
-   }
-
-   private LunaCustomAction customAction() {
-      return LunaCustomAction.fromId(this.getEntityData().get(TRACKED_CUSTOM_ACTION));
-   }
-
-   private void setCustomAction(LunaCustomAction action) {
-      this.getEntityData().set(TRACKED_CUSTOM_ACTION, action.id());
-   }
-
-   private LunaCustomPhase customPhase() {
-      return LunaCustomPhase.fromId(this.getEntityData().get(TRACKED_CUSTOM_PHASE));
-   }
-
-   private void setCustomPhase(LunaCustomPhase phase) {
-      this.getEntityData().set(TRACKED_CUSTOM_PHASE, phase.id());
-   }
-
-   private enum LunaCustomAction {
-      NONE(""),
-      HEAD_PAT("head_pat");
-
-      private final String id;
-
-      LunaCustomAction(String id) {
-         this.id = id;
-      }
-
-      public String id() {
-         return this.id;
-      }
-
-      public static LunaCustomAction fromId(String id) {
-         return "head_pat".equals(id) ? HEAD_PAT : NONE;
-      }
-   }
-
-   private enum LunaCustomPhase {
-      IDLE("idle"),
-      APPROACH("approach"),
-      ACTIVE("active");
-
-      private final String id;
-
-      LunaCustomPhase(String id) {
-         this.id = id;
-      }
-
-      public String id() {
-         return this.id;
-      }
-
-      public static LunaCustomPhase fromId(String id) {
-         return switch (id) {
-            case "approach" -> APPROACH;
-            case "active" -> ACTIVE;
-            default -> IDLE;
-         };
-      }
    }
 }

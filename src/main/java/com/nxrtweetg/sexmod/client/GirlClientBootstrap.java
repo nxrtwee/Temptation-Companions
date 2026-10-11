@@ -24,16 +24,30 @@ public final class GirlClientBootstrap {
 
    public static void initialize() {
       GirlSceneCameraConfig.load();
-      registerRenderer(ModEntities.JENNY, "jenny", "jennydressed", "jennynude");
-      registerRenderer(ModEntities.ELLIE, "ellie", "dressed", "nude");
-      registerRenderer(ModEntities.BIA, "bia", "biadressed", "bianude");
-      registerRenderer(ModEntities.LUNA, "cat", "dressed", "nude");
-      registerRenderer(ModEntities.SLIME, "slime", "dressed", "nude");
-      registerRenderer(ModEntities.ALLIE, "allie", "armored", "allie");
-      registerRenderer(ModEntities.BEE, "bee", "armored", "bee");
+      // Geo slots in the original's index order: 0 = base/nude, 1 = the dressed or armored body. Luna's
+      // two slots really are one file in the original (cg.java) and our pair was split out of it; the
+      // slime and Allie use their armored rig as the everyday body, because only it carries the armour,
+      // hand and prop bones our render path needs - see GirlModelSlotPolicy.
+      registerRenderer(ModEntities.JENNY, "jenny", "jennynude", "jennydressed");
+      registerRenderer(ModEntities.ELLIE, "ellie", "nude", "dressed");
+      registerRenderer(ModEntities.BIA, "bia", "bianude", "biadressed");
+      registerRenderer(ModEntities.LUNA, "cat", "nude", "dressed");
+      registerRenderer(ModEntities.SLIME, "slime", "nude", "dressed");
+      registerRenderer(ModEntities.ALLIE, "allie", "allie", "armored");
+      registerRenderer(ModEntities.BEE, "bee", "bee", "armored");
+      registerRenderer(ModEntities.KOBOLD, "kobold", GirlModelSlotPolicy.ARMORED_WHEN_EQUIPPED, "kobold", "armored");
+      registerRenderer(ModEntities.GOBLIN, "goblin", GirlModelSlotPolicy.ARMORED_WHEN_EQUIPPED, "goblin", "armored");
+      registerRenderer(ModEntities.GALATH, "galath", "galath", "galath");
+      registerRenderer(ModEntities.MANGLELIE, "manglelie", GirlModelSlotPolicy.MANGLELIE_POLICY, "manglelie", "manglelie", "galath/galath_con_mang");
       MenuScreens.register(GirlMenuTypes.GIRL_INVENTORY, GirlInventoryScreen::new);
       UseEntityCallback.EVENT.register((UseEntityCallback)(player, world, hand, entity, hitResult) -> {
-         if (world.isClientSide() && hand == InteractionHand.MAIN_HAND && entity instanceof SceneGirlEntity girl && !GirlSceneInputController.shouldBlockGameplayInput()) {
+         if (world.isClientSide()
+            && hand == InteractionHand.MAIN_HAND
+            && entity instanceof SceneGirlEntity girl
+            && girl.hasInteractionMenu()
+            && girl.trackedScenePhase() == com.nxrtweetg.sexmod.girls.scene.GirlScenePhase.IDLE
+            && !girl.defersInteractionToServer(player.getItemInHand(hand))
+            && !GirlSceneInputController.shouldBlockGameplayInput()) {
             Minecraft.getInstance().gui.setScreen(new GirlInteractionScreen(girl));
             return InteractionResult.SUCCESS;
          } else {
@@ -46,13 +60,20 @@ public final class GirlClientBootstrap {
       GirlSceneCameraController.register();
       GirlSceneCameraTuner.register();
       AllieSummonClientTracker.register();
+      GirlCustomMenuClientTracker.register();
    }
 
-   private static void registerRenderer(EntityType<? extends SceneGirlEntity> type, String character, String dressed, String nude) {
+   private static void registerRenderer(EntityType<? extends SceneGirlEntity> type, String character, String... modelSlots) {
+      registerRenderer(type, character, GirlModelSlotPolicy.DIRECT, modelSlots);
+   }
+
+   private static void registerRenderer(
+      EntityType<? extends SceneGirlEntity> type, String character, GirlModelSlotPolicy slotPolicy, String... modelSlots
+   ) {
       if (type == null) {
          return;
       }
 
-      EntityRendererRegistry.register(type, context -> new GirlEntityRenderer(context, new GirlGeoModel(character, dressed, nude)));
+      EntityRendererRegistry.register(type, context -> new GirlEntityRenderer(context, new GirlGeoModel(character, slotPolicy, modelSlots)));
    }
 }

@@ -21,10 +21,26 @@ import net.fabricmc.api.Environment;
  */
 @Environment(EnvType.CLIENT)
 public final class GirlSceneTransitionFade {
-   /** Finalized fade timings — tuned in-game via numpad editor, now hardcoded. */
-   public static float fadeOutTicks  = 10.0F;
-   public static float blackHoldTicks = 28.0F;
-   public static float fadeInTicks   = 18.0F;
+   /**
+    * Fade timings.
+    *
+    * <p>Short on purpose. The original has no blackout at all - the camera is a single teleport - so the
+    * only cuts left to cover are the two where our scene camera switches on or off, and a 2.8-second
+    * blackout at each of them was more noticeable than the cut it was hiding. The hold has to outlast
+    * {@code SceneGirlEntity.FADE_LEAD_TICKS} minus the fade-out so the cut still lands on black even
+    * with a few ticks of latency between the server's signal and the client's tick.
+    */
+   public static float fadeOutTicks() {
+      return (float)com.nxrtweetg.sexmod.config.SexmodConfig.getFadeDurationTicks();
+   }
+
+   public static float blackHoldTicks() {
+      return (float)com.nxrtweetg.sexmod.config.SexmodConfig.getFadeLeadTicks();
+   }
+
+   public static float fadeInTicks() {
+      return (float)com.nxrtweetg.sexmod.config.SexmodConfig.getFadeDurationTicks();
+   }
 
    /** Текущий тик анимации, 0 = неактивна. */
    private static int transitionTick = 0;
@@ -32,7 +48,7 @@ public final class GirlSceneTransitionFade {
    private GirlSceneTransitionFade() {
    }
 
-   private static float total() { return fadeOutTicks + blackHoldTicks + fadeInTicks; }
+   private static float total() { return fadeOutTicks() + blackHoldTicks() + fadeInTicks(); }
 
    /**
     * Запускает/перезапускает fade.
@@ -40,8 +56,12 @@ public final class GirlSceneTransitionFade {
     * Если идёт fade-in — перезапускаем с начала: пришёл новый переход, нужно снова закрыть.
     */
    public static void trigger() {
+      if (!com.nxrtweetg.sexmod.config.SexmodConfig.isSceneFadeEnabled()) {
+         transitionTick = 0;
+         return;
+      }
       float t = transitionTick > 0 ? (transitionTick - 1) : -1;
-      boolean inFadeIn = t > fadeOutTicks + blackHoldTicks;
+      boolean inFadeIn = t > fadeOutTicks() + blackHoldTicks();
       boolean inactive = transitionTick == 0;
       if (inactive || inFadeIn) {
          transitionTick = 1;
@@ -67,17 +87,21 @@ public final class GirlSceneTransitionFade {
    }
 
    public static float getAlpha(float partialTick) {
-      if (transitionTick == 0) return 0.0F;
+      if (!com.nxrtweetg.sexmod.config.SexmodConfig.isSceneFadeEnabled() || transitionTick == 0) return 0.0F;
 
-      float t = Math.max(0.0F, Math.min((transitionTick - 1) + partialTick, total()));
+      float fo = fadeOutTicks();
+      float bh = blackHoldTicks();
+      float fi = fadeInTicks();
+      float tot = fo + bh + fi;
+      float t = Math.max(0.0F, Math.min((transitionTick - 1) + partialTick, tot));
 
-      if (t <= fadeOutTicks) {
-         return easeIn(t / fadeOutTicks);
-      } else if (t <= fadeOutTicks + blackHoldTicks) {
+      if (t <= fo) {
+         return easeIn(t / fo);
+      } else if (t <= fo + bh) {
          return 1.0F;
       } else {
-         float elapsed = t - fadeOutTicks - blackHoldTicks;
-         return easeOut(elapsed / fadeInTicks);
+         float elapsed = t - fo - bh;
+         return easeOut(elapsed / fi);
       }
    }
 

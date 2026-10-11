@@ -1,7 +1,10 @@
 package com.nxrtweetg.sexmod.client;
 
 import com.nxrtweetg.sexmod.girls.scene.GirlScenePhase;
+import com.nxrtweetg.sexmod.girls.scene.GirlSceneAction;
+import com.nxrtweetg.sexmod.config.SexmodConfig;
 import com.mojang.blaze3d.platform.InputConstants.Type;
+import com.nxrtweetg.sexmod.girls.GirlEntity;
 import com.nxrtweetg.sexmod.girls.SceneGirlEntity;
 import com.nxrtweetg.sexmod.network.JennySceneInputPayload;
 import java.util.Comparator;
@@ -26,6 +29,9 @@ public final class GirlSceneInputController {
    private static final KeyMapping CONTROL_SCREEN_KEY = KeyMappingHelper.registerKeyMapping(
       new KeyMapping("key.sexmod.scene_controls", Type.KEYSYM, 78, CATEGORY)
    );
+   private static final KeyMapping SETTINGS_KEY = KeyMappingHelper.registerKeyMapping(
+      new KeyMapping("key.sexmod.settings", Type.KEYSYM, GLFW.GLFW_KEY_Z, CATEGORY)
+   );
    private static final KeyMapping FREECAM_TOGGLE_KEY = KeyMappingHelper.registerKeyMapping(
       new KeyMapping("key.sexmod.freecam_toggle", Type.KEYSYM, GLFW.GLFW_KEY_G, CATEGORY)
    );
@@ -49,10 +55,9 @@ public final class GirlSceneInputController {
    private static final KeyMapping FADE_IN_DOWN   = KeyMappingHelper.registerKeyMapping(new KeyMapping("key.sexmod.fade_in_down",    Type.KEYSYM, GLFW.GLFW_KEY_KP_1, CATEGORY));
    private static final KeyMapping FADE_IN_UP     = KeyMappingHelper.registerKeyMapping(new KeyMapping("key.sexmod.fade_in_up",      Type.KEYSYM, GLFW.GLFW_KEY_KP_3, CATEGORY));
    private static final KeyMapping FADE_PREVIEW   = KeyMappingHelper.registerKeyMapping(new KeyMapping("key.sexmod.fade_preview",    Type.KEYSYM, GLFW.GLFW_KEY_KP_5, CATEGORY));
-   private static final int HELD_THRUST_REPEAT_TICKS = 4;
    private static boolean thrustHeld;
    private static boolean climaxHeld;
-   private static int heldThrustCooldown;
+   private static int proneDoggyShiftTicks;
 
    private GirlSceneInputController() {
    }
@@ -66,6 +71,14 @@ public final class GirlSceneInputController {
                      client.gui.setScreen(null);
                   } else if (client.player != null && client.level != null && findOwnedGirl(client.player).isPresent()) {
                      client.gui.setScreen(new GirlSceneControlScreen());
+                  }
+               }
+
+               while (SETTINGS_KEY.consumeClick()) {
+                  if (client.gui.screen() instanceof GirlSettingsScreen) {
+                     client.gui.setScreen(null);
+                  } else if (client.player != null && client.level != null) {
+                     client.gui.setScreen(new GirlSettingsScreen());
                   }
                }
 
@@ -92,26 +105,42 @@ public final class GirlSceneInputController {
                }
 
                // Fade editor — KP4/6 fadeOut, KP2/8 blackHold, KP1/3 fadeIn, KP5 preview
-               while (FADE_OUT_DOWN.consumeClick())  { GirlSceneTransitionFade.fadeOutTicks  = Math.max(1, GirlSceneTransitionFade.fadeOutTicks  - 1); }
-               while (FADE_OUT_UP.consumeClick())    { GirlSceneTransitionFade.fadeOutTicks  += 1; }
-               while (FADE_HOLD_DOWN.consumeClick()) { GirlSceneTransitionFade.blackHoldTicks = Math.max(1, GirlSceneTransitionFade.blackHoldTicks - 1); }
-               while (FADE_HOLD_UP.consumeClick())   { GirlSceneTransitionFade.blackHoldTicks += 1; }
-               while (FADE_IN_DOWN.consumeClick())   { GirlSceneTransitionFade.fadeInTicks   = Math.max(1, GirlSceneTransitionFade.fadeInTicks   - 1); }
-               while (FADE_IN_UP.consumeClick())     { GirlSceneTransitionFade.fadeInTicks   += 1; }
+               while (FADE_OUT_DOWN.consumeClick())  { SexmodConfig.setFadeDurationTicks(SexmodConfig.getFadeDurationTicks() - 1); }
+               while (FADE_OUT_UP.consumeClick())    { SexmodConfig.setFadeDurationTicks(SexmodConfig.getFadeDurationTicks() + 1); }
+               while (FADE_HOLD_DOWN.consumeClick()) { SexmodConfig.setFadeLeadTicks(SexmodConfig.getFadeLeadTicks() - 1); }
+               while (FADE_HOLD_UP.consumeClick())   { SexmodConfig.setFadeLeadTicks(SexmodConfig.getFadeLeadTicks() + 1); }
+               while (FADE_IN_DOWN.consumeClick())   { SexmodConfig.setFadeDurationTicks(SexmodConfig.getFadeDurationTicks() - 1); }
+               while (FADE_IN_UP.consumeClick())     { SexmodConfig.setFadeDurationTicks(SexmodConfig.getFadeDurationTicks() + 1); }
                while (FADE_PREVIEW.consumeClick())   { GirlSceneTransitionFade.trigger(); }
 
                if (client.player != null
                   && client.level != null
                   && !(client.gui.screen() instanceof GirlInteractionScreen)
-                  && !(client.gui.screen() instanceof GirlSceneControlScreen)) {
+                  && !(client.gui.screen() instanceof GirlSceneControlScreen)
+                  && !(client.gui.screen() instanceof GirlSettingsScreen)) {
                   Optional<SceneGirlEntity> optional = findOwnedGirl(client.player);
                   if (optional.isEmpty()) {
                      thrustHeld = false;
                      climaxHeld = false;
-                     heldThrustCooldown = 0;
+                     proneDoggyShiftTicks = 0;
                   } else {
                      SceneGirlEntity girl = optional.get();
                      int i = girl.getId();
+                     // A custom interaction (headpat, talk) is not a sex scene: it locks the player in
+                     // place the way the original's d3.a(false) did, but sneak and jump stay off the
+                     // scene controls. Only the abort key answers.
+                     if (!girl.customActionId().isEmpty()) {
+                        thrustHeld = false;
+                        climaxHeld = false;
+                        proneDoggyShiftTicks = 0;
+
+                        while (RESET_KEY.consumeClick()) {
+                           ClientPlayNetworking.send(new JennySceneInputPayload(i, "reset"));
+                        }
+
+                        return;
+                     }
+
                      if (girl.trackedScenePhase() == GirlScenePhase.WAITING
                         || girl.trackedScenePhase() == GirlScenePhase.APPROACH
                         || girl.trackedScenePhase() == GirlScenePhase.WALKING
@@ -119,37 +148,60 @@ public final class GirlSceneInputController {
                         // Jenny is walking over / heading to the bed; vanilla keys stay vanilla
                         thrustHeld = false;
                         climaxHeld = false;
-                        heldThrustCooldown = 0;
+                        proneDoggyShiftTicks = 0;
+
+                        while (RESET_KEY.consumeClick()) {
+                           ClientPlayNetworking.send(new JennySceneInputPayload(i, "reset"));
+                        }
                         return;
                      }
 
                      if (GirlSceneFreecam.isActive()) {
                         thrustHeld = false;
                         climaxHeld = false;
-                        heldThrustCooldown = 0;
+                        proneDoggyShiftTicks = 0;
                         return;
                      }
 
                      // vanilla keys drive the scene, as in the original (d3_class161 on InputUpdateEvent)
                      boolean flag = client.options.keyShift.isDown();
-                     if (flag && !thrustHeld) {
-                        ClientPlayNetworking.send(new JennySceneInputPayload(i, "thrust"));
-                        heldThrustCooldown = 4;
-                     } else if (flag) {
-                        if (--heldThrustCooldown <= 0) {
-                           ClientPlayNetworking.send(new JennySceneInputPayload(i, "thrust"));
-                           heldThrustCooldown = 4;
+                     boolean isProneDoggy = girl.trackedActiveAction().filter(a -> a == GirlSceneAction.PRONE_DOGGY).isPresent();
+                     if (isProneDoggy) {
+                        if (flag) {
+                           if (proneDoggyShiftTicks == 0) {
+                              ClientPlayNetworking.send(new JennySceneInputPayload(i, "thrust"));
+                              thrustHeld = true;
+                           } else if (proneDoggyShiftTicks == 1) {
+                              ClientPlayNetworking.send(new JennySceneInputPayload(i, "thrust_release"));
+                              thrustHeld = false;
+                           }
+                           proneDoggyShiftTicks++;
+                           if (proneDoggyShiftTicks >= 20) {
+                              proneDoggyShiftTicks = 0;
+                           }
+                        } else {
+                           if (proneDoggyShiftTicks > 0) {
+                              if (thrustHeld) {
+                                 ClientPlayNetworking.send(new JennySceneInputPayload(i, "thrust_release"));
+                              }
+                              thrustHeld = false;
+                              proneDoggyShiftTicks = 0;
+                           }
                         }
                      } else {
-                        heldThrustCooldown = 0;
+                        if (flag && !thrustHeld) {
+                           ClientPlayNetworking.send(new JennySceneInputPayload(i, "thrust"));
+                        } else if (!flag && thrustHeld) {
+                           ClientPlayNetworking.send(new JennySceneInputPayload(i, "thrust_release"));
+                        }
+                        thrustHeld = flag;
                      }
-
-                     thrustHeld = flag;
                      boolean flag1 = client.options.keyJump.isDown();
                      if (flag1 && !climaxHeld) {
-                        // jump finishes the scene only on a full meter, otherwise it exits
-                        ClientPlayNetworking.send(new JennySceneInputPayload(i, GirlHornyMeter.isFull() ? "climax" : "reset"));
+                        // Space ONLY finishes the scene on a full meter (CLIMAX).
+                        // Space MUST NOT reset or abort the scene! Only 'X' aborts.
                         if (GirlHornyMeter.isFull()) {
+                           ClientPlayNetworking.send(new JennySceneInputPayload(i, "climax"));
                            GirlHornyMeter.markFinishing();
                         }
                      }
@@ -163,7 +215,7 @@ public final class GirlSceneInputController {
                } else {
                   thrustHeld = false;
                   climaxHeld = false;
-                  heldThrustCooldown = 0;
+                  proneDoggyShiftTicks = 0;
                }
             }
          );
@@ -195,11 +247,41 @@ public final class GirlSceneInputController {
 
    public static boolean shouldBlockGameplayInput() {
       Minecraft minecraft = Minecraft.getInstance();
-      return minecraft.player != null && minecraft.level != null && findOwnedGirl(minecraft.player).isPresent();
+      if (minecraft.player == null || minecraft.level == null) {
+         return false;
+      }
+      return findOwnedGirl(minecraft.player)
+         .map(girl -> {
+            GirlScenePhase phase = girl.trackedScenePhase();
+            if (phase == GirlScenePhase.WAITING
+               || phase == GirlScenePhase.WALKING
+               || (phase == GirlScenePhase.POSITIONING && girl.waitsForPlayerApproachTracked())) {
+               return false;
+            }
+            return true;
+         })
+         .orElse(false);
    }
 
    public static boolean shouldHideFirstPersonHands() {
-      return shouldBlockGameplayInput();
+      Minecraft minecraft = Minecraft.getInstance();
+      if (minecraft.player == null || minecraft.level == null) {
+         return false;
+      }
+
+      // A partner-less custom interaction (Bia's talk) keeps the vanilla first-person view, so the
+      // hands belong on screen. Every scene phase, and anything that draws him, still hides them.
+      return findOwnedGirl(minecraft.player)
+         .map(girl -> {
+            GirlScenePhase phase = girl.trackedScenePhase();
+            if (phase == GirlScenePhase.WAITING
+               || phase == GirlScenePhase.WALKING
+               || (phase == GirlScenePhase.POSITIONING && girl.waitsForPlayerApproachTracked())) {
+               return false;
+            }
+            return phase != GirlScenePhase.IDLE || girl.shouldRenderPlayerTracked();
+         })
+         .orElse(false);
    }
 
    static Optional<SceneGirlEntity> findOwnedGirl(Player player) {
@@ -207,7 +289,13 @@ public final class GirlSceneInputController {
          .getEntitiesOfClass(SceneGirlEntity.class, player.getBoundingBox().inflate(24.0), entity -> entity.isAlive())
          .stream()
          .filter(entity -> entity.trackedActivePlayer().map(uuid -> uuid.equals(player.getUUID())).orElse(false))
-         .filter(entity -> entity.trackedScenePhase() != GirlScenePhase.IDLE || entity.shouldRenderPlayerTracked())
+         // a custom interaction owns her with the scene phase still IDLE, so it needs its own clause -
+         // without it the player keeps full control while she walks over for a headpat
+         .filter(
+            entity -> entity.trackedScenePhase() != GirlScenePhase.IDLE
+               || entity.shouldRenderPlayerTracked()
+               || !entity.customActionId().isEmpty()
+         )
          .min(Comparator.comparingDouble(player::distanceToSqr));
    }
 

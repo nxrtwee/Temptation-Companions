@@ -8,7 +8,9 @@
     "ItemInHandRendererMixin",
     "KeyboardInputMixin",
     "MinecraftMixin",
-    "OptionsMixin"
+    "OptionsMixin",
+    "RenderPassMixin",
+    "RenderTypeInvoker"
   ],
   "injectors": {
     "defaultRequire": 1

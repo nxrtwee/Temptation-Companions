@@ -7,6 +7,7 @@ import com.nxrtweetg.sexmod.girls.state.GirlAnimationParameter;
 import com.nxrtweetg.sexmod.girls.state.GirlCoreState;
 import com.nxrtweetg.sexmod.girls.state.GirlFollowUpAction;
 import com.nxrtweetg.sexmod.girls.state.GirlPaymentItem;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.Map.Entry;
 import net.minecraft.core.BlockPos;
@@ -48,9 +49,25 @@ public abstract class GirlEntity extends PathfinderMob {
    private static final EntityDataAccessor<Integer> TRACKED_ATTACK_VARIANT = SynchedEntityData.defineId(GirlEntity.class, EntityDataSerializers.INT);
    /** The menu hides "follow me" or "stop follow me" depending on this, so the client needs it too. */
    private static final EntityDataAccessor<Boolean> TRACKED_HAS_MASTER = SynchedEntityData.defineId(GirlEntity.class, EntityDataSerializers.BOOLEAN);
+   /**
+    * Who that master is. The flag above only answers "does she have one", which was enough while the
+    * menu was the only consumer; a kobold prices her scenes free for her own master and writes his
+    * tribe on her name plate, and both of those are drawn client-side.
+    */
+   private static final EntityDataAccessor<Optional<UUID>> TRACKED_MASTER = SynchedEntityData.defineId(
+      GirlEntity.class, ModDataSerializers.OPTIONAL_UUID
+   );
+   private static final EntityDataAccessor<Boolean> TRACKED_TAMED_BY_LASSO = SynchedEntityData.defineId(GirlEntity.class, EntityDataSerializers.BOOLEAN);
+   private static final EntityDataAccessor<Boolean> TRACKED_STAYING_AT_HOME = SynchedEntityData.defineId(GirlEntity.class, EntityDataSerializers.BOOLEAN);
+   private static final EntityDataAccessor<String> TRACKED_ASSIGNED_HOME = SynchedEntityData.defineId(GirlEntity.class, EntityDataSerializers.STRING);
+
    private final GirlCoreState coreState = new GirlCoreState();
    private final SimpleContainer equipment = new SimpleContainer(GirlEquipmentSlot.Kind.COUNT);
    private GirlActivity activity = GirlActivity.NONE;
+   private boolean tamedByLasso;
+   private boolean stayingAtHome;
+   private String assignedHomeName = "";
+   private boolean returningToLasso;
 
    protected GirlEntity(EntityType<? extends PathfinderMob> entityType, Level world) {
       super(entityType, world);
@@ -63,6 +80,10 @@ public abstract class GirlEntity extends PathfinderMob {
       builder.define(TRACKED_ACTIVITY, GirlActivity.NONE.id());
       builder.define(TRACKED_ATTACK_VARIANT, 0);
       builder.define(TRACKED_HAS_MASTER, false);
+      builder.define(TRACKED_MASTER, Optional.empty());
+      builder.define(TRACKED_TAMED_BY_LASSO, false);
+      builder.define(TRACKED_STAYING_AT_HOME, false);
+      builder.define(TRACKED_ASSIGNED_HOME, "");
    }
 
    public SimpleContainer equipmentContainer() {
@@ -177,11 +198,36 @@ public abstract class GirlEntity extends PathfinderMob {
       player.openMenu(new GirlEquipmentMenuProvider(this));
    }
 
+   /**
+    * The translation key a companion command answers with. Jenny's lines are the shared default because
+    * the original hardcoded them in its GUI; a character who has her own voice - the bee only reacts, she
+    * does not speak - overrides this and keeps the same five suffixes.
+    */
+   public String commandDialogueKey(String suffix) {
+      return "jenny.dialogue." + suffix;
+   }
+
    public static AttributeSupplier.Builder createGirlAttributes() {
       return LivingEntity.createLivingAttributes()
          .add(Attributes.MAX_HEALTH, 15.0)
          .add(Attributes.FOLLOW_RANGE, 30.0)
          .add(Attributes.MOVEMENT_SPEED, 0.5)
+         .add(Attributes.ATTACK_DAMAGE, 1.0)
+         .add(Attributes.ATTACK_SPEED, 4.0);
+   }
+
+   /**
+    * The bee's own stat line ({@code fz.func_110147_ax}): frailer, slower on foot, quick in the air and
+    * with half the notice range. Built from scratch rather than layered over
+    * {@link #createGirlAttributes()}, because the builder collects into an immutable map and a repeated
+    * attribute would blow up at build time instead of overriding.
+    */
+   public static AttributeSupplier.Builder createBeeAttributes() {
+      return LivingEntity.createLivingAttributes()
+         .add(Attributes.MAX_HEALTH, 12.0)
+         .add(Attributes.FOLLOW_RANGE, 16.0)
+         .add(Attributes.MOVEMENT_SPEED, 0.2)
+         .add(Attributes.FLYING_SPEED, 0.4)
          .add(Attributes.ATTACK_DAMAGE, 1.0)
          .add(Attributes.ATTACK_SPEED, 4.0);
    }
@@ -247,11 +293,58 @@ public abstract class GirlEntity extends PathfinderMob {
 
    private void syncHasMaster() {
       this.entityData.set(TRACKED_HAS_MASTER, this.coreState.hasMaster());
+      this.entityData.set(TRACKED_MASTER, Optional.ofNullable(this.coreState.masterId()));
    }
 
    public boolean trackedHasMaster() {
       return this.entityData.get(TRACKED_HAS_MASTER);
    }
+
+   /** Her master's id as the client sees it; empty when she has none. */
+   public Optional<UUID> trackedMasterId() {
+      return this.entityData.get(TRACKED_MASTER);
+   }
+
+   /** Answerable on either side, which the price table and the name plate both need. */
+   public boolean isMasterOf(Player player) {
+      return player != null && this.trackedMasterId().filter(player.getUUID()::equals).isPresent();
+   }
+
+   /**
+    * Whether this girl features companion command buttons (follow, home, inventory) in her GUI
+    * (corresponding to donor m_class414.k). Companions return true, wild/boss girls return false.
+    */
+   public boolean hasCompanionCommands() {
+      return true;
+   }
+
+   public boolean isTamedByLasso() {
+      return this.level().isClientSide() ? this.entityData.get(TRACKED_TAMED_BY_LASSO) : this.tamedByLasso;
+   }
+
+   public void setTamedByLasso(boolean tamed) {
+      this.tamedByLasso = tamed;
+      this.entityData.set(TRACKED_TAMED_BY_LASSO, tamed);
+   }
+
+   public boolean isStayingAtHome() {
+      return this.level().isClientSide() ? this.entityData.get(TRACKED_STAYING_AT_HOME) : this.stayingAtHome;
+   }
+
+   public void setStayingAtHome(boolean staying) {
+      this.stayingAtHome = staying;
+      this.entityData.set(TRACKED_STAYING_AT_HOME, staying);
+   }
+
+   public String assignedHomeName() {
+      return this.level().isClientSide() ? this.entityData.get(TRACKED_ASSIGNED_HOME) : this.assignedHomeName;
+   }
+
+   public void setAssignedHomeName(String name) {
+      this.assignedHomeName = name != null ? name : "";
+      this.entityData.set(TRACKED_ASSIGNED_HOME, this.assignedHomeName);
+   }
+
 
    @Override
    protected void addAdditionalSaveData(ValueOutput output) {
@@ -275,6 +368,9 @@ public abstract class GirlEntity extends PathfinderMob {
       output.storeNullable("MasterId", UUIDUtil.CODEC, this.coreState.masterId());
       output.storeNullable("HomePos", BlockPos.CODEC, this.coreState.homePos());
       output.putBoolean("GoingHome", this.coreState.isGoingHome());
+      output.putBoolean("TamedByLasso", this.tamedByLasso);
+      output.putBoolean("StayingAtHome", this.stayingAtHome);
+      output.putString("AssignedHomeName", this.assignedHomeName);
       output.putString("Activity", this.activity.id());
 
       ValueOutput equipmentOutput = output.child("Equipment");
@@ -317,6 +413,9 @@ public abstract class GirlEntity extends PathfinderMob {
       this.syncHasMaster();
       this.coreState.setHomePos(input.read("HomePos", BlockPos.CODEC).orElse(null));
       this.coreState.setGoingHome(input.getBooleanOr("GoingHome", false));
+      this.setTamedByLasso(input.getBooleanOr("TamedByLasso", false));
+      this.setStayingAtHome(input.getBooleanOr("StayingAtHome", false));
+      this.setAssignedHomeName(input.getStringOr("AssignedHomeName", ""));
       // A pearl throw cannot be resumed across a reload, so it never survives one. Assigned directly:
       // setActivity refuses anything but NONE while a scene is loaded, which would drop a saved
       // DOWNED state and leave her standing at 1 HP.
@@ -377,6 +476,21 @@ public abstract class GirlEntity extends PathfinderMob {
          return false;
       }
 
+      if (this.isTamedByLasso()) {
+         if (source.is(DamageTypeTags.BYPASSES_INVULNERABILITY)) {
+            return super.hurtServer(world, source, amount);
+         }
+         // Immortal: health cannot drop below 1.0F, but still plays hurt animation/sound/reaction
+         if (this.getHealth() - amount <= 1.0F) {
+            this.setHealth(amount + 1.0F);
+         }
+         boolean damaged = super.hurtServer(world, source, amount);
+         if (this.getHealth() < 1.0F) {
+            this.setHealth(1.0F);
+         }
+         return damaged;
+      }
+
       if (source.is(DamageTypeTags.BYPASSES_INVULNERABILITY)) {
          return super.hurtServer(world, source, amount);
       }
@@ -396,6 +510,34 @@ public abstract class GirlEntity extends PathfinderMob {
       return super.hurtServer(world, source, amount);
    }
 
+   private java.util.UUID interactingPlayerId = null;
+   private int menuInteractionTimeout = 0;
+
+   public void setInteractingPlayer(Player player) {
+      this.interactingPlayerId = player != null ? player.getUUID() : null;
+      this.menuInteractionTimeout = 60;
+      if (player != null) {
+         this.getNavigation().stop();
+         this.setDeltaMovement(this.getDeltaMovement().multiply(0.0, 1.0, 0.0));
+         this.getLookControl().setLookAt(player, 30.0F, 30.0F);
+      }
+   }
+
+   public void clearInteractingPlayer(Player player) {
+      if (player == null || (this.interactingPlayerId != null && this.interactingPlayerId.equals(player.getUUID()))) {
+         this.interactingPlayerId = null;
+         this.menuInteractionTimeout = 0;
+      }
+   }
+
+   public boolean isInteractingWithMenu() {
+      return this.interactingPlayerId != null;
+   }
+
+   public Player interactingPlayer() {
+      return this.interactingPlayerId != null ? this.level().getPlayerByUUID(this.interactingPlayerId) : null;
+   }
+
    public boolean hasActiveInteraction() {
       return this.coreState.activePlayerId() != null;
    }
@@ -409,7 +551,66 @@ public abstract class GirlEntity extends PathfinderMob {
             return;
          }
 
+         if (this.interactingPlayerId != null) {
+            Player interactor = this.interactingPlayer();
+            if (interactor == null || !interactor.isAlive() || this.distanceToSqr(interactor) > 64.0 || --this.menuInteractionTimeout <= 0) {
+               this.interactingPlayerId = null;
+            } else {
+               this.getNavigation().stop();
+               this.setDeltaMovement(this.getDeltaMovement().multiply(0.0, 1.0, 0.0));
+               this.getLookControl().setLookAt(interactor, 30.0F, 30.0F);
+            }
+         }
+
+         if (this.isStayingAtHome() && !this.coreState().isGoingHome() && !this.assignedHomeName().isEmpty()) {
+            com.nxrtweetg.sexmod.home.GirlHomeRegion region = com.nxrtweetg.sexmod.home.SexmodHomeData.get(serverlevel).getHome(this.assignedHomeName());
+            if (region != null && !region.contains(this.getX(), this.getY(), this.getZ())) {
+               BlockPos center = region.center();
+               if (this.distanceToSqr(center.getX() + 0.5, center.getY(), center.getZ() + 0.5) > 16.0 * 16.0) {
+                  this.teleportTo(center.getX() + 0.5, center.getY(), center.getZ() + 0.5);
+               } else {
+                  this.getNavigation().moveTo(center.getX() + 0.5, center.getY(), center.getZ() + 0.5, 0.4);
+               }
+            }
+         }
+
+         if (this.isTamedByLasso() && this.getTarget() != null) {
+            LivingEntity target = this.getTarget();
+            Player master = this.master();
+            if (master != null) {
+               if (!target.isAlive() || target.distanceToSqr(master) > 25.0 * 25.0 || this.distanceToSqr(master) > 30.0 * 30.0) {
+                  this.setTarget(null);
+                  this.getNavigation().stop();
+               }
+            }
+         }
+
+         if (!this.returningToLasso && this.isTamedByLasso() && !this.isStayingAtHome()) {
+            Player master = this.master();
+            if (master instanceof ServerPlayer serverPlayer) {
+               if (serverPlayer.level() != this.level() || this.distanceToSqr(serverPlayer) > 96.0 * 96.0) {
+                  this.returningToLasso = true;
+                  com.nxrtweetg.sexmod.item.LassoItem.returnGirlToPlayerLasso(this, serverPlayer);
+                  return;
+               }
+            }
+         }
+
          this.tickRegeneration(serverlevel);
+      }
+   }
+
+   @Override
+   public void remove(RemovalReason reason) {
+      super.remove(reason);
+      if (!this.returningToLasso && this.isTamedByLasso() && !this.isStayingAtHome()) {
+         if (reason == RemovalReason.UNLOADED_TO_CHUNK || reason == RemovalReason.UNLOADED_WITH_PLAYER) {
+            Player master = this.master();
+            if (master instanceof ServerPlayer serverPlayer) {
+               this.returningToLasso = true;
+               com.nxrtweetg.sexmod.item.LassoItem.returnGirlToPlayerLasso(this, serverPlayer);
+            }
+         }
       }
    }
 

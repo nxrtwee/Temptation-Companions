@@ -117,6 +117,18 @@ public final class GirlSceneAnimations {
       return variants;
    }
 
+   /**
+    * Whether the first of a scene's fast takes is an entry into the beat rather than one of its loops.
+    *
+    * <p>Reverse cowgirl is the one scene built that way: the original enters the beat on
+    * {@code REVERSE_COWGIRL_FAST_START} - {@code reverse_cowgirl_fasts}, the take that carries the
+    * shift of weight - and from its {@code fastSwitch} onwards rolls only among the three
+    * {@code fastc} takes, so the entry is never played again while the key stays down.
+    */
+   public static boolean beatEntersOnFirstTake(GirlSceneAction action) {
+      return action == GirlSceneAction.REVERSE_COWGIRL;
+   }
+
    private static Map<GirlSceneAction, Map<GirlScenePhase, Entry>> build() {
       Map<GirlSceneAction, Map<GirlScenePhase, Entry>> table = new EnumMap<>(GirlSceneAction.class);
 
@@ -207,9 +219,11 @@ public final class GirlSceneAnimations {
       prone_doggy.put(GirlScenePhase.APPROACH, new Entry(GirlAnimationRole.WALK, null));
       prone_doggy.put(GirlScenePhase.WALKING, new Entry(GirlAnimationRole.WALK, null));
       prone_doggy.put(GirlScenePhase.PAYMENT, new Entry(GirlAnimationRole.PAYMENT, null));
-      // she shares anal's lying-down and holding takes: prone_doggy ships no wait animation of its
-      // own, and prone_doggy_intro is already the scene proper with the partner in it
-      // (original: anal_prepare -> anal_prepareDone -> ANAL_WAIT -> PRONE_DOGGY_INTRO, BiaEntity:244-262)
+      // Fallback for a character who ships no sit-down pair. The original waits for him sitting on the
+      // bed instead - its menu entry goes straight to fp.SITDOWN and holds in SITDOWNIDLE until he is
+      // within a block (e0.a("doggy"), e0.a() per-tick) - and SceneGirlEntity#edgeApproachRole overrides
+      // these two entries with sitdown/sitdownidle whenever she owns them. Jenny does not, and prone
+      // doggy ships no wait take of its own, so she borrows anal's.
       prone_doggy.put(GirlScenePhase.POSITIONING, new Entry(GirlAnimationRole.ANAL_POSITIONING, null));
       prone_doggy.put(GirlScenePhase.WAITING, new Entry(GirlAnimationRole.ANAL_WAIT, null));
       // intro loops until the player thrusts, then insert plays once and hands over to soft
@@ -226,6 +240,7 @@ public final class GirlSceneAnimations {
       sitting_alt.put(GirlScenePhase.APPROACH, new Entry(GirlAnimationRole.WALK, null));
       sitting_alt.put(GirlScenePhase.WALKING, new Entry(GirlAnimationRole.WALK, null));
       sitting_alt.put(GirlScenePhase.PAYMENT, new Entry(GirlAnimationRole.PAYMENT, null));
+      // Same fallback as prone doggy's, and overridden by her sit-down pair the same way.
       sitting_alt.put(GirlScenePhase.POSITIONING, new Entry(GirlAnimationRole.ANAL_POSITIONING, null));
       sitting_alt.put(GirlScenePhase.WAITING, new Entry(GirlAnimationRole.ANAL_WAIT, null));
       sitting_alt.put(GirlScenePhase.INTRO, new Entry(GirlAnimationRole.SITTING_ALT_POSITIONING, GirlAnimationRole.SITTING_ALT_START));
@@ -331,6 +346,20 @@ public final class GirlSceneAnimations {
       cowgirl.put(GirlScenePhase.CLIMAX, new Entry(GirlAnimationRole.COWGIRL_CUM, null));
       cowgirl.put(GirlScenePhase.IDLE, new Entry(GirlAnimationRole.NULL, null));
       table.put(GirlSceneAction.COWGIRL, cowgirl);
+
+      // The bee: she flies up to the player and starts it herself, so there is no walk, no payment and
+      // nothing to position - the take begins the tick the scene does.
+      Map<GirlScenePhase, Entry> bee_sex = new EnumMap<>(GirlScenePhase.class);
+      bee_sex.put(GirlScenePhase.APPROACH, new Entry(GirlAnimationRole.NULL, null));
+      bee_sex.put(GirlScenePhase.WALKING, new Entry(GirlAnimationRole.NULL, null));
+      bee_sex.put(GirlScenePhase.PAYMENT, new Entry(GirlAnimationRole.NULL, null));
+      bee_sex.put(GirlScenePhase.POSITIONING, new Entry(GirlAnimationRole.NULL, null));
+      bee_sex.put(GirlScenePhase.WAITING, new Entry(GirlAnimationRole.NULL, null));
+      bee_sex.put(GirlScenePhase.INTRO, new Entry(GirlAnimationRole.SEX_START, null));
+      bee_sex.put(GirlScenePhase.ACTIVE, new Entry(GirlAnimationRole.SEX_SLOW, GirlAnimationRole.SEX_FAST));
+      bee_sex.put(GirlScenePhase.CLIMAX, new Entry(GirlAnimationRole.SEX_CUM, null));
+      bee_sex.put(GirlScenePhase.IDLE, new Entry(GirlAnimationRole.NULL, null));
+      table.put(GirlSceneAction.BEE_SEX, bee_sex);
       // Strip: APPROACH and PAYMENT use walk, ACTIVE onwards uses the strip animation
       Map<GirlScenePhase, Entry> strip = new EnumMap<>(GirlScenePhase.class);
       strip.put(GirlScenePhase.APPROACH,    new Entry(GirlAnimationRole.WALK, null));
@@ -343,6 +372,28 @@ public final class GirlSceneAnimations {
       strip.put(GirlScenePhase.CLIMAX,      new Entry(GirlAnimationRole.STRIP, null));
       strip.put(GirlScenePhase.IDLE,        new Entry(GirlAnimationRole.NULL, null));
       table.put(GirlSceneAction.STRIP, strip);
+
+      Map<GirlScenePhase, Entry> nelson = new EnumMap<>(GirlScenePhase.class);
+      nelson.put(GirlScenePhase.APPROACH, new Entry(GirlAnimationRole.WALK, null));
+      nelson.put(GirlScenePhase.WALKING, new Entry(GirlAnimationRole.WALK, null));
+      nelson.put(GirlScenePhase.PAYMENT, new Entry(GirlAnimationRole.PAYMENT, null));
+      nelson.put(GirlScenePhase.POSITIONING, new Entry(GirlAnimationRole.NULL, null));
+      nelson.put(GirlScenePhase.WAITING, new Entry(GirlAnimationRole.NULL, null));
+      nelson.put(GirlScenePhase.INTRO, new Entry(GirlAnimationRole.NELSON_INTRO, null));
+      nelson.put(GirlScenePhase.ACTIVE, new Entry(GirlAnimationRole.NELSON_SLOW, GirlAnimationRole.NELSON_FAST));
+      nelson.put(GirlScenePhase.CLIMAX, new Entry(GirlAnimationRole.NELSON_CUM, null));
+      nelson.put(GirlScenePhase.IDLE, new Entry(GirlAnimationRole.NULL, null));
+      Map<GirlScenePhase, Entry> threesome = new EnumMap<>(GirlScenePhase.class);
+      threesome.put(GirlScenePhase.APPROACH, new Entry(GirlAnimationRole.NULL, null));
+      threesome.put(GirlScenePhase.WALKING, new Entry(GirlAnimationRole.NULL, null));
+      threesome.put(GirlScenePhase.PAYMENT, new Entry(GirlAnimationRole.NULL, null));
+      threesome.put(GirlScenePhase.POSITIONING, new Entry(GirlAnimationRole.NULL, null));
+      threesome.put(GirlScenePhase.WAITING, new Entry(GirlAnimationRole.NULL, null));
+      threesome.put(GirlScenePhase.INTRO, new Entry(GirlAnimationRole.NULL, null));
+      threesome.put(GirlScenePhase.ACTIVE, new Entry(GirlAnimationRole.THREESOME_SLOW, GirlAnimationRole.THREESOME_FAST));
+      threesome.put(GirlScenePhase.CLIMAX, new Entry(GirlAnimationRole.THREESOME_CUM, null));
+      threesome.put(GirlScenePhase.IDLE, new Entry(GirlAnimationRole.NULL, null));
+      table.put(GirlSceneAction.THREESOME, threesome);
 
       return table;
    }

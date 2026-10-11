@@ -31,6 +31,8 @@ public final class GirlSoundSet {
    private final Map<String, Integer> ownVariants;
    private final Map<String, String> substitutes;
 
+   private final boolean fallbackAllowed;
+
    /**
     * One resolved line: where it lives and how many takes are actually on disk, so the caller picks
     * an index that exists rather than the count the scene wished for.
@@ -46,7 +48,7 @@ public final class GirlSoundSet {
     * @param ownVariants how many takes she ships per family, e.g. {@code ahh -> 8}
     */
    public GirlSoundSet(String character, Map<String, Integer> ownVariants) {
-      this(character, ownVariants, Map.of());
+      this(character, ownVariants, Map.of(), true);
    }
 
    /**
@@ -55,9 +57,14 @@ public final class GirlSoundSet {
     * @param substitutes family she lacks -> family of her own to speak it with
     */
    public GirlSoundSet(String character, Map<String, Integer> ownVariants, Map<String, String> substitutes) {
+      this(character, ownVariants, substitutes, true);
+   }
+
+   public GirlSoundSet(String character, Map<String, Integer> ownVariants, Map<String, String> substitutes, boolean fallbackAllowed) {
       this.character = character;
       this.ownVariants = ownVariants;
       this.substitutes = substitutes;
+      this.fallbackAllowed = fallbackAllowed;
    }
 
    /**
@@ -76,6 +83,10 @@ public final class GirlSoundSet {
       int substituteVariants = substitute == null ? 0 : this.ownVariants.getOrDefault(substitute, 0);
       if (substituteVariants > 0) {
          return voice(this.character, substitute, Math.min(requested, substituteVariants));
+      }
+
+      if (!this.fallbackAllowed) {
+         return voice(this.character, family, 0);
       }
 
       return voice(FALLBACK_CHARACTER, family, Math.min(requested, JENNY_VARIANTS.getOrDefault(family, 0)));

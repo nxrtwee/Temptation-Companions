@@ -11,43 +11,83 @@ import net.minecraft.resources.Identifier;
  * The asset set for one girl. Her own animation file is searched first and Jenny's is the fallback,
  * which GeckoLib applies per animation name rather than per file, so a girl who lacks a scene still
  * plays it off Jenny's rig.
+ *
+ * <p>Her body is one of an ordered list of geo slots, given in the original's order: slot 0 is the
+ * base or nude model, slot 1 the armored one, slot 2 - for the three characters that have it - the
+ * dressed one. Which slot the synced variant selects is {@link GirlModelSlotPolicy}'s business.
  */
 @Environment(EnvType.CLIENT)
 public final class GirlGeoModel extends GeoModel<SceneGirlEntity> {
-   private static final Identifier JENNY_ANIMATIONS = Identifier.fromNamespaceAndPath("sexmod", "jenny/jenny");
-   private static final Identifier[] NO_FALLBACK = new Identifier[0];
-   private static final Identifier[] JENNY_FALLBACK = {JENNY_ANIMATIONS};
+   private static final Identifier[] ALL_ANIMATION_FALLBACKS = {
+      Identifier.fromNamespaceAndPath("sexmod", "jenny/jenny"),
+      Identifier.fromNamespaceAndPath("sexmod", "ellie/ellie"),
+      Identifier.fromNamespaceAndPath("sexmod", "bia/bia"),
+      Identifier.fromNamespaceAndPath("sexmod", "slime/slime"),
+      Identifier.fromNamespaceAndPath("sexmod", "bee/bee"),
+      Identifier.fromNamespaceAndPath("sexmod", "allie/allie"),
+      Identifier.fromNamespaceAndPath("sexmod", "goblin/goblin"),
+      Identifier.fromNamespaceAndPath("sexmod", "kobold/kobold"),
+      Identifier.fromNamespaceAndPath("sexmod", "galath/galath"),
+      Identifier.fromNamespaceAndPath("sexmod", "manglelie/manglelie"),
+      Identifier.fromNamespaceAndPath("sexmod", "cat/cat")
+   };
    private static final Identifier GOBLIN_TEXTURE = Identifier.fromNamespaceAndPath("sexmod", "textures/entity/goblin/goblin.png");
    private static final Identifier GOBLIN_ARMORED_TEXTURE = Identifier.fromNamespaceAndPath("sexmod", "textures/entity/goblin/goblinbk.png");
 
-   private final Identifier dressedModel;
-   private final Identifier nudeModel;
+   private final Identifier[] modelSlots;
+   private final GirlModelSlotPolicy slotPolicy;
    private final Identifier texture;
    private final Identifier animations;
    private final Identifier[] animationFallbacks;
    private final String character;
 
-   public GirlGeoModel(String character, String dressedModelName, String nudeModelName) {
+   /** The common case: two slots read straight off the variant. */
+   public GirlGeoModel(String character, String... modelNames) {
+      this(character, GirlModelSlotPolicy.DIRECT, modelNames);
+   }
+
+   public GirlGeoModel(String character, GirlModelSlotPolicy slotPolicy, String... modelNames) {
+      if (modelNames.length == 0) {
+         throw new IllegalArgumentException("Girl " + character + " needs at least one geo slot");
+      }
+
       this.character = character;
-      this.dressedModel = Identifier.fromNamespaceAndPath("sexmod", character + "/" + dressedModelName);
-      this.nudeModel = Identifier.fromNamespaceAndPath("sexmod", character + "/" + nudeModelName);
+      this.slotPolicy = slotPolicy;
+      this.modelSlots = new Identifier[modelNames.length];
+
+      for (int slot = 0; slot < modelNames.length; slot++) {
+         String name = modelNames[slot];
+         this.modelSlots[slot] = name.contains("/")
+            ? Identifier.fromNamespaceAndPath("sexmod", name)
+            : Identifier.fromNamespaceAndPath("sexmod", character + "/" + name);
+      }
+
       this.texture = Identifier.fromNamespaceAndPath("sexmod", "textures/entity/" + character + "/" + character + ".png");
       this.animations = Identifier.fromNamespaceAndPath("sexmod", character + "/" + character);
-      this.animationFallbacks = this.animations.equals(JENNY_ANIMATIONS) ? NO_FALLBACK : JENNY_FALLBACK;
+      this.animationFallbacks = java.util.Arrays.stream(ALL_ANIMATION_FALLBACKS)
+         .filter(id -> !id.equals(this.animations))
+         .toArray(Identifier[]::new);
    }
 
    @Override
    public Identifier getModelResource(GeoRenderState renderState) {
-      return renderState.getOrDefaultGeckolibData(GirlRenderData.MODEL_VARIANT, 1) == 0 ? this.nudeModel : this.dressedModel;
+      return this.modelSlots[this.resolveSlot(renderState)];
    }
 
    @Override
    public Identifier getTextureResource(GeoRenderState renderState) {
       if ("goblin".equals(this.character)) {
-         return renderState.getOrDefaultGeckolibData(GirlRenderData.MODEL_VARIANT, 1) == 0 ? GOBLIN_TEXTURE : GOBLIN_ARMORED_TEXTURE;
+         return this.resolveSlot(renderState) == 0 ? GOBLIN_TEXTURE : GOBLIN_ARMORED_TEXTURE;
       }
 
       return this.texture;
+   }
+
+   /** Never out of range: every policy is handed the slot count and the base one clamps. */
+   private int resolveSlot(GeoRenderState renderState) {
+      int variant = renderState.getOrDefaultGeckolibData(GirlRenderData.MODEL_VARIANT, 1);
+      int slot = this.slotPolicy.resolve(renderState, variant, this.modelSlots.length);
+      return slot >= 0 && slot < this.modelSlots.length ? slot : 0;
    }
 
    @Override

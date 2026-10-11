@@ -84,9 +84,9 @@ public final class GirlDebugHud {
                minecraft.font,
                Component.literal(String.format(
                   "FADE out=%.0f hold=%.0f in=%.0f  [KP4/6  KP2/8  KP1/3]  KP5=preview",
-                  GirlSceneTransitionFade.fadeOutTicks,
-                  GirlSceneTransitionFade.blackHoldTicks,
-                  GirlSceneTransitionFade.fadeInTicks
+                  GirlSceneTransitionFade.fadeOutTicks(),
+                  GirlSceneTransitionFade.blackHoldTicks(),
+                  GirlSceneTransitionFade.fadeInTicks()
                )),
                i,
                j + 108,

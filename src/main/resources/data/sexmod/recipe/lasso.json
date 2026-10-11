@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "equipment",
+  "key": {
+    "S": "minecraft:string",
+    "T": "minecraft:stick"
+  },
+  "pattern": [
+    " S ",
+    "S S",
+    "T  "
+  ],
+  "result": {
+    "count": 1,
+    "id": "sexmod:lasso"
+  }
+}

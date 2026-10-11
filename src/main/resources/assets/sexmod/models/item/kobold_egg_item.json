@@ -1,6 +1,0 @@
-{
-  "parent": "item/generated",
-  "textures": {
-    "layer0": "sexmod:item/kobold_egg_item"
-  }
-}

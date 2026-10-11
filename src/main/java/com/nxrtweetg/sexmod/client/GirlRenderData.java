@@ -9,7 +9,6 @@ import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.client.renderer.item.ItemStackRenderState;
 import net.minecraft.resources.Identifier;
-import net.minecraft.world.phys.Vec3;
 
 @Environment(EnvType.CLIENT)
 public final class GirlRenderData {
@@ -25,9 +24,13 @@ public final class GirlRenderData {
    public static final DataTicket<Double> TUNE_SIDE = DataTicket.create("jenny_tune_side", new TypeToken<Double>() {});
    public static final DataTicket<Double> TUNE_VERTICAL = DataTicket.create("jenny_tune_vertical", new TypeToken<Double>() {});
    public static final DataTicket<Double> KOBOLD_SIDE_OFFSET = DataTicket.create("jenny_kobold_side_offset", new TypeToken<Double>() {});
+   /**
+    * Whether the bee is carrying her satchel. The original showed that bone whenever the take she was
+    * playing had "chest" in its name; the flag is the same thing said in a way the bone pass can read.
+    */
+   public static final DataTicket<Boolean> HAS_CHEST = DataTicket.create("girl_has_chest", new TypeToken<Boolean>() {});
    public static final DataTicket<Float> CAMERA_YAW = DataTicket.create("jenny_camera_yaw", new TypeToken<Float>() {});
    public static final DataTicket<Boolean> IS_OWNER = DataTicket.create("jenny_is_owner", new TypeToken<Boolean>() {});
-   public static final DataTicket<Vec3> LIGHT_DIRECTION = DataTicket.create("jenny_light_direction", new TypeToken<Vec3>() {});
    public static final DataTicket<ItemStackRenderState> PAYMENT_STACK_STATE = DataTicket.create(
       "jenny_payment_stack_state", new TypeToken<ItemStackRenderState>() {}
    );
@@ -47,6 +50,14 @@ public final class GirlRenderData {
    public static final DataTicket<Identifier> PARTNER_SKIN = DataTicket.create("jenny_partner_skin", new TypeToken<Identifier>() {});
    /** True = partner uses Alex (SLIM) arm geometry; false = Steve (WIDE). */
    public static final DataTicket<Boolean> PARTNER_IS_SLIM = DataTicket.create("jenny_partner_is_slim", new TypeToken<Boolean>() {});
+   public static final DataTicket<Integer> KOBOLD_TRIBE_COLOR = DataTicket.create("girl_kobold_tribe_color", new TypeToken<Integer>() {});
+   public static final DataTicket<Integer> KOBOLD_EYE_COLOR = DataTicket.create("girl_kobold_eye_color", new TypeToken<Integer>() {});
+   public static final DataTicket<Integer> GOBLIN_SKIN_COLOR = DataTicket.create("girl_goblin_skin_color", new TypeToken<Integer>() {});
+   public static final DataTicket<Integer> GOBLIN_HAIR_COLOR = DataTicket.create("girl_goblin_hair_color", new TypeToken<Integer>() {});
+   public static final DataTicket<Integer> GOBLIN_EYE_COLOR = DataTicket.create("girl_goblin_eye_color", new TypeToken<Integer>() {});
+   public static final DataTicket<Integer> GOBLIN_HAIR_STYLE = DataTicket.create("girl_goblin_hair_style", new TypeToken<Integer>() {});
+   public static final DataTicket<Integer> GOBLIN_CROWN = DataTicket.create("girl_goblin_crown", new TypeToken<Integer>() {});
+   public static final DataTicket<Float> ALLIE_DISMISS_SCALE = DataTicket.create("girl_allie_dismiss_scale", new TypeToken<Float>() {});
 
    private GirlRenderData() {
    }

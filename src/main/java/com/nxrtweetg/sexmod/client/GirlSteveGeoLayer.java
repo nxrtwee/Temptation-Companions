@@ -42,8 +42,9 @@ public final class GirlSteveGeoLayer extends GeoRenderLayer<SceneGirlEntity, Voi
     * Body bones hidden in the genital pass (self + all children).
     * boyCam is child of Head2 — covered by Head2's skipChildrenRender.
     * Torso2 is handled separately via setMeshOnly (mesh hidden, children kept traversable).
+    * "blocks" is a child of Torso2 carrying the player torso cubes in Galath and Manglelie rigs.
     */
-   private static final String[] BODY_BONES_TO_HIDE = {"Head2", "LeftArm", "RightArm", "LeftLeg", "RightLeg"};
+   private static final String[] BODY_BONES_TO_HIDE = {"Head2", "LeftArm", "RightArm", "LeftLeg", "RightLeg", "blocks"};
 
    public GirlSteveGeoLayer(GeoRenderer<SceneGirlEntity, Void, LivingEntityRenderState> renderer) {
       super(renderer);

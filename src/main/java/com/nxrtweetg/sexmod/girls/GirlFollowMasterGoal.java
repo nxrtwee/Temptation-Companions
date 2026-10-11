@@ -31,8 +31,8 @@ public final class GirlFollowMasterGoal extends Goal {
 
    @Override
    public boolean canUse() {
-      // Never follow while heading home, or the teleport below would drag her back to the player.
-      if (this.girl.hasActiveInteraction() || !this.girl.coreState().hasMaster() || this.girl.coreState().isGoingHome()) {
+      // Never follow while heading home or staying at home, or the teleport below would drag her back to the player.
+      if (this.girl.hasActiveInteraction() || this.girl.isInteractingWithMenu() || !this.girl.coreState().hasMaster() || this.girl.coreState().isGoingHome() || this.girl.isStayingAtHome()) {
          return false;
       }
 
@@ -50,8 +50,10 @@ public final class GirlFollowMasterGoal extends Goal {
       return this.master != null
          && this.master.isAlive()
          && !this.girl.hasActiveInteraction()
+         && !this.girl.isInteractingWithMenu()
          && this.girl.coreState().hasMaster()
          && !this.girl.coreState().isGoingHome()
+         && !this.girl.isStayingAtHome()
          && this.girl.distanceToSqr(this.master) > STOP_FOLLOW_DISTANCE * STOP_FOLLOW_DISTANCE;
    }
 
@@ -74,10 +76,13 @@ public final class GirlFollowMasterGoal extends Goal {
 
       this.girl.getLookControl().setLookAt(this.master, 10.0F, this.girl.getMaxHeadXRot());
 
-      // The original teleported once the master left the navigation's search range, which in 1.12
-      // was the follow-range attribute (f_class282.c). Without it she gives up on walls and gaps.
-      double searchRange = this.girl.getAttributeValue(Attributes.FOLLOW_RANGE);
-      if (this.girl.distanceToSqr(this.master) > searchRange * searchRange) {
+      // If tamed by lasso, max distance is 15 blocks. Otherwise follow range attribute.
+      double maxDistance = this.girl.isTamedByLasso() ? 15.0 : this.girl.getAttributeValue(Attributes.FOLLOW_RANGE);
+      if (this.girl.distanceToSqr(this.master) > maxDistance * maxDistance) {
+         // Do not spam teleport while player is airborne/flying/falling; wait for landing
+         if (!this.master.onGround() || this.master.isFallFlying() || this.master.getAbilities().flying) {
+            return;
+         }
          this.teleportToMaster();
          return;
       }

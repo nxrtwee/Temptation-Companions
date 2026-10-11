@@ -13,6 +13,8 @@ import java.util.Properties;
 import java.util.Set;
 import net.fabricmc.loader.api.FabricLoader;
 
+import com.nxrtweetg.sexmod.config.SexmodConfig;
+
 /**
  * Per-scene body proportions, tuned in-game. Keys are {@code <character>.<scene>.<field>}; keys
  * without a character prefix predate the roster and are read as Jenny's. An untuned girl inherits
@@ -29,9 +31,17 @@ public final class GirlSceneBodyConfig {
 
    public static BodySettings get(String character, GirlSceneAction action) {
       ensureLoaded();
+      if (action == null) {
+         return new BodySettings(SexmodConfig.getBreastScale(character), SexmodConfig.getBootyScale(character));
+      }
       BodySettings own = settings(character).get(action);
       if (own != null) {
          return own;
+      }
+      float gBreasts = SexmodConfig.getBreastScale(character);
+      float gBooty = SexmodConfig.getBootyScale(character);
+      if (gBreasts != 1.0F || gBooty != 1.0F) {
+         return new BodySettings(gBreasts, gBooty);
       }
 
       return settings(BASE_CHARACTER).getOrDefault(action, BodySettings.DEFAULT);

@@ -72,6 +72,7 @@ public final class GirlSceneControlScreen extends Screen {
       this.addCameraRow("Height", GirlSceneCameraConfig.Field.VERTICAL, 0.05);
       this.addCameraRow("Side", GirlSceneCameraConfig.Field.LATERAL, 0.05);
 
+
       this.rows.add(Row.header("Placement"));
       this.rows.add(Row.value("Fwd", girl::trackedSceneTuneForward, value -> this.sendPlacement("forward", value), "scene_back", "scene_forward"));
       this.rows.add(Row.value("Side", girl::trackedSceneTuneSide, value -> this.sendPlacement("side", value), "scene_left", "scene_right"));
@@ -244,7 +245,11 @@ public final class GirlSceneControlScreen extends Screen {
          case MATING_PRESS -> "Sex / Mating Press";
          case REVERSE_COWGIRL -> "Sex / Reverse Cowgirl";
          case COWGIRL -> "Sex / Cowgirl";
+         case BEE_SEX -> "Sex / Bee";
+         case NELSON -> "Nelson";
+         case THREESOME -> "Threesome";
          case STRIP -> "Strip";
+         case HEAD_PAT -> "Head Pat";
       };
    }
 

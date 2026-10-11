@@ -28,6 +28,7 @@ public final class GirlCommandButton extends AbstractButton {
    private static final int LABEL_MARGIN = 4;
    private static final int LABEL_HEIGHT = 8;
 
+   private final int targetX;
    private final int iconU;
    private final int expandedWidth;
    private final Runnable onCommand;
@@ -36,9 +37,11 @@ public final class GirlCommandButton extends AbstractButton {
 
    public GirlCommandButton(int x, int y, int height, Component label, int iconU, int expandedWidth, Runnable onCommand) {
       super(x, y, COLLAPSED_WIDTH, height, label);
+      this.targetX = x;
       this.iconU = iconU;
       this.expandedWidth = expandedWidth;
       this.onCommand = onCommand;
+      this.visible = false;
    }
 
    public void setSlide(float slide) {
@@ -52,10 +55,19 @@ public final class GirlCommandButton extends AbstractButton {
 
    @Override
    protected void extractContents(GuiGraphicsExtractor context, int mouseX, int mouseY, float delta) {
+      if (this.slide <= 0.0F || !this.visible || this.getX() + this.getWidth() <= 0) {
+         return;
+      }
+
       this.expansion = this.isHovered()
          ? Math.min(this.expandedWidth, this.expansion + EXPANSION_STEP)
          : Math.max(0, this.expansion - EXPANSION_STEP);
-      this.setWidth(Mth.lerpInt(this.slide, 0, COLLAPSED_WIDTH) + this.expansion);
+      this.setX(Mth.lerpInt(this.slide, -COLLAPSED_WIDTH, this.targetX));
+      this.setWidth(COLLAPSED_WIDTH + this.expansion);
+
+      if (this.getWidth() < 8 || this.getX() + this.getWidth() <= 0) {
+         return;
+      }
 
       this.extractDefaultSprite(context);
       context.blit(
@@ -75,13 +87,15 @@ public final class GirlCommandButton extends AbstractButton {
          // Centred over the label area only, not the whole button: extractDefaultLabel would centre
          // across the icon too and run the text underneath it.
          int labelRight = this.getX() + this.getWidth() - ICON_SIZE - ICON_MARGIN;
-         context.textRendererForWidget(this, GuiGraphicsExtractor.HoveredTextEffects.NONE)
-            .accept(
-               TextAlignment.CENTER,
-               (this.getX() + LABEL_MARGIN + labelRight) / 2,
-               this.getY() + (this.getHeight() - LABEL_HEIGHT) / 2,
-               this.getMessage()
-            );
+         if (labelRight > this.getX() + LABEL_MARGIN) {
+            context.textRendererForWidget(this, GuiGraphicsExtractor.HoveredTextEffects.NONE)
+               .accept(
+                  TextAlignment.CENTER,
+                  (this.getX() + LABEL_MARGIN + labelRight) / 2,
+                  this.getY() + (this.getHeight() - LABEL_HEIGHT) / 2,
+                  this.getMessage()
+               );
+         }
       }
    }
 

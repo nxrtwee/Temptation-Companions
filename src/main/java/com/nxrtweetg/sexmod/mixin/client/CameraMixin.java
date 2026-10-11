@@ -1,5 +1,6 @@
 package com.nxrtweetg.sexmod.mixin.client;
 
+import com.nxrtweetg.sexmod.client.GirlSceneCamRig;
 import com.nxrtweetg.sexmod.client.GirlSceneCameraController;
 import com.nxrtweetg.sexmod.client.GirlSceneCameraState;
 import com.nxrtweetg.sexmod.client.GirlSceneFreecam;
@@ -61,10 +62,29 @@ abstract class CameraMixin {
       if (focusedEntity != null) {
          GirlSceneFreecam.activePosition().or(GirlSceneCameraState::activeAnchor).ifPresent(this::setPosition);
          // the player entity stays pinned by the scene, so free-look lives on the camera alone.
-         // Yaw wraps freely; pitch is clamped once here, against the combined value.
-         this.setRotation(
-            Mth.wrapDegrees(this.yRot() + GirlSceneFreeLook.yawOffset()), Mth.clamp(this.xRot() + GirlSceneFreeLook.pitchOffset(), -90.0F, 90.0F)
-         );
+         GirlSceneCamRig.Rig rig = GirlSceneCameraState.activeRig().orElse(null);
+         if (rig == null) {
+            // Yaw wraps freely; pitch is clamped once here, against the combined value.
+            this.setRotation(
+               Mth.wrapDegrees(this.yRot() + GirlSceneFreeLook.yawOffset()), Mth.clamp(this.xRot() + GirlSceneFreeLook.pitchOffset(), -90.0F, 90.0F)
+            );
+         } else {
+            // The original's own window, in its own order: pitch is pushed under the state's maximum
+            // and only then over its minimum (e_.java:307-322), and yaw is held inside +-90. It centres
+            // that window on her yaw and starts the player inside it with the placement table's own yaw
+            // offset; we pin the player ourselves, so the window is centred on the pinned facing
+            // instead - the same 180 degrees of freedom, measured from where the scene put him.
+            float pitch = this.xRot() + GirlSceneFreeLook.pitchOffset();
+            if (pitch > rig.maxPitch()) {
+               pitch = rig.maxPitch();
+            }
+
+            if (pitch < rig.minPitch()) {
+               pitch = rig.minPitch();
+            }
+
+            this.setRotation(Mth.wrapDegrees(this.yRot() + Mth.clamp(GirlSceneFreeLook.yawOffset(), -90.0F, 90.0F)), pitch);
+         }
       }
    }
 }

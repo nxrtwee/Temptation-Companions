@@ -43,3 +43,12 @@ tmp_*.png
 runclient.bat
 # working backups of edited rigs live next to the real assets; they must not ship
 **/*.bak
+
+# ---- agent / dev scratch & decompiled donor resources ---------------------
+.antigravity/
+all\ memory/
+chota/
+com/
+*.txt
+src/main/resources/assets/eggs.png
+src/main/resources/assets/lamp.png

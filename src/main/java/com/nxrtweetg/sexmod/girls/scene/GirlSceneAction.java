@@ -6,7 +6,7 @@ import java.util.Optional;
 
 public enum GirlSceneAction {
    BLOWJOB("blowjob", GirlPaymentItem.EMERALD, 3, GirlFollowUpAction.BLOWJOB),
-   KOBOLD_BLOWJOB("kobold_blowjob", GirlPaymentItem.EMERALD, 3, GirlFollowUpAction.KOBOLD_BLOWJOB, false),
+   KOBOLD_BLOWJOB("kobold_blowjob", GirlPaymentItem.EMERALD, 3, GirlFollowUpAction.KOBOLD_BLOWJOB, true),
    DEEPTHROAT("deepthroat", GirlPaymentItem.EMERALD, 3, GirlFollowUpAction.DEEPTHROAT),
    FACEFUCK("facefuck", GirlPaymentItem.EMERALD, 3, GirlFollowUpAction.FACEFUCK),
    BOOBJOB("boobjob", GirlPaymentItem.ENDER_PEARL, 2, GirlFollowUpAction.BOOBJOB),
@@ -19,10 +19,19 @@ public enum GirlSceneAction {
    SITTING("sitting", GirlPaymentItem.DIAMOND, 2, GirlFollowUpAction.SITTING),
    SITTING_ALT("sitting_alt", GirlPaymentItem.DIAMOND, 2, GirlFollowUpAction.SITTING_ALT),
    MISSIONARY("missionary", GirlPaymentItem.DIAMOND, 2, GirlFollowUpAction.MISSIONARY),
-   MATING_PRESS("mating_press", GirlPaymentItem.DIAMOND, 2, GirlFollowUpAction.MATING_PRESS, false),
+   MATING_PRESS("mating_press", GirlPaymentItem.DIAMOND, 2, GirlFollowUpAction.MATING_PRESS, true),
    REVERSE_COWGIRL("reverse_cowgirl", GirlPaymentItem.DIAMOND, 2, GirlFollowUpAction.REVERSE_COWGIRL),
    COWGIRL("cowgirl", GirlPaymentItem.DIAMOND, 2, GirlFollowUpAction.COWGIRL),
-   STRIP("strip", GirlPaymentItem.GOLD, 1, GirlFollowUpAction.STRIP);
+   /**
+    * The bee's own scene (original {@code CITIZEN_*}). She never sells it - she starts it herself once
+    * her arousal timer runs out - so it carries no price and is marked unavailable: {@link #enabled()}
+    * is only consulted on the player-request paths, never by {@code beginSelfStartedScene}.
+    */
+   BEE_SEX("bee_sex", GirlPaymentItem.EMERALD, 0, GirlFollowUpAction.BEE_SEX, false),
+   NELSON("nelson", GirlPaymentItem.DIAMOND, 2, GirlFollowUpAction.DOGGY),
+   THREESOME("threesome", GirlPaymentItem.DIAMOND, 0, GirlFollowUpAction.THREESOME),
+   STRIP("strip", GirlPaymentItem.GOLD, 1, GirlFollowUpAction.STRIP),
+   HEAD_PAT("headpat", GirlPaymentItem.EMERALD, 0, GirlFollowUpAction.NONE, false);
 
    private final String legacyId;
    private final GirlPaymentItem paymentItem;
@@ -85,6 +94,9 @@ public enum GirlSceneAction {
          case "mating_press", "matingpress" -> Optional.of(MATING_PRESS);
          case "reverse_cowgirl", "reversecowgirl" -> Optional.of(REVERSE_COWGIRL);
          case "cowgirl" -> Optional.of(COWGIRL);
+         case "bee_sex", "beesex", "citizen" -> Optional.of(BEE_SEX);
+         case "nelson" -> Optional.of(NELSON);
+         case "threesome" -> Optional.of(THREESOME);
          case "strip" -> Optional.of(STRIP);
          default -> Optional.empty();
       };

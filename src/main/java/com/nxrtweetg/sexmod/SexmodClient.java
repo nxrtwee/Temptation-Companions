@@ -12,5 +12,9 @@ public final class SexmodClient implements ClientModInitializer {
       SexmodMod.LOGGER.info("Initializing client hooks");
       LegacyGeckoLibResourceCompat.initialize();
       GirlClientBootstrap.initialize();
+      net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking.registerGlobalReceiver(
+         com.nxrtweetg.sexmod.network.SyncHomesPayload.ID,
+         (payload, context) -> context.client().execute(() -> com.nxrtweetg.sexmod.home.ClientHomeManager.setHomes(payload.homes()))
+      );
    }
 }

@@ -38050,9 +38050,6 @@
 					}
 				},
 				"cheekL": {
-					"relative_to": {
-						"rotation": "entity"
-					},
 					"rotation": {
 						"0.0": {
 							"vector": [0, 11.24, 13.17]
@@ -38243,9 +38240,6 @@
 					}
 				},
 				"RightArm": {
-					"relative_to": {
-						"rotation": "entity"
-					},
 					"rotation": {
 						"0.0": {
 							"vector": [-16.9, -22.37, 18.12]
@@ -38777,31 +38771,31 @@
 							"vector": [0, 0, 0]
 						},
 						"0.2083": {
-							"vector": [7.5, "NaN-0.5", "NaN-1*"],
+							"vector": [7.5, -0.5, -1],
 							"easing": "easeInOutSine"
 						},
 						"0.4583": {
-							"vector": [-9.9299, "-(1.7082)", "-(4.6999)"],
+							"vector": [-9.9299, -1.7082, -4.6999],
 							"easing": "easeInOutSine"
 						},
 						"0.6667": {
-							"vector": [9, "NaN-1.15", "NaN-3"],
+							"vector": [9, -1.15, -3],
 							"easing": "easeInOutSine"
 						},
 						"0.8333": {
-							"vector": [-6, "-(0.825)", "-(3)"],
+							"vector": [-6, -0.825, -3],
 							"easing": "easeInOutSine"
 						},
 						"1.0": {
-							"vector": [3, "NaN-0.6", "NaN-1.6"],
+							"vector": [3, -0.6, -1.6],
 							"easing": "easeInOutSine"
 						},
 						"1.1667": {
-							"vector": [-2, "-(0.2)", "-(0.7)"],
+							"vector": [-2, -0.2, -0.7],
 							"easing": "easeInOutSine"
 						},
 						"1.3333": {
-							"vector": [0.675, "NaN-0.1", "NaN-0.25"],
+							"vector": [0.675, -0.1, -0.25],
 							"easing": "easeInOutSine"
 						},
 						"1.4583": {
@@ -39371,9 +39365,6 @@
 					}
 				},
 				"cheekL": {
-					"relative_to": {
-						"rotation": "entity"
-					},
 					"rotation": {
 						"0.0": {
 							"vector": [0, 11.24, 13.17]
@@ -39564,9 +39555,6 @@
 					}
 				},
 				"RightArm": {
-					"relative_to": {
-						"rotation": "entity"
-					},
 					"rotation": {
 						"0.0": {
 							"vector": [-16.9, -22.37, 18.12]
@@ -42615,9 +42603,6 @@
 					}
 				},
 				"cheekL": {
-					"relative_to": {
-						"rotation": "entity"
-					},
 					"rotation": {
 						"0.0": {
 							"vector": [0, 11.24, 13.17]
@@ -42908,9 +42893,6 @@
 					}
 				},
 				"RightArm": {
-					"relative_to": {
-						"rotation": "entity"
-					},
 					"rotation": {
 						"0.0": {
 							"vector": [-16.9, -22.37, 18.12]

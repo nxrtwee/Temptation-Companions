@@ -1,9 +1,11 @@
 package com.nxrtweetg.sexmod.client;
 
+import com.nxrtweetg.sexmod.girls.scene.GirlCustomPhase;
 import com.nxrtweetg.sexmod.girls.scene.GirlSceneAction;
 import com.nxrtweetg.sexmod.girls.SceneGirlEntity;
 import com.nxrtweetg.sexmod.girls.scene.GirlPayment;
 import com.nxrtweetg.sexmod.network.GirlCommandPayload;
+import com.nxrtweetg.sexmod.network.JennySceneInputPayload;
 import com.nxrtweetg.sexmod.network.JennyStartInteractionPayload;
 import java.util.ArrayList;
 import java.util.List;
@@ -79,6 +81,7 @@ public final class GirlInteractionScreen extends Screen {
    private int actionScrollOffset;
    private float slideMain;
    private float slideCommands;
+   private boolean actionChosen;
 
    public GirlInteractionScreen(SceneGirlEntity girl) {
       super(girl.getName());
@@ -100,6 +103,7 @@ public final class GirlInteractionScreen extends Screen {
 
    @Override
    protected void init() {
+      ClientPlayNetworking.send(new GirlCommandPayload(this.entityId, "menu_open"));
       this.commandButtons.clear();
       this.actionButtons.clear();
       List<GirlInteractionScreen.MenuEntry> entries = this.visibleEntries();
@@ -109,30 +113,45 @@ public final class GirlInteractionScreen extends Screen {
          Button button = Button.builder(Component.literal(entry.label()), press -> entry.onClick().run())
             .bounds(this.actionButtonX(), y, ACTION_BUTTON_WIDTH, ACTION_BUTTON_HEIGHT)
             .build();
+         button.visible = false;
          this.actionButtons.add(this.addRenderableWidget(button));
          y -= ACTION_BUTTON_SPACING;
       }
 
-      int commandY = COMMAND_FIRST_Y;
+      if (this.girl.hasCompanionCommands()) {
+         int commandY = COMMAND_FIRST_Y;
 
-      for (int i = 0; i < COMMAND_KEYS.length; i++) {
-         // The original showed exactly one of follow me / stop follow me, based on the master state.
-         if (i == 0 && this.hasMaster || i == 1 && !this.hasMaster) {
-            continue;
+         for (int i = 0; i < COMMAND_KEYS.length; i++) {
+            // The original showed exactly one of follow me / stop follow me, based on the master state.
+            if (i == 0 && this.hasMaster || i == 1 && !this.hasMaster) {
+               continue;
+            }
+
+            String key = COMMAND_KEYS[i];
+            Runnable action;
+            if ("action.names.setnewhome".equals(key)) {
+               action = () -> {
+                  if (Minecraft.getInstance() != null) {
+                     Minecraft.getInstance().gui.setScreen(new GirlHomeSettingsScreen(this.girl, this));
+                  }
+               };
+            } else {
+               action = () -> this.sendCommand(key);
+            }
+
+            GirlCommandButton button = new GirlCommandButton(
+               COMMAND_BUTTON_X,
+               commandY,
+               COMMAND_BUTTON_HEIGHT,
+               Component.literal(I18n.get(key)),
+               COMMAND_ICON_U[i],
+               COMMAND_EXPANDED_WIDTH[i],
+               action
+            );
+            button.visible = false;
+            this.commandButtons.add(this.addRenderableWidget(button));
+            commandY += COMMAND_BUTTON_SPACING;
          }
-
-         String key = COMMAND_KEYS[i];
-         GirlCommandButton button = new GirlCommandButton(
-            COMMAND_BUTTON_X,
-            commandY,
-            COMMAND_BUTTON_HEIGHT,
-            Component.literal(I18n.get(key)),
-            COMMAND_ICON_U[i],
-            COMMAND_EXPANDED_WIDTH[i],
-            () -> this.sendCommand(key)
-         );
-         this.commandButtons.add(this.addRenderableWidget(button));
-         commandY += COMMAND_BUTTON_SPACING;
       }
    }
 
@@ -147,31 +166,35 @@ public final class GirlInteractionScreen extends Screen {
 
       for (Button button : this.actionButtons) {
          button.setX(actionX);
+         button.visible = this.slideMain > 0.0F && actionX < this.width;
       }
 
-      for (GirlCommandButton button : this.commandButtons) {
-         button.setSlide(this.slideCommands);
-         button.visible = this.slideCommands > 0.0F;
+      if (this.girl.hasCompanionCommands()) {
+         for (GirlCommandButton button : this.commandButtons) {
+            button.setSlide(this.slideCommands);
+            button.visible = this.slideCommands > 0.0F && (button.getX() + button.getWidth() > 0);
+         }
+
+         // Order matters: 26.2 auto-layers each element above whatever it overlaps, so the frame has to
+         // be submitted before the stacks or it would bury them.
+         if (this.slideCommands > 0.0F) {
+            context.blit(
+               RenderPipelines.GUI_TEXTURED,
+               GIRL_INVENTORY,
+               Mth.lerpInt(this.slideMain, -30, 120) - 113,
+               PANEL_Y,
+               0,
+               0,
+               PANEL_WIDTH,
+               PANEL_HEIGHT,
+               TEXTURE_SIZE,
+               TEXTURE_SIZE
+            );
+         }
+
+         this.extractEquipment(context);
       }
 
-      // Order matters: 26.2 auto-layers each element above whatever it overlaps, so the frame has to
-      // be submitted before the stacks or it would bury them.
-      if (this.slideCommands > 0.0F) {
-         context.blit(
-            RenderPipelines.GUI_TEXTURED,
-            GIRL_INVENTORY,
-            Mth.lerpInt(this.slideMain, -30, 120) - 113,
-            PANEL_Y,
-            0,
-            0,
-            PANEL_WIDTH,
-            PANEL_HEIGHT,
-            TEXTURE_SIZE,
-            TEXTURE_SIZE
-         );
-      }
-
-      this.extractEquipment(context);
       // Before the widgets: the original pushed the price plates to zLevel -300 so the buttons sit on
       // top of them, and in 26.2 the equivalent is simply submitting them first.
       this.extractPrices(context);
@@ -231,7 +254,10 @@ public final class GirlInteractionScreen extends Screen {
       return false;
    }
 
-   /** Keeps the original slide-out layout, but groups the port's larger action roster into clear sections. */
+   /**
+    * Keeps the original slide-out layout. The top level is flat as the original's was - one row per
+    * thing she answers to - except for the one row that opens her whole scene roster.
+    */
    private List<GirlInteractionScreen.MenuEntry> currentEntries() {
       List<GirlInteractionScreen.MenuEntry> entries = new ArrayList<>();
       if (this.currentSection != null) {
@@ -242,7 +268,7 @@ public final class GirlInteractionScreen extends Screen {
          entries.add(this.backEntry());
       } else {
          for (SceneGirlEntity.InteractionSection section : this.girl.interactionSections()) {
-            entries.add(this.submenuEntry(section));
+            entries.add(section.directOption().map(this::actionEntry).orElseGet(() -> this.submenuEntry(section)));
          }
       }
 
@@ -307,11 +333,13 @@ public final class GirlInteractionScreen extends Screen {
    }
 
    private void sendCommand(String commandKey) {
+      this.actionChosen = true;
       ClientPlayNetworking.send(new GirlCommandPayload(this.entityId, commandKey));
       this.onClose();
    }
 
    private void sendAction(String actionId, ItemStack price) {
+      this.actionChosen = true;
       LocalPlayer player = Minecraft.getInstance().player;
       if (player != null && !GirlPayment.canAfford(player, price)) {
          player.sendSystemMessage(Component.literal("<" + this.girlName + "> " + I18n.get(this.girl.dialogueKey("cannotafford"))));
@@ -330,6 +358,35 @@ public final class GirlInteractionScreen extends Screen {
 
       ClientPlayNetworking.send(new JennyStartInteractionPayload(this.entityId, actionId));
       this.onClose();
+   }
+
+   private int menuKeepAliveTicks = 0;
+
+   @Override
+   public void tick() {
+      super.tick();
+      if (this.minecraft != null && this.minecraft.player != null) {
+         this.girl.getNavigation().stop();
+         this.girl.setDeltaMovement(this.girl.getDeltaMovement().multiply(0.0, 1.0, 0.0));
+         this.girl.getLookControl().setLookAt(this.minecraft.player, 30.0F, 30.0F);
+         if (++this.menuKeepAliveTicks >= 20) {
+            this.menuKeepAliveTicks = 0;
+            ClientPlayNetworking.send(new GirlCommandPayload(this.entityId, "menu_open"));
+         }
+      }
+   }
+
+   @Override
+   public void onClose() {
+      ClientPlayNetworking.send(new GirlCommandPayload(this.entityId, "menu_close"));
+      if (!this.actionChosen) {
+         if (this.girl instanceof com.nxrtweetg.sexmod.girls.allie.AllieEntity) {
+            ClientPlayNetworking.send(new GirlCommandPayload(this.entityId, "allie_dismiss_free"));
+         } else if (!this.girl.customActionId().isEmpty() || this.girl.customPhase() == GirlCustomPhase.WAITING) {
+            ClientPlayNetworking.send(new JennySceneInputPayload(this.entityId, "reset"));
+         }
+      }
+      super.onClose();
    }
 
    private record MenuEntry(String label, ItemStack price, Runnable onClick) {

@@ -2,6 +2,7 @@ package com.nxrtweetg.sexmod.client;
 
 import com.nxrtweetg.sexmod.girls.scene.GirlSceneAction;
 import com.nxrtweetg.sexmod.girls.scene.GirlScenePhase;
+import com.nxrtweetg.sexmod.config.SexmodConfig;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import java.io.IOException;
@@ -59,7 +60,11 @@ public final class GirlSceneCameraConfig {
    }
 
    public static double distanceMultiplier(String character, GirlSceneAction action, GirlScenePhase phase) {
-      return settings(character, action, phase).distanceMultiplier;
+      SceneCameraSettings s = settings(character, action, phase);
+      if (SexmodConfig.isBoneCamDynamic() && s.dynamicDistanceMultiplier != null) {
+         return s.dynamicDistanceMultiplier;
+      }
+      return s.distanceMultiplier;
    }
 
    public static double verticalOffset(String character, GirlSceneAction action) {
@@ -67,7 +72,11 @@ public final class GirlSceneCameraConfig {
    }
 
    public static double verticalOffset(String character, GirlSceneAction action, GirlScenePhase phase) {
-      return settings(character, action, phase).verticalOffset;
+      SceneCameraSettings s = settings(character, action, phase);
+      if (SexmodConfig.isBoneCamDynamic() && s.dynamicVerticalOffset != null) {
+         return s.dynamicVerticalOffset;
+      }
+      return s.verticalOffset;
    }
 
    public static double lateralOffset(String character, GirlSceneAction action) {
@@ -75,7 +84,11 @@ public final class GirlSceneCameraConfig {
    }
 
    public static double lateralOffset(String character, GirlSceneAction action, GirlScenePhase phase) {
-      return settings(character, action, phase).lateralOffset;
+      SceneCameraSettings s = settings(character, action, phase);
+      if (SexmodConfig.isBoneCamDynamic() && s.dynamicLateralOffset != null) {
+         return s.dynamicLateralOffset;
+      }
+      return s.lateralOffset;
    }
 
    public static double helperVerticalOffset(String character, GirlSceneAction action) {
@@ -120,34 +133,94 @@ public final class GirlSceneCameraConfig {
       HELPER_FORWARD,
       HELPER_SIDE,
       HELPER_SCALE,
-      GIRL_SCALE;
+      GIRL_SCALE,
+      /** -1 leaves the choice to {@link GirlSceneCamRig#boneByDefault}, 0 forces off, 1 forces on. */
+      CAMERA_MODE,
+      BONE_VERTICAL,
+      BONE_FORWARD,
+      BONE_SIDE;
+   }
+
+   /**
+    * How a scene picks its camera: {@link CameraMode#AUTO} defers to
+    * {@link GirlSceneCamRig#boneByDefault}, the other two force the choice.
+    */
+   @Environment(EnvType.CLIENT)
+   public enum CameraMode {
+      AUTO,
+      LEGACY,
+      BONE;
+   }
+
+   public static GirlSceneCameraConfig.CameraMode cameraMode(String character, GirlSceneAction action, GirlScenePhase phase) {
+      if (SexmodConfig.isBoneCamDynamic()) {
+         return GirlSceneCameraConfig.CameraMode.BONE;
+      }
+      return GirlSceneCameraConfig.CameraMode.LEGACY;
+   }
+
+   public static double boneVerticalOffset(String character, GirlSceneAction action, GirlScenePhase phase) {
+      return settings(character, action, phase).boneVerticalOffset;
+   }
+
+   public static double boneForwardOffset(String character, GirlSceneAction action, GirlScenePhase phase) {
+      return settings(character, action, phase).boneForwardOffset;
+   }
+
+   public static double boneSideOffset(String character, GirlSceneAction action, GirlScenePhase phase) {
+      return settings(character, action, phase).boneSideOffset;
    }
 
    public static double get(String character, GirlSceneAction action, GirlScenePhase phase, Field field) {
       GirlSceneCameraConfig.SceneCameraSettings settings = settings(character, action, phase);
       return switch (field) {
-         case DISTANCE -> settings.distanceMultiplier;
-         case VERTICAL -> settings.verticalOffset;
-         case LATERAL -> settings.lateralOffset;
+         case DISTANCE -> distanceMultiplier(character, action, phase);
+         case VERTICAL -> verticalOffset(character, action, phase);
+         case LATERAL -> lateralOffset(character, action, phase);
          case HELPER_VERTICAL -> settings.helperVerticalOffset;
          case HELPER_FORWARD -> settings.helperForwardOffset;
          case HELPER_SIDE -> settings.helperSideOffset;
          case HELPER_SCALE -> settings.helperScale;
          case GIRL_SCALE -> settings.girlScale;
+         case CAMERA_MODE -> settings.boneCamera;
+         case BONE_VERTICAL -> settings.boneVerticalOffset;
+         case BONE_FORWARD -> settings.boneForwardOffset;
+         case BONE_SIDE -> settings.boneSideOffset;
       };
    }
 
    public static void set(String character, GirlSceneAction action, GirlScenePhase phase, Field field, double value) {
       GirlSceneCameraConfig.SceneCameraSettings settings = mutableSettings(character, action, phase);
-      switch (field) {
-         case DISTANCE -> settings.distanceMultiplier = value;
-         case VERTICAL -> settings.verticalOffset = value;
-         case LATERAL -> settings.lateralOffset = value;
-         case HELPER_VERTICAL -> settings.helperVerticalOffset = value;
-         case HELPER_FORWARD -> settings.helperForwardOffset = value;
-         case HELPER_SIDE -> settings.helperSideOffset = value;
-         case HELPER_SCALE -> settings.helperScale = value;
-         case GIRL_SCALE -> settings.girlScale = value;
+      if (SexmodConfig.isBoneCamDynamic()) {
+         switch (field) {
+            case DISTANCE -> settings.dynamicDistanceMultiplier = value;
+            case VERTICAL -> settings.dynamicVerticalOffset = value;
+            case LATERAL -> settings.dynamicLateralOffset = value;
+            case HELPER_VERTICAL -> settings.helperVerticalOffset = value;
+            case HELPER_FORWARD -> settings.helperForwardOffset = value;
+            case HELPER_SIDE -> settings.helperSideOffset = value;
+            case HELPER_SCALE -> settings.helperScale = value;
+            case GIRL_SCALE -> settings.girlScale = value;
+            case CAMERA_MODE -> settings.boneCamera = value;
+            case BONE_VERTICAL -> settings.boneVerticalOffset = value;
+            case BONE_FORWARD -> settings.boneForwardOffset = value;
+            case BONE_SIDE -> settings.boneSideOffset = value;
+         }
+      } else {
+         switch (field) {
+            case DISTANCE -> settings.distanceMultiplier = value;
+            case VERTICAL -> settings.verticalOffset = value;
+            case LATERAL -> settings.lateralOffset = value;
+            case HELPER_VERTICAL -> settings.helperVerticalOffset = value;
+            case HELPER_FORWARD -> settings.helperForwardOffset = value;
+            case HELPER_SIDE -> settings.helperSideOffset = value;
+            case HELPER_SCALE -> settings.helperScale = value;
+            case GIRL_SCALE -> settings.girlScale = value;
+            case CAMERA_MODE -> settings.boneCamera = value;
+            case BONE_VERTICAL -> settings.boneVerticalOffset = value;
+            case BONE_FORWARD -> settings.boneForwardOffset = value;
+            case BONE_SIDE -> settings.boneSideOffset = value;
+         }
       }
 
       roster = roster.sanitized();
@@ -179,10 +252,16 @@ public final class GirlSceneCameraConfig {
    }
 
    public static double adjustDistance(String character, GirlSceneAction action, GirlScenePhase phase, double delta) {
-      mutableSettings(character, action, phase).distanceMultiplier += delta;
+      SceneCameraSettings settings = mutableSettings(character, action, phase);
+      if (SexmodConfig.isBoneCamDynamic()) {
+         double base = settings.dynamicDistanceMultiplier != null ? settings.dynamicDistanceMultiplier : settings.distanceMultiplier;
+         settings.dynamicDistanceMultiplier = base + delta;
+      } else {
+         settings.distanceMultiplier += delta;
+      }
       roster = roster.sanitized();
       save();
-      return settings(character, action, phase).distanceMultiplier;
+      return distanceMultiplier(character, action, phase);
    }
 
    public static double adjustVerticalOffset(String character, GirlSceneAction action, double delta) {
@@ -190,10 +269,16 @@ public final class GirlSceneCameraConfig {
    }
 
    public static double adjustVerticalOffset(String character, GirlSceneAction action, GirlScenePhase phase, double delta) {
-      mutableSettings(character, action, phase).verticalOffset += delta;
+      SceneCameraSettings settings = mutableSettings(character, action, phase);
+      if (SexmodConfig.isBoneCamDynamic()) {
+         double base = settings.dynamicVerticalOffset != null ? settings.dynamicVerticalOffset : settings.verticalOffset;
+         settings.dynamicVerticalOffset = base + delta;
+      } else {
+         settings.verticalOffset += delta;
+      }
       roster = roster.sanitized();
       save();
-      return settings(character, action, phase).verticalOffset;
+      return verticalOffset(character, action, phase);
    }
 
    public static double adjustLateralOffset(String character, GirlSceneAction action, double delta) {
@@ -201,10 +286,16 @@ public final class GirlSceneCameraConfig {
    }
 
    public static double adjustLateralOffset(String character, GirlSceneAction action, GirlScenePhase phase, double delta) {
-      mutableSettings(character, action, phase).lateralOffset += delta;
+      SceneCameraSettings settings = mutableSettings(character, action, phase);
+      if (SexmodConfig.isBoneCamDynamic()) {
+         double base = settings.dynamicLateralOffset != null ? settings.dynamicLateralOffset : settings.lateralOffset;
+         settings.dynamicLateralOffset = base + delta;
+      } else {
+         settings.lateralOffset += delta;
+      }
       roster = roster.sanitized();
       save();
-      return settings(character, action, phase).lateralOffset;
+      return lateralOffset(character, action, phase);
    }
 
    public static double adjustHelperVerticalOffset(String character, GirlSceneAction action, double delta) {
@@ -279,11 +370,14 @@ public final class GirlSceneCameraConfig {
    private enum CameraProfile {
       MAIN,
       INTRO,
-      PAYMENT;
+      PAYMENT,
+      WAITING;
 
       private static GirlSceneCameraConfig.CameraProfile forPhase(GirlScenePhase phase) {
          if (phase == GirlScenePhase.PAYMENT) {
             return PAYMENT;
+         } else if (phase == GirlScenePhase.WAITING || phase == GirlScenePhase.POSITIONING) {
+            return WAITING;
          } else {
             return phase == GirlScenePhase.INTRO ? INTRO : MAIN;
          }
@@ -340,16 +434,19 @@ public final class GirlSceneCameraConfig {
       private Map<GirlSceneAction, GirlSceneCameraConfig.SceneCameraSettings> mainByAction = new EnumMap<>(GirlSceneAction.class);
       private Map<GirlSceneAction, GirlSceneCameraConfig.SceneCameraSettings> introByAction = new EnumMap<>(GirlSceneAction.class);
       private Map<GirlSceneAction, GirlSceneCameraConfig.SceneCameraSettings> paymentByAction = new EnumMap<>(GirlSceneAction.class);
+      private Map<GirlSceneAction, GirlSceneCameraConfig.SceneCameraSettings> waitingByAction = new EnumMap<>(GirlSceneAction.class);
 
       private GirlSceneCameraConfig.CameraSettings sanitized() {
          this.byAction = sanitizeMap(this.byAction);
          this.mainByAction = sanitizeMap(this.mainByAction);
          this.introByAction = sanitizeMap(this.introByAction);
          this.paymentByAction = sanitizeMap(this.paymentByAction);
+         this.waitingByAction = sanitizeMap(this.waitingByAction);
          this.migrateLegacyMainSettings();
          sanitizeEntries(this.mainByAction);
          sanitizeEntries(this.introByAction);
          sanitizeEntries(this.paymentByAction);
+         sanitizeEntries(this.waitingByAction);
          return this;
       }
 
@@ -362,6 +459,7 @@ public final class GirlSceneCameraConfig {
          fillProfile(this.mainByAction, GirlSceneCameraConfig.CameraProfile.MAIN);
          fillProfile(this.introByAction, GirlSceneCameraConfig.CameraProfile.INTRO);
          fillProfile(this.paymentByAction, GirlSceneCameraConfig.CameraProfile.PAYMENT);
+         fillProfile(this.waitingByAction, GirlSceneCameraConfig.CameraProfile.WAITING);
          return this;
       }
 
@@ -397,6 +495,7 @@ public final class GirlSceneCameraConfig {
             case MAIN -> this.mainByAction;
             case INTRO -> this.introByAction;
             case PAYMENT -> this.paymentByAction;
+            case WAITING -> this.waitingByAction;
          };
       }
 
@@ -534,25 +633,29 @@ public final class GirlSceneCameraConfig {
          seed(map, "ellie", GirlSceneCameraConfig.CameraProfile.PAYMENT, GirlSceneAction.SITTING, -0.85, 0.23, 0.03, 0.0, 1.0, 0.0, 0.0, 1.0);
          seed(map, "ellie", GirlSceneCameraConfig.CameraProfile.PAYMENT, GirlSceneAction.STRIP, -1.18, 0.34, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0);
          seed(map, "ellie", GirlSceneCameraConfig.CameraProfile.PAYMENT, GirlSceneAction.TOUCH_BOOBS, -0.78, 0.06, 0.02, 1.0, 1.0, -20.0, 0.0, 1.0);
-         seed(map, "bia", GirlSceneCameraConfig.CameraProfile.MAIN, GirlSceneAction.ANAL, -3.1, -0.05, -0.05, 0.0, 1.0, 0.0, 0.0, 1.0);
-         seed(map, "bia", GirlSceneCameraConfig.CameraProfile.MAIN, GirlSceneAction.ANAL_ALT, -4.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0);
+         seed(map, "bia", GirlSceneCameraConfig.CameraProfile.MAIN, GirlSceneAction.ANAL, -3.1, -0.05, -0.05, 0.0, 1.0, -15.0, 0.0, 1.0);
+         seed(map, "bia", GirlSceneCameraConfig.CameraProfile.MAIN, GirlSceneAction.ANAL_ALT, -4.0, 0.0, 0.0, 0.0, 1.0, -15.0, 0.0, 1.0);
          seed(map, "bia", GirlSceneCameraConfig.CameraProfile.MAIN, GirlSceneAction.BLOWJOB, 0.3, -0.7, -0.85, 0.2, 0.96, 1.62, 0.0, 1.14);
          seed(map, "bia", GirlSceneCameraConfig.CameraProfile.MAIN, GirlSceneAction.BOOBJOB, -0.2, -0.7, -0.9, 0.0, 1.0, 1.04, 0.0, 1.16);
-         seed(map, "bia", GirlSceneCameraConfig.CameraProfile.MAIN, GirlSceneAction.DOGGY, 0.7, -0.05, 0.0, 0.04, 0.88, -0.44, 0.0, 1.0);
+         seed(map, "bia", GirlSceneCameraConfig.CameraProfile.MAIN, GirlSceneAction.COWGIRL, -3.5, 0.4, 0.0, -1.24, 1.0, -15.0, 0.0, 1.0);
+         seed(map, "bia", GirlSceneCameraConfig.CameraProfile.MAIN, GirlSceneAction.DOGGY, 0.7, -0.05, 0.0, 0.04, 0.88, -15.0, 0.0, 1.0);
          seed(map, "bia", GirlSceneCameraConfig.CameraProfile.MAIN, GirlSceneAction.FACEFUCK, -1.2, 0.2, 0.0, -4.0, 0.98, 0.88, 0.0, 1.18);
-         seed(map, "bia", GirlSceneCameraConfig.CameraProfile.MAIN, GirlSceneAction.MISSIONARY, 1.1, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0);
-         seed(map, "bia", GirlSceneCameraConfig.CameraProfile.MAIN, GirlSceneAction.PRONE_DOGGY, 0.5, -0.25, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0);
-         seed(map, "bia", GirlSceneCameraConfig.CameraProfile.MAIN, GirlSceneAction.REVERSE_COWGIRL, -0.4, 0.3, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0);
-         seed(map, "bia", GirlSceneCameraConfig.CameraProfile.MAIN, GirlSceneAction.SITTING_ALT, -0.1, 0.4, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0);
+         seed(map, "bia", GirlSceneCameraConfig.CameraProfile.MAIN, GirlSceneAction.MISSIONARY, 1.1, 0.0, 0.0, 0.0, 1.0, -15.0, 0.0, 1.0);
+         seed(map, "bia", GirlSceneCameraConfig.CameraProfile.MAIN, GirlSceneAction.PRONE_DOGGY, 0.5, -0.25, 0.0, 0.0, 1.0, -15.0, 0.0, 1.0);
+         seed(map, "bia", GirlSceneCameraConfig.CameraProfile.MAIN, GirlSceneAction.REVERSE_COWGIRL, -0.4, 0.3, 0.0, 0.0, 1.0, -15.0, 0.0, 1.0);
+         seed(map, "bia", GirlSceneCameraConfig.CameraProfile.MAIN, GirlSceneAction.SITTING_ALT, -0.1, 0.4, 0.0, 0.0, 1.0, -15.0, 0.0, 1.0);
          seed(map, "bia", GirlSceneCameraConfig.CameraProfile.MAIN, GirlSceneAction.STRIP, 1.3, 0.2, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0);
          seed(map, "bia", GirlSceneCameraConfig.CameraProfile.MAIN, GirlSceneAction.TOUCH_BOOBS, -0.8, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0);
+         seed(map, "bia", GirlSceneCameraConfig.CameraProfile.INTRO, GirlSceneAction.ANAL, -1.85, 0.02, -0.02, 0.0, 1.0, -15.0, 0.0, 1.0);
+         seed(map, "bia", GirlSceneCameraConfig.CameraProfile.INTRO, GirlSceneAction.ANAL_ALT, 1.0, 0.0, 0.0, 0.0, 1.0, -15.0, 0.0, 1.0);
          seed(map, "bia", GirlSceneCameraConfig.CameraProfile.INTRO, GirlSceneAction.BLOWJOB, -1.0, 0.15, 0.0, 0.0, 1.0, 0.0, 0.0, 1.18);
-         seed(map, "bia", GirlSceneCameraConfig.CameraProfile.INTRO, GirlSceneAction.COWGIRL, -3.6, 0.51, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0);
+         seed(map, "bia", GirlSceneCameraConfig.CameraProfile.INTRO, GirlSceneAction.COWGIRL, -3.6, 0.51, 0.0, 0.0, 1.0, -15.0, 0.0, 1.0);
+         seed(map, "bia", GirlSceneCameraConfig.CameraProfile.INTRO, GirlSceneAction.DOGGY, 0.72, -0.05, -0.01, 0.0, 1.0, -15.0, 0.0, 1.0);
          seed(map, "bia", GirlSceneCameraConfig.CameraProfile.INTRO, GirlSceneAction.FACEFUCK, -1.15, 0.34, -0.03, 0.04, 0.92, 0.06, 0.0, 1.0);
-         seed(map, "bia", GirlSceneCameraConfig.CameraProfile.INTRO, GirlSceneAction.MISSIONARY, 0.82, 0.05, 0.02, 0.0, 1.0, 0.0, 0.0, 1.0);
-         seed(map, "bia", GirlSceneCameraConfig.CameraProfile.INTRO, GirlSceneAction.PRONE_DOGGY, 0.76, -0.2, 0.02, 0.0, 1.0, 0.0, 0.0, 1.0);
-         seed(map, "bia", GirlSceneCameraConfig.CameraProfile.INTRO, GirlSceneAction.REVERSE_COWGIRL, 0.58, 0.36, 0.02, 0.0, 1.0, 0.0, 0.0, 1.0);
-         seed(map, "bia", GirlSceneCameraConfig.CameraProfile.INTRO, GirlSceneAction.SITTING_ALT, -0.3, 0.5, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0);
+         seed(map, "bia", GirlSceneCameraConfig.CameraProfile.INTRO, GirlSceneAction.MISSIONARY, 0.82, 0.05, 0.02, 0.0, 1.0, -15.0, 0.0, 1.0);
+         seed(map, "bia", GirlSceneCameraConfig.CameraProfile.INTRO, GirlSceneAction.PRONE_DOGGY, 0.76, -0.2, 0.02, 0.0, 1.0, -15.0, 0.0, 1.0);
+         seed(map, "bia", GirlSceneCameraConfig.CameraProfile.INTRO, GirlSceneAction.REVERSE_COWGIRL, 0.58, 0.36, 0.02, 0.0, 1.0, -15.0, 0.0, 1.0);
+         seed(map, "bia", GirlSceneCameraConfig.CameraProfile.INTRO, GirlSceneAction.SITTING_ALT, -0.3, 0.5, 0.0, 0.0, 1.0, -15.0, 0.0, 1.0);
          seed(map, "bia", GirlSceneCameraConfig.CameraProfile.INTRO, GirlSceneAction.TOUCH_BOOBS, -0.58, 0.02, 0.02, 0.0, 1.0, 0.0, 0.0, 1.0);
          seed(map, "bia", GirlSceneCameraConfig.CameraProfile.PAYMENT, GirlSceneAction.ANAL, -0.9, 0.12, -0.02, 0.0, 1.0, 0.0, 0.0, 1.0);
          seed(map, "bia", GirlSceneCameraConfig.CameraProfile.PAYMENT, GirlSceneAction.ANAL_ALT, -0.9, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0);
@@ -567,6 +670,15 @@ public final class GirlSceneCameraConfig {
          seed(map, "bia", GirlSceneCameraConfig.CameraProfile.PAYMENT, GirlSceneAction.SITTING, -0.95, 0.18, 0.03, 0.0, 1.0, 0.0, 0.0, 1.0);
          seed(map, "bia", GirlSceneCameraConfig.CameraProfile.PAYMENT, GirlSceneAction.SITTING_ALT, -1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0);
          seed(map, "bia", GirlSceneCameraConfig.CameraProfile.PAYMENT, GirlSceneAction.TOUCH_BOOBS, -0.78, 0.11, 0.02, 0.0, 1.0, 0.0, 0.0, 1.0);
+         seed(map, "bia", GirlSceneCameraConfig.CameraProfile.WAITING, GirlSceneAction.ANAL, -1.85, 0.02, -0.02, 0.0, 1.0, 0.0, 0.0, 1.0);
+         seed(map, "bia", GirlSceneCameraConfig.CameraProfile.WAITING, GirlSceneAction.ANAL_ALT, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0);
+         seed(map, "bia", GirlSceneCameraConfig.CameraProfile.WAITING, GirlSceneAction.BLOWJOB, -1.0, 0.15, 0.0, 0.0, 1.0, 0.0, 0.0, 1.18);
+         seed(map, "bia", GirlSceneCameraConfig.CameraProfile.WAITING, GirlSceneAction.COWGIRL, -3.6, 0.51, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0);
+         seed(map, "bia", GirlSceneCameraConfig.CameraProfile.WAITING, GirlSceneAction.DOGGY, 0.72, -0.05, -0.01, 0.0, 1.0, 0.0, 0.0, 1.0);
+         seed(map, "bia", GirlSceneCameraConfig.CameraProfile.WAITING, GirlSceneAction.MISSIONARY, 0.82, 0.05, 0.02, 0.0, 1.0, 0.0, 0.0, 1.0);
+         seed(map, "bia", GirlSceneCameraConfig.CameraProfile.WAITING, GirlSceneAction.PRONE_DOGGY, 0.76, -0.2, 0.02, 0.0, 1.0, 0.0, 0.0, 1.0);
+         seed(map, "bia", GirlSceneCameraConfig.CameraProfile.WAITING, GirlSceneAction.REVERSE_COWGIRL, 0.58, 0.36, 0.02, 0.0, 1.0, 0.0, 0.0, 1.0);
+         seed(map, "bia", GirlSceneCameraConfig.CameraProfile.WAITING, GirlSceneAction.SITTING_ALT, -0.3, 0.5, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0);
          seed(map, "luna", GirlSceneCameraConfig.CameraProfile.MAIN, GirlSceneAction.BLOWJOB, 0.3, -0.7, -0.85, 0.22, 1.0, 0.52, 0.0, 1.22);
          seed(map, "luna", GirlSceneCameraConfig.CameraProfile.MAIN, GirlSceneAction.BOOBJOB, -0.1, -0.35, -0.85, -3.0, 0.84, 1.0, 0.18, 1.14);
          seed(map, "luna", GirlSceneCameraConfig.CameraProfile.MAIN, GirlSceneAction.DEEPTHROAT, -0.9, 0.05, 0.0, 1.0, 1.0, 0.0, 0.0, 1.14);
@@ -642,6 +754,20 @@ public final class GirlSceneCameraConfig {
       private double helperSideOffset = 0.0;
       /** Scales the girl's own {@code body} bone; the partner has {@code helperScale}. */
       private double girlScale = 1.0;
+      /**
+       * -1 = follow the state's own row in {@link GirlSceneCamRig}, 0 = the measured {@code Head2}
+       * framing, 1 = mount the camera on the animated cam bone. Kept as a double so the editor's
+       * numeric rows can write it like any other field.
+       */
+      private double boneCamera = 0.0;
+      /** Nudges on top of the cam bone, in blocks; only read in bone mode. */
+      private double boneVerticalOffset = 0.0;
+      private double boneForwardOffset = 0.0;
+      private double boneSideOffset = 0.0;
+      /** Dynamic camera offsets (used in dynamic mode; null falls back to static values). */
+      private Double dynamicDistanceMultiplier = null;
+      private Double dynamicVerticalOffset = null;
+      private Double dynamicLateralOffset = null;
 
       private SceneCameraSettings() {
       }
@@ -675,6 +801,13 @@ public final class GirlSceneCameraConfig {
             this.helperSideOffset
          );
          copy.girlScale = this.girlScale;
+         copy.boneCamera = this.boneCamera;
+         copy.boneVerticalOffset = this.boneVerticalOffset;
+         copy.boneForwardOffset = this.boneForwardOffset;
+         copy.boneSideOffset = this.boneSideOffset;
+         copy.dynamicDistanceMultiplier = this.dynamicDistanceMultiplier;
+         copy.dynamicVerticalOffset = this.dynamicVerticalOffset;
+         copy.dynamicLateralOffset = this.dynamicLateralOffset;
          return copy;
       }
 
@@ -711,6 +844,32 @@ public final class GirlSceneCameraConfig {
 
          if (!Double.isFinite(this.helperSideOffset)) {
             this.helperSideOffset = 0.0;
+         }
+
+         if (!Double.isFinite(this.boneCamera)) {
+            this.boneCamera = 0.0;
+         }
+
+         if (!Double.isFinite(this.boneVerticalOffset)) {
+            this.boneVerticalOffset = 0.0;
+         }
+
+         if (!Double.isFinite(this.boneForwardOffset)) {
+            this.boneForwardOffset = 0.0;
+         }
+
+         if (!Double.isFinite(this.boneSideOffset)) {
+            this.boneSideOffset = 0.0;
+         }
+
+         if (this.dynamicDistanceMultiplier != null && !Double.isFinite(this.dynamicDistanceMultiplier)) {
+            this.dynamicDistanceMultiplier = null;
+         }
+         if (this.dynamicVerticalOffset != null && !Double.isFinite(this.dynamicVerticalOffset)) {
+            this.dynamicVerticalOffset = null;
+         }
+         if (this.dynamicLateralOffset != null && !Double.isFinite(this.dynamicLateralOffset)) {
+            this.dynamicLateralOffset = null;
          }
 
          return this;

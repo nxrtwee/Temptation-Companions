@@ -9,7 +9,8 @@ public enum GirlPaymentItem {
    EMERALD(Items.EMERALD),
    ENDER_PEARL(Items.ENDER_PEARL),
    COD(Items.COD),
-   SALMON(Items.SALMON);
+   SALMON(Items.SALMON),
+   IRON_PICKAXE(Items.IRON_PICKAXE);
 
    private final Item item;
 

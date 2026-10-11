@@ -10,6 +10,7 @@ import com.geckolib.loading.loader.GeckoLibGsonLoader;
 import com.geckolib.loading.math.MathParser;
 import com.google.gson.JsonObject;
 import com.nxrtweetg.sexmod.SexmodMod;
+import com.nxrtweetg.sexmod.girls.anim.GirlAnimationLengths;
 import java.lang.reflect.Field;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -99,6 +100,7 @@ public final class LegacyGeckoLibResourceCompat {
       @Override
       protected PreparedLegacyResources prepare(SharedState sharedState) {
          ResourceManager resourceManager = sharedState.resourceManager();
+         GirlAnimationLengths.reloadFromResourceManager(resourceManager);
          GeckoLibGsonLoader loader = new GeckoLibGsonLoader();
          MathParser mathParser = MathParser.createWithDeduplication();
          Map<Identifier, BakedGeoModel> models = new LinkedHashMap<>();

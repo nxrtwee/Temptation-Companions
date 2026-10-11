@@ -65,73 +65,85 @@ public final class GirlSceneLayoutConfig {
     */
    private static void seedMeasuredOffsets() {
       seed("allie", LayoutProfile.MAIN, GirlSceneAction.DEEPTHROAT, 0.0, 0.0, 0.0);
-      seed("allie", LayoutProfile.MAIN, GirlSceneAction.MISSIONARY, 0.0, 0.15, -0.65);
-      seed("bia", LayoutProfile.INTRO, GirlSceneAction.ANAL, -1.7, 0.1, -0.65);
-      seed("bia", LayoutProfile.INTRO, GirlSceneAction.ANAL_ALT, 0.0, 0.0, 0.0);
+      seed("allie", LayoutProfile.MAIN, GirlSceneAction.MISSIONARY, 0.0, 0.0, 0.0);
+      seed("bia", LayoutProfile.INTRO, GirlSceneAction.ANAL, -15.0, 0.0, 0.0);
+      seed("bia", LayoutProfile.INTRO, GirlSceneAction.ANAL_ALT, -15.0, 0.0, 0.0);
       seed("bia", LayoutProfile.INTRO, GirlSceneAction.BLOWJOB, 0.05, 0.0, 0.25);
-      seed("bia", LayoutProfile.INTRO, GirlSceneAction.COWGIRL, -1.2, 0.15, -0.6);
-      seed("bia", LayoutProfile.INTRO, GirlSceneAction.PRONE_DOGGY, -1.05, 0.25, -0.6);
-      seed("bia", LayoutProfile.INTRO, GirlSceneAction.SITTING_ALT, -0.05, 0.0, 0.0);
-      seed("bia", LayoutProfile.MAIN, GirlSceneAction.ANAL, -2.05, 0.0, -0.7);
-      seed("bia", LayoutProfile.MAIN, GirlSceneAction.ANAL_ALT, -2.1, 0.0, -0.6);
+      seed("bia", LayoutProfile.INTRO, GirlSceneAction.COWGIRL, -15.0, 0.0, 0.0);
+      seed("bia", LayoutProfile.INTRO, GirlSceneAction.DOGGY, -15.0, 0.0, 0.0);
+      seed("bia", LayoutProfile.INTRO, GirlSceneAction.MISSIONARY, -15.0, 0.0, 0.0);
+      seed("bia", LayoutProfile.INTRO, GirlSceneAction.PRONE_DOGGY, -15.0, 0.0, 0.0);
+      seed("bia", LayoutProfile.INTRO, GirlSceneAction.REVERSE_COWGIRL, -15.0, 0.0, 0.0);
+      seed("bia", LayoutProfile.INTRO, GirlSceneAction.SITTING_ALT, -15.0, 0.0, 0.0);
+      seed("bia", LayoutProfile.MAIN, GirlSceneAction.ANAL, -15.0, 0.0, 0.0);
+      seed("bia", LayoutProfile.MAIN, GirlSceneAction.ANAL_ALT, -15.0, 0.0, 0.0);
       seed("bia", LayoutProfile.MAIN, GirlSceneAction.BLOWJOB, 0.0, 0.2, -0.05);
-      seed("bia", LayoutProfile.MAIN, GirlSceneAction.COWGIRL, 0.0, 0.15, -0.6);
-      seed("bia", LayoutProfile.MAIN, GirlSceneAction.DOGGY, -1.9, 0.25, -0.65);
+      seed("bia", LayoutProfile.MAIN, GirlSceneAction.COWGIRL, -15.0, 0.0, 0.0);
+      seed("bia", LayoutProfile.MAIN, GirlSceneAction.DOGGY, -15.0, 0.0, 0.0);
       seed("bia", LayoutProfile.MAIN, GirlSceneAction.FACEFUCK, -0.05, 0.05, 0.0);
-      seed("bia", LayoutProfile.MAIN, GirlSceneAction.MISSIONARY, -1.55, 0.15, -0.65);
-      seed("bia", LayoutProfile.MAIN, GirlSceneAction.PRONE_DOGGY, -0.95, 0.25, -0.7);
-      seed("bia", LayoutProfile.MAIN, GirlSceneAction.REVERSE_COWGIRL, -3.65, 0.0, 0.15);
-      seed("bia", LayoutProfile.MAIN, GirlSceneAction.SITTING_ALT, -1.05, 0.2, -0.65);
+      seed("bia", LayoutProfile.MAIN, GirlSceneAction.MISSIONARY, -15.0, 0.0, 0.0);
+      seed("bia", LayoutProfile.MAIN, GirlSceneAction.PRONE_DOGGY, -15.0, 0.0, 0.0);
+      seed("bia", LayoutProfile.MAIN, GirlSceneAction.REVERSE_COWGIRL, -15.0, 0.0, 0.0);
+      seed("bia", LayoutProfile.MAIN, GirlSceneAction.SITTING_ALT, -15.0, 0.0, 0.0);
       seed("bia", LayoutProfile.MAIN, GirlSceneAction.TOUCH_BOOBS, -2.3, -0.3, 0.95);
       seed("bia", LayoutProfile.PAYMENT, GirlSceneAction.BLOWJOB, 0.0, 0.0, -0.05);
       seed("bia", LayoutProfile.PAYMENT, GirlSceneAction.TOUCH_BOOBS, 0.0, -0.3, 3.65);
-      seed("ellie", LayoutProfile.INTRO, GirlSceneAction.ANAL, -1.45, 0.1, -0.65);
+      seed("bia", LayoutProfile.WAITING, GirlSceneAction.ANAL, 0.0, 0.0, 0.0);
+      seed("bia", LayoutProfile.WAITING, GirlSceneAction.ANAL_ALT, 0.0, 0.0, 0.0);
+      seed("bia", LayoutProfile.WAITING, GirlSceneAction.BLOWJOB, 0.0, 0.0, 0.0);
+      seed("bia", LayoutProfile.WAITING, GirlSceneAction.COWGIRL, 0.0, 0.0, 0.0);
+      seed("bia", LayoutProfile.WAITING, GirlSceneAction.DOGGY, 0.0, 0.0, 0.0);
+      seed("bia", LayoutProfile.WAITING, GirlSceneAction.MISSIONARY, 0.0, 0.0, 0.0);
+      seed("bia", LayoutProfile.WAITING, GirlSceneAction.PRONE_DOGGY, 0.0, 0.0, 0.0);
+      seed("bia", LayoutProfile.WAITING, GirlSceneAction.REVERSE_COWGIRL, 0.0, 0.0, 0.0);
+      seed("bia", LayoutProfile.WAITING, GirlSceneAction.SITTING_ALT, 0.0, 0.0, 0.0);
+      seed("ellie", LayoutProfile.INTRO, GirlSceneAction.ANAL, 0.0, 0.0, 0.0);
       seed("ellie", LayoutProfile.INTRO, GirlSceneAction.TOUCH_BOOBS, -4.0, 0.0, -3.0);
-      seed("ellie", LayoutProfile.MAIN, GirlSceneAction.DOGGY, -1.85, 0.2, -0.65);
+      seed("ellie", LayoutProfile.MAIN, GirlSceneAction.DOGGY, 0.0, 0.0, 0.0);
       seed("ellie", LayoutProfile.MAIN, GirlSceneAction.FACEFUCK, 0.35, -0.05, 0.0);
       seed("ellie", LayoutProfile.MAIN, GirlSceneAction.KOBOLD_ANAL, 0.0, 0.0, 0.0);
       seed("ellie", LayoutProfile.MAIN, GirlSceneAction.TOUCH_BOOBS, -20.9, -0.3, -0.45);
-      seed("jenny", LayoutProfile.INTRO, GirlSceneAction.ANAL, -1.55, 0.1, -0.65);
-      seed("jenny", LayoutProfile.INTRO, GirlSceneAction.COWGIRL, -1.4, 0.15, -0.6);
+      seed("jenny", LayoutProfile.INTRO, GirlSceneAction.ANAL, 0.0, 0.0, 0.0);
+      seed("jenny", LayoutProfile.INTRO, GirlSceneAction.COWGIRL, 0.0, 0.0, 0.0);
       seed("jenny", LayoutProfile.INTRO, GirlSceneAction.DEEPTHROAT, 0.95, 0.05, 1.0);
-      seed("jenny", LayoutProfile.INTRO, GirlSceneAction.DOGGY, -1.85, 0.2, -0.65);
+      seed("jenny", LayoutProfile.INTRO, GirlSceneAction.DOGGY, 0.0, 0.0, 0.0);
       seed("jenny", LayoutProfile.INTRO, GirlSceneAction.FACEFUCK, 0.4, -0.05, 0.0);
       seed("jenny", LayoutProfile.INTRO, GirlSceneAction.KOBOLD_BLOWJOB, 0.45, -0.05, -0.05);
-      seed("jenny", LayoutProfile.INTRO, GirlSceneAction.MATING_PRESS, 0.8, 0.0, -0.1);
-      seed("jenny", LayoutProfile.INTRO, GirlSceneAction.MISSIONARY, -1.45, 0.15, -0.65);
-      seed("jenny", LayoutProfile.INTRO, GirlSceneAction.PRONE_DOGGY, -0.95, 0.25, -0.6);
-      seed("jenny", LayoutProfile.INTRO, GirlSceneAction.REVERSE_COWGIRL, -0.1, 0.0, 0.0);
-      seed("jenny", LayoutProfile.INTRO, GirlSceneAction.SITTING, -1.8, 0.05, -0.5);
+      seed("jenny", LayoutProfile.INTRO, GirlSceneAction.MATING_PRESS, 0.0, 0.0, 0.0);
+      seed("jenny", LayoutProfile.INTRO, GirlSceneAction.MISSIONARY, 0.0, 0.0, 0.0);
+      seed("jenny", LayoutProfile.INTRO, GirlSceneAction.PRONE_DOGGY, 0.0, 0.0, 0.0);
+      seed("jenny", LayoutProfile.INTRO, GirlSceneAction.REVERSE_COWGIRL, 0.0, 0.0, 0.0);
+      seed("jenny", LayoutProfile.INTRO, GirlSceneAction.SITTING, 0.0, 0.0, 0.0);
       seed("jenny", LayoutProfile.INTRO, GirlSceneAction.TOUCH_BOOBS, -0.25, 0.0, 0.1);
-      seed("jenny", LayoutProfile.MAIN, GirlSceneAction.ANAL, -1.45, 0.1, -0.65);
-      seed("jenny", LayoutProfile.MAIN, GirlSceneAction.COWGIRL, -1.4, 0.15, -0.6);
+      seed("jenny", LayoutProfile.MAIN, GirlSceneAction.ANAL, 0.0, 0.0, 0.0);
+      seed("jenny", LayoutProfile.MAIN, GirlSceneAction.COWGIRL, 0.0, 0.0, 0.0);
       seed("jenny", LayoutProfile.MAIN, GirlSceneAction.DEEPTHROAT, 14.0, 0.0, 15.0);
-      seed("jenny", LayoutProfile.MAIN, GirlSceneAction.DOGGY, -1.85, 0.2, -0.65);
+      seed("jenny", LayoutProfile.MAIN, GirlSceneAction.DOGGY, 0.0, 0.0, 0.0);
       seed("jenny", LayoutProfile.MAIN, GirlSceneAction.FACEFUCK, 0.35, -0.05, 0.0);
       seed("jenny", LayoutProfile.MAIN, GirlSceneAction.KOBOLD_BLOWJOB, 0.45, -0.05, -0.05);
-      seed("jenny", LayoutProfile.MAIN, GirlSceneAction.MATING_PRESS, 0.8, 0.0, -0.1);
-      seed("jenny", LayoutProfile.MAIN, GirlSceneAction.MISSIONARY, -1.5, 0.15, -0.65);
-      seed("jenny", LayoutProfile.MAIN, GirlSceneAction.PRONE_DOGGY, -0.95, 0.25, -0.6);
-      seed("jenny", LayoutProfile.MAIN, GirlSceneAction.REVERSE_COWGIRL, -0.1, 0.0, 0.0);
-      seed("jenny", LayoutProfile.MAIN, GirlSceneAction.SITTING, -1.8, 0.05, -0.5);
+      seed("jenny", LayoutProfile.MAIN, GirlSceneAction.MATING_PRESS, 0.0, 0.0, 0.0);
+      seed("jenny", LayoutProfile.MAIN, GirlSceneAction.MISSIONARY, 0.0, 0.0, 0.0);
+      seed("jenny", LayoutProfile.MAIN, GirlSceneAction.PRONE_DOGGY, 0.0, 0.0, 0.0);
+      seed("jenny", LayoutProfile.MAIN, GirlSceneAction.REVERSE_COWGIRL, 0.0, 0.0, 0.0);
+      seed("jenny", LayoutProfile.MAIN, GirlSceneAction.SITTING, 0.0, 0.0, 0.0);
       seed("jenny", LayoutProfile.MAIN, GirlSceneAction.TOUCH_BOOBS, -21.35, -0.3, -0.6);
-      seed("jenny", LayoutProfile.PAYMENT, GirlSceneAction.ANAL, -1.55, 0.1, -0.65);
-      seed("jenny", LayoutProfile.PAYMENT, GirlSceneAction.COWGIRL, -1.4, 0.15, -0.6);
+      seed("jenny", LayoutProfile.PAYMENT, GirlSceneAction.ANAL, 0.0, 0.0, 0.0);
+      seed("jenny", LayoutProfile.PAYMENT, GirlSceneAction.COWGIRL, 0.0, 0.0, 0.0);
       seed("jenny", LayoutProfile.PAYMENT, GirlSceneAction.DEEPTHROAT, 0.05, 0.0, 0.0);
-      seed("jenny", LayoutProfile.PAYMENT, GirlSceneAction.DOGGY, -1.85, 0.2, -0.65);
+      seed("jenny", LayoutProfile.PAYMENT, GirlSceneAction.DOGGY, 0.0, 0.0, 0.0);
       seed("jenny", LayoutProfile.PAYMENT, GirlSceneAction.FACEFUCK, 0.4, -0.05, 0.0);
       seed("jenny", LayoutProfile.PAYMENT, GirlSceneAction.KOBOLD_BLOWJOB, 0.1, 0.0, -0.05);
-      seed("jenny", LayoutProfile.PAYMENT, GirlSceneAction.MATING_PRESS, 0.8, 0.0, -0.1);
-      seed("jenny", LayoutProfile.PAYMENT, GirlSceneAction.MISSIONARY, -1.45, 0.15, -0.65);
-      seed("jenny", LayoutProfile.PAYMENT, GirlSceneAction.PRONE_DOGGY, -0.95, 0.25, -0.6);
-      seed("jenny", LayoutProfile.PAYMENT, GirlSceneAction.REVERSE_COWGIRL, -0.1, 0.0, 0.0);
-      seed("jenny", LayoutProfile.PAYMENT, GirlSceneAction.SITTING, -1.8, 0.05, -0.5);
+      seed("jenny", LayoutProfile.PAYMENT, GirlSceneAction.MATING_PRESS, 0.0, 0.0, 0.0);
+      seed("jenny", LayoutProfile.PAYMENT, GirlSceneAction.MISSIONARY, 0.0, 0.0, 0.0);
+      seed("jenny", LayoutProfile.PAYMENT, GirlSceneAction.PRONE_DOGGY, 0.0, 0.0, 0.0);
+      seed("jenny", LayoutProfile.PAYMENT, GirlSceneAction.REVERSE_COWGIRL, 0.0, 0.0, 0.0);
+      seed("jenny", LayoutProfile.PAYMENT, GirlSceneAction.SITTING, 0.0, 0.0, 0.0);
       seed("jenny", LayoutProfile.PAYMENT, GirlSceneAction.TOUCH_BOOBS, -0.05, 0.0, 0.1);
       seed("luna", LayoutProfile.MAIN, GirlSceneAction.BLOWJOB, 0.1, 0.05, 0.2);
       seed("luna", LayoutProfile.MAIN, GirlSceneAction.BOOBJOB, 0.05, 0.1, 0.0);
       seed("luna", LayoutProfile.MAIN, GirlSceneAction.DEEPTHROAT, 12.2, -0.1, 15.45);
       seed("luna", LayoutProfile.MAIN, GirlSceneAction.FACEFUCK, 0.35, 0.0, 0.0);
-      seed("luna", LayoutProfile.MAIN, GirlSceneAction.MISSIONARY, -1.5, 0.15, -0.65);
+      seed("luna", LayoutProfile.MAIN, GirlSceneAction.MISSIONARY, 0.0, 0.0, 0.0);
       seed("luna", LayoutProfile.MAIN, GirlSceneAction.TOUCH_BOOBS, 0.0, 0.0, 0.0);
       seed("luna", LayoutProfile.PAYMENT, GirlSceneAction.TOUCH_BOOBS, 0.0, -0.35, 1.95);
    }
@@ -265,6 +277,9 @@ public final class GirlSceneLayoutConfig {
       if (phase == GirlScenePhase.PAYMENT) {
          return LayoutProfile.PAYMENT;
       }
+      if (phase == GirlScenePhase.WAITING || phase == GirlScenePhase.POSITIONING) {
+         return LayoutProfile.WAITING;
+      }
 
       return phase == GirlScenePhase.INTRO ? LayoutProfile.INTRO : LayoutProfile.MAIN;
    }
@@ -272,7 +287,8 @@ public final class GirlSceneLayoutConfig {
    private enum LayoutProfile {
       MAIN("main"),
       INTRO("intro"),
-      PAYMENT("payment");
+      PAYMENT("payment"),
+      WAITING("waiting");
 
       private final String key;
 

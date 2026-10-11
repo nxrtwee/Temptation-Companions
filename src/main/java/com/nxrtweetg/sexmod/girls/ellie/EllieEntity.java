@@ -1,16 +1,32 @@
 package com.nxrtweetg.sexmod.girls.ellie;
 
+import com.geckolib.animation.RawAnimation;
+import com.nxrtweetg.sexmod.girls.scene.GirlInteractionService;
 import com.nxrtweetg.sexmod.girls.SceneGirlEntity;
 import com.nxrtweetg.sexmod.girls.anim.GirlAnimationSet;
 import com.nxrtweetg.sexmod.girls.anim.GirlSoundSet;
+import com.nxrtweetg.sexmod.girls.scene.GirlCustomPhase;
+import com.nxrtweetg.sexmod.girls.scene.GirlEdgeApproach;
 import com.nxrtweetg.sexmod.girls.scene.GirlSceneAction;
 import java.util.EnumSet;
 import java.util.Map;
 import java.util.Set;
+import net.minecraft.network.syncher.EntityDataAccessor;
+import net.minecraft.network.syncher.EntityDataSerializers;
+import net.minecraft.network.syncher.SynchedEntityData;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.storage.ValueInput;
+import net.minecraft.world.level.storage.ValueOutput;
 
 public final class EllieEntity extends SceneGirlEntity {
+   private static final EntityDataAccessor<Boolean> TRACKED_HORNY = SynchedEntityData.defineId(
+      EllieEntity.class, EntityDataSerializers.BOOLEAN
+   );
+
    /** The animation names in ellie.animation.json; everything else is borrowed from Jenny. */
    private static final Set<String> OWN_ANIMATIONS = Set.of(
       "attack0", "attack1", "attack2", "backwards_walk", "bowcharge", "carry_cum", "carry_fast", "carry_intro",
@@ -52,6 +68,170 @@ public final class EllieEntity extends SceneGirlEntity {
    }
 
    @Override
+   protected void defineSynchedData(SynchedEntityData.Builder builder) {
+      super.defineSynchedData(builder);
+      builder.define(TRACKED_HORNY, false);
+   }
+
+   public boolean isHorny() {
+      return this.getEntityData().get(TRACKED_HORNY);
+   }
+
+   public void setHorny(boolean horny) {
+      this.getEntityData().set(TRACKED_HORNY, horny);
+   }
+
+   @Override
+   protected void addAdditionalSaveData(ValueOutput output) {
+      super.addAdditionalSaveData(output);
+      output.putBoolean("Horny", this.isHorny());
+   }
+
+   @Override
+   protected void readAdditionalSaveData(ValueInput input) {
+      super.readAdditionalSaveData(input);
+      this.setHorny(input.getBooleanOr("Horny", false));
+   }
+
+   @Override
+   public boolean hasPaymentPhase(GirlSceneAction action) {
+      return false;
+   }
+
+   @Override
+   public int paymentAmountFor(GirlSceneAction action) {
+      return 0;
+   }
+
+   /** She ships both takes of the sit-on-the-edge wait (original fp.SITDOWN / fp.SITDOWNIDLE). */
+   @Override
+   protected GirlEdgeApproach edgeApproach() {
+      return GirlEdgeApproach.SIT_DOWN;
+   }
+
+   @Override
+   public void applyHornyPotion() {
+      if (this.hasActiveScene() || !this.customActionId().isEmpty()) {
+         return;
+      }
+      this.setHorny(true);
+      if (this.level() instanceof ServerLevel serverLevel) {
+         Player nearest = serverLevel.getNearestPlayer(this, 10.0);
+         if (nearest instanceof ServerPlayer player && !player.isSpectator()) {
+            this.beginCustomInteraction(player, "dash");
+         }
+      }
+   }
+
+   @Override
+   protected boolean customApproachesPlayer(String actionId) {
+      return false;
+   }
+
+   @Override
+   protected boolean customShowsPartner(String actionId) {
+      return "hug".equals(actionId);
+   }
+
+   @Override
+   protected double customPartnerDistance(String actionId) {
+      return "hug".equals(actionId) ? 0.5 : 0.0;
+   }
+
+   @Override
+   protected int customDurationTicks(String actionId, GirlCustomPhase phase) {
+      if (phase != GirlCustomPhase.ACTIVE) {
+         return 0;
+      }
+      return switch (actionId) {
+         case "dash" -> 16;
+         case "hug" -> 150;
+         default -> 0;
+      };
+   }
+
+   @Override
+   protected RawAnimation selectCustomActionAnimation() {
+      String actionId = this.customActionId();
+      GirlCustomPhase phase = this.customPhase();
+      if ("dash".equals(actionId)) {
+         return this.selectNamedAnimation("dash", true);
+      }
+      if ("hug".equals(actionId)) {
+         return switch (phase) {
+            case ACTIVE -> this.selectNamedAnimation("hug", true);
+            case WAITING -> this.selectNamedAnimation("hugidle", true);
+            default -> null;
+         };
+      }
+      return null;
+   }
+
+   @Override
+   protected RawAnimation selectCustomMovementAnimation(boolean moving) {
+      if (this.customActionId().isEmpty()) {
+         return null;
+      }
+      return this.selectNamedAnimation("null", true);
+   }
+
+   @Override
+   protected boolean isCustomStructuralKeyframe(String keyframe) {
+      return switch (keyframe) {
+         case "dashDone", "hugDone" -> true;
+         default -> false;
+      };
+   }
+
+   @Override
+   protected boolean applyCustomSceneKeyframe(ServerPlayer player, String keyframe) {
+      switch (keyframe) {
+         case "dashDone":
+            if ("dash".equals(this.customActionId())) {
+               this.switchCustomInteraction(player, "hug", GirlCustomPhase.ACTIVE);
+               return true;
+            }
+            return false;
+         case "hugDone":
+            if ("hug".equals(this.customActionId())) {
+               this.advanceCustomPhase(player, GirlCustomPhase.WAITING);
+               return true;
+            }
+            return false;
+         default:
+            return false;
+      }
+   }
+
+   @Override
+   protected void onCustomWatchdogExpired(ServerPlayer player) {
+      String actionId = this.customActionId();
+      if ("dash".equals(actionId)) {
+         this.switchCustomInteraction(player, "hug", GirlCustomPhase.ACTIVE);
+      } else if ("hug".equals(actionId)) {
+         this.advanceCustomPhase(player, GirlCustomPhase.WAITING);
+      } else {
+         super.onCustomWatchdogExpired(player);
+      }
+   }
+
+   @Override
+   public boolean interceptSceneChoice(ServerPlayer player, GirlSceneAction action) {
+      if (!"hug".equals(this.customActionId()) || this.customPhase() != GirlCustomPhase.WAITING) {
+         return false;
+      }
+      if (this.coreState().activePlayerId() == null || !this.coreState().activePlayerId().equals(player.getUUID())) {
+         return false;
+      }
+      if (!this.effectiveSceneActions().contains(action)) {
+         return false;
+      }
+      this.stopCustomInteraction();
+      GirlInteractionService.tryBeginInteraction(player, this, action);
+      return true;
+   }
+
+   @Override
    protected boolean handleCustomSoundKeyframe(String keyframe) {
       switch (keyframe) {
          case "hugMSG2":
@@ -89,6 +269,11 @@ public final class EllieEntity extends SceneGirlEntity {
 
    @Override
    protected Set<GirlSceneAction> sceneActions() {
-      return EnumSet.of(GirlSceneAction.FACEFUCK, GirlSceneAction.MISSIONARY, GirlSceneAction.COWGIRL, GirlSceneAction.STRIP);
+      if (this.isHorny()) {
+         return EnumSet.of(GirlSceneAction.COWGIRL, GirlSceneAction.MISSIONARY);
+      }
+      return this.coreState().currentModel() != 0
+         ? EnumSet.of(GirlSceneAction.FACEFUCK, GirlSceneAction.STRIP)
+         : EnumSet.of(GirlSceneAction.STRIP);
    }
 }

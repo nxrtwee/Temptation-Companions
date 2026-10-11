@@ -19,7 +19,9 @@ public enum GirlFollowUpAction {
    MISSIONARY("missionary"),
    MATING_PRESS("mating_press"),
    REVERSE_COWGIRL("reverse_cowgirl"),
-   COWGIRL("cowgirl");
+   COWGIRL("cowgirl"),
+   BEE_SEX("bee_sex"),
+   THREESOME("threesome");
 
    private final String legacyId;
 

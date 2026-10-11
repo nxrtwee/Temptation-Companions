@@ -32,7 +32,7 @@ public final class GirlSceneCameraController {
    /** SLIM = Alex (narrow arms), WIDE = Steve (wide arms). Locked alongside the skin. */
    private static boolean lockedPartnerIsSlim = false;
    /** Last seen fade signal counter — triggers fade when server increments it. */
-   private static int lastSeenFadeSignal = 0;
+   private static int lastSeenFadeSignal = -1;
 
    public static Identifier getLockedPartnerSkin() {
       return lockedPartnerSkin;
@@ -79,11 +79,13 @@ public final class GirlSceneCameraController {
             }
 
             // Fade: сервер инкрементирует TRACKED_FADE_SIGNAL за FADE_LEAD_TICKS до snapTo.
-            // Сравниваем с последним виденным — если изменился, тригерим fade.
+            // Сравниваем с последним виденным — если изменился и больше, тригерим fade.
             // tick() и trigger() живут через "пешие" фазы (APPROACH/WALKING/POSITIONING/WAITING):
             // suspendSceneCamera не трогает fade, чтобы предзапущенный затем успел закрыть экран.
             int fadeSignal = girl.trackedFadeSignal();
-            if (fadeSignal != lastSeenFadeSignal) {
+            if (lastSeenFadeSignal < 0) {
+               lastSeenFadeSignal = fadeSignal;
+            } else if (fadeSignal > lastSeenFadeSignal) {
                lastSeenFadeSignal = fadeSignal;
                GirlSceneTransitionFade.trigger();
             }
@@ -95,6 +97,9 @@ public final class GirlSceneCameraController {
                || girlscenephase == GirlScenePhase.WALKING
                || (girlscenephase == GirlScenePhase.POSITIONING && girl.waitsForPlayerApproachTracked())) {
                suspendSceneCamera(client);
+               if (girlscenephase == GirlScenePhase.WAITING && GirlSceneTransitionFade.isActive()) {
+                  lockMovement(client, localplayer);
+               }
             } else if (girlscenephase == GirlScenePhase.APPROACH) {
                // she is walking up to us: movement is locked but the view stays free, so backing the
                // camera away still makes her follow
@@ -118,8 +123,10 @@ public final class GirlSceneCameraController {
                lockMovement(client, localplayer);
                GirlSceneFreecam.tick(client);
             } else {
-               fullReleaseSceneCamera(client);
+               suspendSceneCamera(client);
             }
+
+            previousPhase = girlscenephase;
          }
       } else {
          fullReleaseSceneCamera(client);
@@ -134,7 +141,7 @@ public final class GirlSceneCameraController {
       GirlHornyMeter.hide();
       GirlSceneTransitionFade.reset();
       previousPhase = GirlScenePhase.IDLE;
-      lastSeenFadeSignal = 0;
+      lastSeenFadeSignal = -1;
       lockedPartnerSkin = null;
       lockedForPlayerUUID = null;
       lockedPartnerIsSlim = false;

@@ -77,12 +77,15 @@ public final class GirlHornyMeter {
          case SITTING_ALT -> girl.isThrustingTracked() ? 0.005 : 0.0025;
          case ANAL, ANAL_ALT -> girl.isThrustingTracked() ? 0.0045 : 0.0022;
          case KOBOLD_ANAL -> girl.isThrustingTracked() ? 0.004 : 0.002;
-         case SITTING, MISSIONARY, REVERSE_COWGIRL, COWGIRL -> girl.isThrustingTracked() ? 0.0045 : 0.0024;
+         case SITTING, MISSIONARY, REVERSE_COWGIRL, COWGIRL, THREESOME -> girl.isThrustingTracked() ? 0.0045 : 0.0024;
          case MATING_PRESS -> girl.isThrustingTracked() ? 0.0055 : 0.0028;
+         case NELSON -> girl.isThrustingTracked() ? 0.0045 : 0.0024;
          case FACEFUCK -> girl.isThrustingTracked() ? 0.0045 : 0.0024;
          case DEEPTHROAT -> girl.isThrustingTracked() ? 0.004 : 0.0022;
          case TOUCH_BOOBS -> girl.isThrustingTracked() ? 0.0035 : 0.0018;
-         case BLOWJOB, KOBOLD_BLOWJOB, BOOBJOB, DOGGY, STRIP -> 0.0;
+         // The bee's own take carries the original's meter keyframes (0.02 slow, 0.04 fast), so nothing
+         // has to stand in for them here.
+         case BLOWJOB, KOBOLD_BLOWJOB, BOOBJOB, DOGGY, BEE_SEX, STRIP, HEAD_PAT -> 0.0;
       };
       if (perTick > 0.0) {
          add(perTick * deltaTicks);

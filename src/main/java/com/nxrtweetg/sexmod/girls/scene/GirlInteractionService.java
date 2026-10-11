@@ -4,27 +4,19 @@ import com.nxrtweetg.sexmod.girls.SceneGirlEntity;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
-import net.minecraft.core.BlockPos;
-import net.minecraft.core.Direction;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.tags.BlockTags;
-import net.minecraft.world.level.block.BedBlock;
-import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.level.block.state.properties.BedPart;
 
 public final class GirlInteractionService {
-   private static final int BED_SEARCH_HORIZONTAL_RADIUS = 4;
-   private static final int BED_SEARCH_VERTICAL_RADIUS = 2;
-
    private GirlInteractionService() {
    }
 
    public static Optional<SceneGirlEntity> findNearestGirl(ServerPlayer player, double radius) {
       ServerLevel serverlevel = player.level();
+      // one who has no menu is not a candidate: she would otherwise shadow the girl the command meant
       List<SceneGirlEntity> list = serverlevel.getEntitiesOfClass(
-         SceneGirlEntity.class, player.getBoundingBox().inflate(radius), entity -> entity.isAlive()
+         SceneGirlEntity.class, player.getBoundingBox().inflate(radius), entity -> entity.isAlive() && entity.hasInteractionMenu()
       );
       return list.stream().min(Comparator.comparingDouble(player::distanceToSqr));
    }
@@ -45,24 +37,35 @@ public final class GirlInteractionService {
          return false;
       }
 
+      // A girl who sells nothing cannot be asked for anything: the original gives her no interaction
+      // handler at all, and her scenes start from her own tick.
+      if (!girl.hasInteractionMenu()) {
+         player.sendSystemMessage(Component.literal(girl.getName().getString() + " does not deal with you."));
+         return false;
+      }
+
       if (!canInteract(player, girl)) {
          return false;
       }
 
       String name = girl.getName().getString();
-      if (requiresBed(action)) {
-         Optional<GirlInteractionService.BedAnchor> optional = findNearestBedAnchor(player, girl);
-         if (optional.isEmpty()) {
-            player.sendSystemMessage(Component.literal("You need a nearby bed for this sex scene."));
+      Optional<GirlBedTable.Variant> variant = girl.requiresBed(action) ? GirlBedTable.variantFor(action) : Optional.empty();
+      if (variant.isPresent()) {
+         Optional<GirlBedTable.Anchor> anchor = GirlBedTable.find(girl, variant.get());
+         if (anchor.isEmpty()) {
+            player.sendSystemMessage(
+               Component.literal("<" + name + "> ").append(Component.translatable(girl.dialogueKey(variant.get().failureDialogueKey())))
+            );
             return false;
          }
 
-         girl.setSceneBedAnchor(optional.get().footPos(), optional.get().facing());
+         girl.setSceneBedAnchor(anchor.get());
       } else {
          girl.clearSceneBedAnchor();
       }
 
-      if (!GirlPayment.charge(player, new net.minecraft.world.item.ItemStack(girl.paymentItemFor(action).item(), girl.paymentAmountFor(action)))) {
+      int paymentAmount = girl.hasPaymentPhase(action) ? girl.paymentAmountFor(action) : 0;
+      if (paymentAmount > 0 && !GirlPayment.charge(player, new net.minecraft.world.item.ItemStack(girl.paymentItemFor(action).item(), paymentAmount))) {
          player.sendSystemMessage(Component.literal("<" + name + "> you cannot afford that..."));
          return false;
       }
@@ -98,50 +101,5 @@ public final class GirlInteractionService {
          return false;
       }
       return true;
-   }
-
-   private static boolean requiresBed(GirlSceneAction action) {
-      return action == GirlSceneAction.DOGGY
-         || action == GirlSceneAction.PRONE_DOGGY
-         || action == GirlSceneAction.SITTING_ALT
-         || action == GirlSceneAction.ANAL
-         || action == GirlSceneAction.ANAL_ALT
-         || action == GirlSceneAction.SITTING
-         || action == GirlSceneAction.MISSIONARY
-         || action == GirlSceneAction.MATING_PRESS
-         || action == GirlSceneAction.COWGIRL
-         || action == GirlSceneAction.REVERSE_COWGIRL;
-   }
-
-   private static Optional<GirlInteractionService.BedAnchor> findNearestBedAnchor(ServerPlayer player, SceneGirlEntity girl) {
-      ServerLevel serverlevel = player.level();
-      BlockPos blockpos = player.blockPosition();
-      GirlInteractionService.BedAnchor bedanchor = null;
-      double d0 = Double.MAX_VALUE;
-
-      for (BlockPos blockpos1 : BlockPos.withinManhattan(blockpos, BED_SEARCH_HORIZONTAL_RADIUS, BED_SEARCH_VERTICAL_RADIUS, BED_SEARCH_HORIZONTAL_RADIUS)) {
-         BlockState blockstate = serverlevel.getBlockState(blockpos1);
-         if (blockstate.is(BlockTags.BEDS) && blockstate.getBlock() instanceof BedBlock) {
-            Direction direction = (Direction)blockstate.getValue(BedBlock.FACING);
-            BlockPos blockpos2 = blockstate.getValue(BedBlock.PART) == BedPart.FOOT
-               ? blockpos1.immutable()
-               : blockpos1.relative(direction.getOpposite()).immutable();
-            BlockState blockstate1 = serverlevel.getBlockState(blockpos2);
-            if (blockstate1.is(BlockTags.BEDS)) {
-               double d1 = player.distanceToSqr(blockpos2.getX() + 0.5, blockpos2.getY() + 0.5, blockpos2.getZ() + 0.5);
-               double d2 = girl.distanceToSqr(blockpos2.getX() + 0.5, blockpos2.getY() + 0.5, blockpos2.getZ() + 0.5);
-               double d3 = d1 + d2;
-               if (d3 < d0) {
-                  d0 = d3;
-                  bedanchor = new GirlInteractionService.BedAnchor(blockpos2, direction);
-               }
-            }
-         }
-      }
-
-      return Optional.ofNullable(bedanchor);
-   }
-
-   private record BedAnchor(BlockPos footPos, Direction facing) {
    }
 }
