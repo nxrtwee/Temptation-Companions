@@ -4,6 +4,21 @@ All notable changes to **Temptation Companions** are documented in this file.
 
 ---
 
+## [1.0-fabric-26.3] - 2026-10-11 - Port to Minecraft 26.3
+
+### Minecraft 26.3 & Platform Support
+* **Full Compatibility with Minecraft 26.3**:
+  * Adapted to Mojang's migration to SDL3 input handling and modern key/mouse button mapping.
+  * Migrated rendering pipelines to the Minecraft 26.3 architecture and Mojang mappings.
+* **GeckoLib 5.5.7 Compatibility & Animation Fixes**:
+  * **Strict GeckoLib requirement**: Requires GeckoLib 5.5.7 for Minecraft 26.3 (and GeckoLib 5.5.3 for Minecraft 26.2).
+  * **Asset Sanitization**: Completely sanitized all 15 animation files, removing legacy/corrupted Blockbench easing strings, stray tokens (`.`, `NaN-2*2`), and unresolved Molang variables (`size`, `pitch`, `yaw`).
+  * **Molang Parser Safety Net (`MathParserMixin`)**: Restored lenient Molang identifier fallback from 5.5.3 to prevent `CompoundException` bake failures on custom expressions.
+  * **Keyframe Extrapolation Fix (`AnimationPointMixin`)**: Fixed GeckoLib 5.5.7's keyframe clamping bug before the first keyframe, eliminating negative time progress and preventing character bone stretching or massive scaling.
+  * Resolved all scene T-posing and emotion/facial overlay stacking issues across all 12 companions.
+
+---
+
 ## [1.0] - 2026-10-11 - Temptation Companions 1.0
 
 ### Complete Roster (12 Companions)
