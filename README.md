@@ -1,6 +1,6 @@
 # Temptation Companions
 
-Adult companion NPCs for **Minecraft 26.2** (Fabric). Spawn a companion, talk her into a scene from
+Adult companion NPCs for **Minecraft 26.3 & 26.2** (Fabric). Spawn a companion, talk her into a scene from
 her menu, pay her, and the mod takes over with a fully animated, camera-directed scene.
 
 > **18+ only.** This mod adds explicit adult content. Do not install it if you are a minor, and do
@@ -39,19 +39,29 @@ cinematic camera director, custom items, dynamic skin layering, and multiplayer 
 
 ## Requirements
 
-| | |
-|---|---|
-| Minecraft | 26.2 |
-| Fabric Loader | 0.19.3 or newer |
-| Fabric API | any 26.2 build (0.155.2+26.2 recommended) |
-| GeckoLib | 5.5.3 for 26.2 |
-| Java | 25 |
+> [!IMPORTANT]
+> **Strict GeckoLib Version Requirements:**
+> Due to breaking internal parser and keyframe interpolation changes across GeckoLib releases:
+> * For **Minecraft 26.3**, you **MUST use GeckoLib 5.5.7** (`geckolib-fabric-26.3-5.5.7.jar`).
+> * For **Minecraft 26.2**, you **MUST use GeckoLib 5.5.3** (`geckolib-fabric-26.2-5.5.3.jar`).
+> Mismatched GeckoLib versions will lead to animation bake errors, T-posing, and visual glitches.
+
+| Component | Minecraft 26.3 | Minecraft 26.2 |
+|---|---|---|
+| **Minecraft** | `26.3` | `26.2` |
+| **Fabric Loader** | `>= 0.19.3` | `>= 0.19.3` |
+| **Fabric API** | Compatible 26.3 build | Compatible 26.2 build |
+| **GeckoLib** | **Strictly 5.5.7** | **Strictly 5.5.3** |
+| **Java** | `25` | `25` |
 
 ## Installation
 
-1. Install Fabric Loader for 26.2.
-2. Drop **Fabric API**, **GeckoLib**, and the Temptation Companions jar into your `.minecraft/mods` folder.
-3. Launch the game.
+1. Install Fabric Loader for your target Minecraft version (26.3 or 26.2).
+2. Download the appropriate mod build from [Releases](https://github.com/nxrtwee/Temptation-Companions/releases):
+   * For **Minecraft 26.3**: `temptation-companions-1.0-fabric-26.3.jar`
+   * For **Minecraft 26.2**: `temptation-companions-1.0-fabric-26.2.jar`
+3. Drop **Fabric API**, the corresponding version of **GeckoLib** (see strict requirements above), and the Temptation Companions jar into your `.minecraft/mods` folder.
+4. Launch the game.
 
 ## Getting started
 
@@ -88,6 +98,14 @@ In-game tuning is automatically saved to `.minecraft/config/`:
 - `sexmod-camera.json` — camera angles and offsets per scene phase
 - `sexmod-<girl>-scene-layout.properties` — character placement and distance
 - `sexmod-<girl>-scene-body.properties` — character proportions
+
+> [!NOTE]
+> **Camera and Scene Tuning:**
+> Default scene framing and camera positions are pre-configured. However, due to differences in companion models, player FOV, and custom perspectives, certain scenes or phases may require manual adjustment via the **N** key tuning panel. The default values may not be optimal for every setup and can be freely fine-tuned in-game.
+
+> [!NOTE]
+> **Shaders & Iris Compatibility:**
+> The mod is fully compatible with Iris shaders and vanilla lighting. Shaders are automatically detected at runtime, seamlessly switching companion rendering to the standard shader-safe cutout pipeline for full dynamic lighting, shadows, and PBR. You can also toggle between Flat-Lit and Shader-Safe rendering manually in the mod settings menu (**Z**).
 
 ## Building from source
 

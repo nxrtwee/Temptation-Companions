@@ -22,14 +22,34 @@ public final class GirlSceneCameraConfig {
    private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
    private static final Path CONFIG_PATH = FabricLoader.getInstance().getConfigDir().resolve("sexmod-camera.json");
    private static final String BASE_CHARACTER = "jenny";
+   private static final RosterSettings BUNDLED_DEFAULTS = loadBundledDefaults();
    private static RosterSettings roster = new RosterSettings();
+
+   private static RosterSettings loadBundledDefaults() {
+      try (java.io.InputStream in = GirlSceneCameraConfig.class.getResourceAsStream("/assets/sexmod/config/default-camera.json")) {
+         if (in != null) {
+            try (Reader reader = new java.io.InputStreamReader(in, java.nio.charset.StandardCharsets.UTF_8)) {
+               RosterSettings loaded = GSON.fromJson(reader, RosterSettings.class);
+               if (loaded != null) {
+                  return loaded.sanitized();
+               }
+            }
+         }
+      } catch (Exception ignored) {
+      }
+      return null;
+   }
 
    private GirlSceneCameraConfig() {
    }
 
    public static void load() {
       if (!Files.exists(CONFIG_PATH)) {
-         roster = new RosterSettings().sanitized();
+         if (BUNDLED_DEFAULTS != null) {
+            roster = GSON.fromJson(GSON.toJson(BUNDLED_DEFAULTS), RosterSettings.class).sanitized();
+         } else {
+            roster = new RosterSettings().sanitized();
+         }
          save();
          return;
       }
@@ -540,6 +560,16 @@ public final class GirlSceneCameraConfig {
       private static GirlSceneCameraConfig.SceneCameraSettings measured(
          String character, GirlSceneCameraConfig.CameraProfile profile, GirlSceneAction action
       ) {
+         if (BUNDLED_DEFAULTS != null && BUNDLED_DEFAULTS.characters != null) {
+            GirlSceneCameraConfig.CameraSettings charSettings = BUNDLED_DEFAULTS.characters.get(character);
+            if (charSettings != null) {
+               GirlSceneCameraConfig.SceneCameraSettings tuned = charSettings.profileMap(profile).get(action);
+               if (tuned != null) {
+                  return tuned.copy().sanitized();
+               }
+            }
+         }
+
          Map<GirlSceneCameraConfig.CameraProfile, Map<GirlSceneAction, GirlSceneCameraConfig.SceneCameraSettings>> byProfile = TUNED.get(character);
          Map<GirlSceneAction, GirlSceneCameraConfig.SceneCameraSettings> byAction = byProfile == null ? null : byProfile.get(profile);
          GirlSceneCameraConfig.SceneCameraSettings tuned = byAction == null ? null : byAction.get(action);
@@ -554,6 +584,23 @@ public final class GirlSceneCameraConfig {
 
       private static Map<String, Map<GirlSceneCameraConfig.CameraProfile, Map<GirlSceneAction, GirlSceneCameraConfig.SceneCameraSettings>>> tuned() {
          Map<String, Map<GirlSceneCameraConfig.CameraProfile, Map<GirlSceneAction, GirlSceneCameraConfig.SceneCameraSettings>>> map = new LinkedHashMap<>();
+
+         if (BUNDLED_DEFAULTS != null && BUNDLED_DEFAULTS.characters != null) {
+            for (Map.Entry<String, GirlSceneCameraConfig.CameraSettings> entry : BUNDLED_DEFAULTS.characters.entrySet()) {
+               String character = entry.getKey();
+               GirlSceneCameraConfig.CameraSettings cs = entry.getValue();
+               for (GirlSceneCameraConfig.CameraProfile profile : GirlSceneCameraConfig.CameraProfile.values()) {
+                  Map<GirlSceneAction, GirlSceneCameraConfig.SceneCameraSettings> profMap = cs.profileMap(profile);
+                  if (profMap != null) {
+                     for (Map.Entry<GirlSceneAction, GirlSceneCameraConfig.SceneCameraSettings> actionEntry : profMap.entrySet()) {
+                        map.computeIfAbsent(character, key -> new EnumMap<>(GirlSceneCameraConfig.CameraProfile.class))
+                           .computeIfAbsent(profile, key -> new EnumMap<>(GirlSceneAction.class))
+                           .put(actionEntry.getKey(), actionEntry.getValue().copy().sanitized());
+                     }
+                  }
+               }
+            }
+         }
          seed(map, "jenny", GirlSceneCameraConfig.CameraProfile.MAIN, GirlSceneAction.ANAL, -2.7, -0.75, -0.05, 1.12, 1.0, 0.0, 0.0, 1.0);
          seed(map, "jenny", GirlSceneCameraConfig.CameraProfile.MAIN, GirlSceneAction.ANAL_ALT, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0);
          seed(map, "jenny", GirlSceneCameraConfig.CameraProfile.MAIN, GirlSceneAction.BLOWJOB, 0.3, -0.7, -0.85, 0.0, 1.0, 0.0, 0.0, 1.0);
@@ -708,6 +755,21 @@ public final class GirlSceneCameraConfig {
          seed(map, "allie", GirlSceneCameraConfig.CameraProfile.PAYMENT, GirlSceneAction.DEEPTHROAT, -1.06, 0.16, -0.01, 0.0, 1.0, 0.0, 0.0, 1.0);
          seed(map, "allie", GirlSceneCameraConfig.CameraProfile.PAYMENT, GirlSceneAction.REVERSE_COWGIRL, -0.84, 0.14, 0.02, 0.0, 1.0, 0.0, 0.0, 1.0);
          seed(map, "bee", GirlSceneCameraConfig.CameraProfile.PAYMENT, GirlSceneAction.SITTING, -0.85, 0.18, 0.03, 0.0, 1.0, 0.0, 0.0, 1.0);
+         seed(map, "slime", GirlSceneCameraConfig.CameraProfile.MAIN, GirlSceneAction.BLOWJOB, 0.3, -0.7, -0.85, 0.0, 1.0, 0.0, 0.0, 1.0);
+         seed(map, "slime", GirlSceneCameraConfig.CameraProfile.MAIN, GirlSceneAction.DOGGY, 0.7, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0);
+         seed(map, "goblin", GirlSceneCameraConfig.CameraProfile.MAIN, GirlSceneAction.BLOWJOB, 0.3, -0.7, -0.85, 0.0, 1.0, 0.0, 0.0, 1.0);
+         seed(map, "manglelie", GirlSceneCameraConfig.CameraProfile.MAIN, GirlSceneAction.DOGGY, 0.7, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0);
+         seed(map, "manglelie", GirlSceneCameraConfig.CameraProfile.INTRO, GirlSceneAction.DOGGY, 0.72, -0.05, -0.01, 0.0, 1.0, 0.0, 0.0, 1.0);
+         seed(map, "manglelie", GirlSceneCameraConfig.CameraProfile.INTRO, GirlSceneAction.PRONE_DOGGY, 0.66, -0.2, 0.02, -1.1, 1.0, -1.0, 0.0, 1.0);
+         seed(map, "galath", GirlSceneCameraConfig.CameraProfile.MAIN, GirlSceneAction.BLOWJOB, 0.3, -0.7, -0.85, 0.0, 1.0, 0.0, 0.0, 1.0);
+         seed(map, "galath", GirlSceneCameraConfig.CameraProfile.MAIN, GirlSceneAction.DOGGY, 0.7, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0);
+         seed(map, "galath", GirlSceneCameraConfig.CameraProfile.MAIN, GirlSceneAction.DEEPTHROAT, -1.1, 0.05, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0);
+         seed(map, "galath", GirlSceneCameraConfig.CameraProfile.MAIN, GirlSceneAction.FACEFUCK, -1.2, 0.2, 0.0, -4.14, 1.0, 1.0, 0.16, 1.0);
+         seed(map, "galath", GirlSceneCameraConfig.CameraProfile.MAIN, GirlSceneAction.BOOBJOB, 0.1, -0.7, -0.9, 0.0, 1.0, 0.0, 0.0, 1.0);
+         seed(map, "galath", GirlSceneCameraConfig.CameraProfile.MAIN, GirlSceneAction.TOUCH_BOOBS, -0.7, 0.0, 0.0, 1.0, 1.0, -17.0, 0.0, 1.0);
+         seed(map, "galath", GirlSceneCameraConfig.CameraProfile.MAIN, GirlSceneAction.PRONE_DOGGY, 0.4, -0.25, 0.0, 0.0, 1.0, -1.0, 0.0, 1.0);
+         seed(map, "galath", GirlSceneCameraConfig.CameraProfile.MAIN, GirlSceneAction.MISSIONARY, 0.9, -0.05, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0);
+         seed(map, "galath", GirlSceneCameraConfig.CameraProfile.MAIN, GirlSceneAction.COWGIRL, -3.5, 0.4, 0.0, -1.24, 1.0, 0.66, 0.0, 1.0);
          return map;
       }
 
