@@ -46,15 +46,26 @@ public final class GirlSettingsScreen extends Screen {
       int panelTop = Math.max(6, (this.height - PANEL_HEIGHT) / 2);
       int y = panelTop + 24;
 
-      // 1. Scene blackout toggle
+      int halfW = (PANEL_WIDTH - PADDING * 2 - 6) / 2;
+
+      // 1. Scene blackout toggle & Shading toggle (side by side)
       Button fadeBtn = Button.builder(
          Component.literal(I18n.get("settings.sexmod.blackout", SexmodConfig.isSceneFadeEnabled() ? "ON" : "OFF")),
          b -> {
             SexmodConfig.setSceneFadeEnabled(!SexmodConfig.isSceneFadeEnabled());
             b.setMessage(Component.literal(I18n.get("settings.sexmod.blackout", SexmodConfig.isSceneFadeEnabled() ? "ON" : "OFF")));
          }
-      ).bounds(panelLeft + PADDING, y, PANEL_WIDTH - PADDING * 2, ROW_HEIGHT).build();
+      ).bounds(panelLeft + PADDING, y, halfW, ROW_HEIGHT).build();
       this.addRenderableWidget(fadeBtn);
+
+      Button shadingBtn = Button.builder(
+         Component.literal(I18n.get("settings.sexmod.shading", SexmodConfig.isFlatLitRenderingEnabled() ? I18n.get("settings.sexmod.shading.flat") : I18n.get("settings.sexmod.shading.shader_safe"))),
+         b -> {
+            SexmodConfig.setFlatLitRenderingEnabled(!SexmodConfig.isFlatLitRenderingEnabled());
+            b.setMessage(Component.literal(I18n.get("settings.sexmod.shading", SexmodConfig.isFlatLitRenderingEnabled() ? I18n.get("settings.sexmod.shading.flat") : I18n.get("settings.sexmod.shading.shader_safe"))));
+         }
+      ).bounds(panelLeft + PADDING + halfW + 6, y, halfW, ROW_HEIGHT).build();
+      this.addRenderableWidget(shadingBtn);
       y += 21;
 
       // 1.1 Bone Cam Mode toggle: Dynamic vs Static
@@ -144,7 +155,6 @@ public final class GirlSettingsScreen extends Screen {
       y += 23;
 
       // 9. Reset buttons
-      int halfW = (PANEL_WIDTH - PADDING * 2 - 6) / 2;
       Button resetCharBtn = Button.builder(Component.literal(I18n.get("settings.sexmod.reset_char")), b -> {
          SexmodConfig.resetCharacter(charId);
          this.rebuildWidgets();

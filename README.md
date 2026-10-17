@@ -99,6 +99,14 @@ In-game tuning is automatically saved to `.minecraft/config/`:
 - `sexmod-<girl>-scene-layout.properties` — character placement and distance
 - `sexmod-<girl>-scene-body.properties` — character proportions
 
+> [!NOTE]
+> **Camera and Scene Tuning:**
+> Default scene framing and camera positions are pre-configured. However, due to differences in companion models, player FOV, and custom perspectives, certain scenes or phases may require manual adjustment via the **N** key tuning panel. The default values may not be optimal for every setup and can be freely fine-tuned in-game.
+
+> [!NOTE]
+> **Shaders & Iris Compatibility:**
+> The mod is fully compatible with Iris shaders and vanilla lighting. Shaders are automatically detected at runtime, seamlessly switching companion rendering to the standard shader-safe cutout pipeline for full dynamic lighting, shadows, and PBR. You can also toggle between Flat-Lit and Shader-Safe rendering manually in the mod settings menu (**Z**).
+
 ## Building from source
 
 ```bash

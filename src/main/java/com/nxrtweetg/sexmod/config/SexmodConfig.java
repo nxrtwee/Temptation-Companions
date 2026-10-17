@@ -47,6 +47,7 @@ public final class SexmodConfig {
    private static boolean sceneFadeEnabled = true;
    private static boolean allScenesEnabled = false;
    private static boolean boneCamDynamic = false;
+   private static boolean flatLitRendering = true;
    private static int fadeDurationTicks = 10;
    private static int fadeLeadTicks = 16;
 
@@ -81,6 +82,7 @@ public final class SexmodConfig {
          sceneFadeEnabled = Boolean.parseBoolean(props.getProperty("sceneFadeEnabled", "true"));
          allScenesEnabled = Boolean.parseBoolean(props.getProperty("allScenesEnabled", "false"));
          boneCamDynamic = Boolean.parseBoolean(props.getProperty("boneCamDynamic", "false"));
+         flatLitRendering = Boolean.parseBoolean(props.getProperty("flatLitRendering", "true"));
          fadeDurationTicks = clampFadeDuration(Integer.parseInt(props.getProperty("fadeDurationTicks", "10")));
          fadeLeadTicks = clampFadeLead(Integer.parseInt(props.getProperty("fadeLeadTicks", "16")));
 
@@ -108,6 +110,7 @@ public final class SexmodConfig {
       props.setProperty("sceneFadeEnabled", Boolean.toString(sceneFadeEnabled));
       props.setProperty("allScenesEnabled", Boolean.toString(allScenesEnabled));
       props.setProperty("boneCamDynamic", Boolean.toString(boneCamDynamic));
+      props.setProperty("flatLitRendering", Boolean.toString(flatLitRendering));
       props.setProperty("fadeDurationTicks", Integer.toString(fadeDurationTicks));
       props.setProperty("fadeLeadTicks", Integer.toString(fadeLeadTicks));
 
@@ -196,6 +199,17 @@ public final class SexmodConfig {
    public static void setBoneCamDynamic(boolean dynamic) {
       ensureLoaded();
       boneCamDynamic = dynamic;
+      save();
+   }
+
+   public static boolean isFlatLitRenderingEnabled() {
+      ensureLoaded();
+      return flatLitRendering;
+   }
+
+   public static void setFlatLitRenderingEnabled(boolean enabled) {
+      ensureLoaded();
+      flatLitRendering = enabled;
       save();
    }
 

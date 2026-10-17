@@ -309,6 +309,9 @@ public final class GirlEntityRenderer extends GeoEntityRenderer<SceneGirlEntity,
    @Override
    public RenderType getRenderType(LivingEntityRenderState renderState, Identifier texture) {
       RenderType renderType = super.getRenderType(renderState, texture);
+      if (ShaderCompat.isShadersActive()) {
+         return renderType;
+      }
       return renderType == RenderTypes.entityCutout(texture) ? GirlFlatLitRenderType.get(texture) : renderType;
    }
 
