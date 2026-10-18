@@ -1,5 +1,6 @@
 # ---- build output -------------------------------------------------------
 build/
+release_artifacts/
 out/
 bin/
 .gradle/
@@ -46,7 +47,7 @@ runclient.bat
 
 # ---- agent / dev scratch & decompiled donor resources ---------------------
 .antigravity/
-all\ memory/
+all memory/
 /chota/
 /com/
 *.txt

@@ -10,6 +10,7 @@ import com.nxrtweetg.sexmod.girls.goblin.GoblinEntity;
 import com.nxrtweetg.sexmod.girls.jenny.JennyEntity;
 import com.nxrtweetg.sexmod.girls.kobold.KoboldEntity;
 import com.nxrtweetg.sexmod.girls.luna.LunaEntity;
+import com.nxrtweetg.sexmod.girls.custom.CustomGirlEntity;
 import com.nxrtweetg.sexmod.girls.manglelie.ManglelieEntity;
 import com.nxrtweetg.sexmod.girls.slime.SlimeGirlEntity;
 import java.util.LinkedHashMap;
@@ -51,6 +52,7 @@ public final class ModEntities {
    public static final EntityType<GoblinEntity> GOBLIN = registerOptional("goblin", GoblinEntity::new, ENABLE_GOBLIN);
    public static final EntityType<GalathEntity> GALATH = registerOptional("galath", GalathEntity::new, ENABLE_GALATH);
    public static final EntityType<ManglelieEntity> MANGLELIE = registerOptional("manglelie", ManglelieEntity::new, ENABLE_MANGLELIE);
+   public static final EntityType<CustomGirlEntity> CUSTOM_GIRL = register("custom_companion", CustomGirlEntity::new);
    /** Keyed by the id the spawn command takes, in the order they are offered. */
    private static final Map<String, EntityType<? extends SceneGirlEntity>> BY_ID = byId();
 
@@ -102,6 +104,7 @@ public final class ModEntities {
       putIfEnabled(map, "goblin", GOBLIN);
       putIfEnabled(map, "galath", GALATH);
       putIfEnabled(map, "manglelie", MANGLELIE);
+      map.put("custom_companion", CUSTOM_GIRL);
       return map;
    }
 

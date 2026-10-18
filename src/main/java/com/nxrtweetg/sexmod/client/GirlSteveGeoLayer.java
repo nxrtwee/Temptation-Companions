@@ -85,6 +85,9 @@ public final class GirlSteveGeoLayer extends GeoRenderLayer<SceneGirlEntity, Voi
             ps.last().set(pose);
             renderPassInfo.renderPosed(() -> {
                setBonesHidden(renderPassInfo, GENITAL_BONES, true);
+               boolean partnerIsSlim = renderState.getOrDefaultGeckolibData(GirlRenderData.PARTNER_IS_SLIM, false);
+               setBonesHidden(renderPassInfo, partnerIsSlim ? GirlEntityRenderer.STEVE_ARM_BONES : GirlEntityRenderer.ALEX_ARM_BONES, true);
+               setBonesHidden(renderPassInfo, partnerIsSlim ? GirlEntityRenderer.ALEX_ARM_BONES : GirlEntityRenderer.STEVE_ARM_BONES, false);
                renderBone(renderPassInfo, steve, vc, packedLight, packedOverlay, renderColor);
                setBonesHidden(renderPassInfo, GENITAL_BONES, false);
             });

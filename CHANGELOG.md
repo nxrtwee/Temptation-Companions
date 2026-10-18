@@ -4,6 +4,34 @@ All notable changes to **Temptation Companions** are documented in this file.
 
 ---
 
+## [1.1] - 2026-10-18 - Temptation Companions 1.1
+
+### Graphics & Shaders Compatibility (Iris)
+* **Iris Shaders Vertex Explosion & Mesh Disappearance Fix**:
+  * Fixed an issue where enabling Iris shader packs caused companion meshes to distort, explode into screen-filling polygons, or become completely invisible due to software flat-lit shader state conflicts.
+  * Added automatic runtime shader detection that dynamically switches model rendering to a dedicated shader-safe cutout pipeline supporting dynamic lighting, entity shadows, and PBR.
+  * Added an in-game rendering mode toggle in the settings menu (**Z**) to manually switch between Flat-Lit and Shader-Safe rendering pipelines.
+
+### Camera, AI & Animation Polish
+* **Baked Default Camera & Scene Tuning**:
+  * Baked tuned scene camera angles, distance offsets, and phase layouts into default mod values.
+  * The in-game tuning panel (**N**) remains fully operational for players to adjust perspectives to their custom FOV and setups.
+* **Smooth Head Rotation & Gaze Tracking**:
+  * Fixed an issue where companions only rotated their entire body when tracking the player or looking around.
+  * Implemented natural head pitch and yaw bone tracking during idle, walking, and waiting phases across all companions.
+
+### Audio & Sound Fixes
+* **Ellie Lipsounds Polish**:
+  * Replaced defective Ellie oral sound takes containing distorted voice line artifacts with clean Allie audio takes.
+
+### Custom Companion Framework
+* **TC-Editor Compatibility & Dual-Rig Architecture**:
+  * Added companion loading support from TC-Editor via `/sexmod spawn <character_name>`.
+  * Implemented unified dual-rig geometry preventing model collisions between custom skins and scene partners.
+  * Fully integrated Jenny's detailed Boobs and Booty geometry seamlessly onto custom companion skins.
+
+---
+
 ## [1.0-fabric-26.3] - 2026-10-11 - Port to Minecraft 26.3
 
 ### Minecraft 26.3 & Platform Support

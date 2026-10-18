@@ -76,6 +76,15 @@ public final class GirlGeoModel extends GeoModel<SceneGirlEntity> {
 
    @Override
    public Identifier getTextureResource(GeoRenderState renderState) {
+      Identifier customSkin = renderState.getGeckolibData(GirlRenderData.CUSTOM_SKIN);
+      if (customSkin != null) {
+         return customSkin;
+      }
+
+      if ("custom".equals(this.character)) {
+         return CustomSkinManager.DEFAULT_SKIN;
+      }
+
       if ("goblin".equals(this.character)) {
          return this.resolveSlot(renderState) == 0 ? GOBLIN_TEXTURE : GOBLIN_ARMORED_TEXTURE;
       }
