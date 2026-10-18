@@ -39,6 +39,7 @@ public final class GirlClientBootstrap {
       registerRenderer(ModEntities.GOBLIN, "goblin", GirlModelSlotPolicy.ARMORED_WHEN_EQUIPPED, "goblin", "armored");
       registerRenderer(ModEntities.GALATH, "galath", "galath", "galath");
       registerRenderer(ModEntities.MANGLELIE, "manglelie", GirlModelSlotPolicy.MANGLELIE_POLICY, "manglelie", "manglelie", "galath/galath_con_mang");
+      registerRenderer(ModEntities.CUSTOM_GIRL, "custom", "partner");
       MenuScreens.register(GirlMenuTypes.GIRL_INVENTORY, GirlInventoryScreen::new);
       UseEntityCallback.EVENT.register((UseEntityCallback)(player, world, hand, entity, hitResult) -> {
          if (world.isClientSide()

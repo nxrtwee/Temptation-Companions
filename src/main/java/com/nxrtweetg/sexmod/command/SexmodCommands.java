@@ -45,6 +45,18 @@ public final class SexmodCommands {
          spawn = spawn.then(Commands.literal(character).executes(context -> spawnGirl((CommandSourceStack)context.getSource(), character)));
       }
 
+      spawn = spawn.then(Commands.argument("custom_name", StringArgumentType.string())
+         .suggests((context, builder) -> {
+            for (String name : com.nxrtweetg.sexmod.girls.custom.TCEditorLoader.getAvailableNames()) {
+               builder.suggest(name);
+            }
+            return builder.buildFuture();
+         })
+         .executes(context -> {
+            String name = StringArgumentType.getString(context, "custom_name");
+            return spawnCustomGirl(context.getSource(), name);
+         }));
+
       LiteralArgumentBuilder<CommandSourceStack> structure = Commands.literal("structure");
       for (String structName : java.util.Arrays.asList("jenny", "ellie", "bia", "luna", "goblin")) {
          structure = structure.then(Commands.literal(structName).executes(context -> {
@@ -224,9 +236,31 @@ public final class SexmodCommands {
          return 0;
       }
 
+      if (girl instanceof com.nxrtweetg.sexmod.girls.custom.CustomGirlEntity customGirl) {
+         java.util.Set<String> names = com.nxrtweetg.sexmod.girls.custom.TCEditorLoader.getAvailableNames();
+         if (!names.isEmpty()) {
+            customGirl.setCustomId(names.iterator().next());
+         }
+      }
+
       girl.snapTo(player.getX() + 1.5, player.getY(), player.getZ() + 1.5, player.getYRot(), 0.0F);
       level.addFreshEntity(girl);
       player.sendSystemMessage(Component.literal("Spawned " + girl.getName().getString() + "."));
+      return 1;
+   }
+
+   private static int spawnCustomGirl(CommandSourceStack source, String characterName) throws CommandSyntaxException {
+      ServerPlayer player = source.getPlayerOrException();
+      ServerLevel level = player.level();
+      com.nxrtweetg.sexmod.girls.custom.CustomGirlEntity girl = ModEntities.CUSTOM_GIRL.create(level, EntitySpawnReason.COMMAND);
+      if (girl == null) {
+         return 0;
+      }
+
+      girl.setCustomId(characterName);
+      girl.snapTo(player.getX() + 1.5, player.getY(), player.getZ() + 1.5, player.getYRot(), 0.0F);
+      level.addFreshEntity(girl);
+      player.sendSystemMessage(Component.literal("Spawned custom companion " + girl.getName().getString() + "."));
       return 1;
    }
 

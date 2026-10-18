@@ -38,6 +38,7 @@ import net.minecraft.client.renderer.rendertype.RenderTypes;
 import net.minecraft.client.renderer.entity.state.LivingEntityRenderState;
 import net.minecraft.client.renderer.state.level.CameraRenderState;
 import net.minecraft.resources.Identifier;
+import net.minecraft.util.Mth;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.phys.Vec3;
 
@@ -90,6 +91,21 @@ public final class GirlEntityRenderer extends GeoEntityRenderer<SceneGirlEntity,
    private static final Set<String> GOBLIN_HAIR_BONES = Set.of(
       "lashR", "lashL", "closedR", "closedL", "browL", "browR"
    );
+   private static final String[] CUSTOM_GENITAL_BONES = {
+      "cock", "ballL", "ballR", "bone123", "bone99", "bone148", "bone149", "bone150", "bone151", "bone2", "bone14", "bone16", "bone17"
+   };
+   static final String[] ALEX_ARM_BONES = {
+      "leftArmAlex", "leftLowerArmAlex", "rightArmAlex", "rightLowerArmAlex"
+   };
+   static final String[] STEVE_ARM_BONES = {
+      "leftArmSteve", "leftLowerArmSteve", "rightArmSteve", "rightLowerArmSteve"
+   };
+   private static final String[] CUSTOM_COMPANION_ALEX_ARMS = {
+      "armAlexR", "lowerArmAlexR", "armAlexL", "lowerArmAlexL"
+   };
+   private static final String[] CUSTOM_COMPANION_STEVE_ARMS = {
+      "armSteveR", "lowerArmSteveR", "armSteveL", "lowerArmSteveL"
+   };
 
    public GirlEntityRenderer(Context context, GirlGeoModel model) {
       super(context, model);
@@ -166,6 +182,33 @@ public final class GirlEntityRenderer extends GeoEntityRenderer<SceneGirlEntity,
       if (partnerSkin != null) {
          renderState.addGeckolibData(GirlRenderData.PARTNER_SKIN, partnerSkin);
          renderState.addGeckolibData(GirlRenderData.PARTNER_IS_SLIM, GirlSceneCameraController.isLockedPartnerSlim());
+      }
+
+      if (animatable instanceof com.nxrtweetg.sexmod.girls.custom.CustomGirlEntity customGirl) {
+         com.nxrtweetg.sexmod.girls.custom.TCEditorLoader.CustomCharacterData data = customGirl.getCustomData();
+         if (data != null) {
+            Identifier skin = CustomSkinManager.getOrLoadSkin(data.id(), data.skinFileName());
+            renderState.addGeckolibData(GirlRenderData.CUSTOM_SKIN, skin);
+            boolean isSlim = "slim".equalsIgnoreCase(data.modelType());
+            renderState.addGeckolibData(GirlRenderData.CUSTOM_IS_SLIM, isSlim);
+            renderState.addGeckolibData(GirlRenderData.CUSTOM_SCALE, data.scale());
+            renderState.addGeckolibData(GirlRenderData.CUSTOM_HAS_BREASTS, data.hasBreasts());
+            renderState.addGeckolibData(GirlRenderData.CUSTOM_BREAST_SCALE, data.breastScale());
+            renderState.addGeckolibData(GirlRenderData.CUSTOM_HAS_BOOTY, data.hasBooty());
+            renderState.addGeckolibData(GirlRenderData.CUSTOM_BOOTY_SCALE, data.bootyScale());
+            renderState.addGeckolibData(GirlRenderData.CUSTOM_HEAD_SCALE_X, data.headScaleX());
+            renderState.addGeckolibData(GirlRenderData.CUSTOM_HEAD_SCALE_Y, data.headScaleY());
+            renderState.addGeckolibData(GirlRenderData.CUSTOM_HEAD_SCALE_Z, data.headScaleZ());
+            renderState.addGeckolibData(GirlRenderData.CUSTOM_TORSO_SCALE_X, data.torsoScaleX());
+            renderState.addGeckolibData(GirlRenderData.CUSTOM_TORSO_SCALE_Y, data.torsoScaleY());
+            renderState.addGeckolibData(GirlRenderData.CUSTOM_TORSO_SCALE_Z, data.torsoScaleZ());
+            renderState.addGeckolibData(GirlRenderData.CUSTOM_ARM_SCALE_X, data.armScaleX());
+            renderState.addGeckolibData(GirlRenderData.CUSTOM_ARM_SCALE_Y, data.armScaleY());
+            renderState.addGeckolibData(GirlRenderData.CUSTOM_ARM_SCALE_Z, data.armScaleZ());
+            renderState.addGeckolibData(GirlRenderData.CUSTOM_LEG_SCALE_X, data.legScaleX());
+            renderState.addGeckolibData(GirlRenderData.CUSTOM_LEG_SCALE_Y, data.legScaleY());
+            renderState.addGeckolibData(GirlRenderData.CUSTOM_LEG_SCALE_Z, data.legScaleZ());
+         }
       }
    }
 
@@ -262,7 +305,10 @@ public final class GirlEntityRenderer extends GeoEntityRenderer<SceneGirlEntity,
       boolean renderPlayer = renderState.getOrDefaultGeckolibData(GirlRenderData.RENDER_PLAYER, false);
       String character = renderState.getOrDefaultGeckolibData(GirlRenderData.CHARACTER, "jenny");
 
-      applyPlayerBoneVisibility(snapshots);
+      applyPlayerBoneVisibility(renderPassInfo, snapshots, character);
+      if (character.startsWith("custom")) {
+         applyCustomCompanionRig(renderPassInfo, snapshots, renderState);
+      }
       applyPaymentBoneVisibility(snapshots, renderState);
       applyArmorBoneVisibility(snapshots, renderState);
       applySceneBodyScale(snapshots, character, action);
@@ -271,9 +317,7 @@ public final class GirlEntityRenderer extends GeoEntityRenderer<SceneGirlEntity,
       if (allieScale < 1.0F) {
          bodyRoot(snapshots).ifPresent(bone -> bone.setScale(bone.getScaleX() * allieScale, bone.getScaleY() * allieScale, bone.getScaleZ() * allieScale));
       }
-      // Скрываем неправильный вариант рук партнёра (Alex vs Steve) чтобы не было z-fighting
-      boolean partnerIsSlim = renderState.getOrDefaultGeckolibData(GirlRenderData.PARTNER_IS_SLIM, false);
-      applyPartnerArmModel(snapshots, partnerIsSlim);
+      // Arms for partner are hidden in GirlSteveGeoLayer during partner pass
 
       if (action == GirlSceneAction.FACEFUCK && (phase == GirlScenePhase.ACTIVE)) {
          applyFacefuckFacePose(snapshots);
@@ -286,6 +330,7 @@ public final class GirlEntityRenderer extends GeoEntityRenderer<SceneGirlEntity,
 
       applyBodySceneTune(snapshots, renderState, action);
       applyHelperTransform(snapshots, renderState, character, action, phase);
+      applyHeadRotation(snapshots, renderState, phase);
       applySlimeRig(snapshots, character, action);
       applyBeeRig(snapshots, renderState, character);
       applyGoblinRig(snapshots, renderState, character);
@@ -324,18 +369,102 @@ public final class GirlEntityRenderer extends GeoEntityRenderer<SceneGirlEntity,
     * Both would overlap and z-fight, so we hide whichever variant does not match the active player's
     * skin model — read from {@link GirlRenderData#PARTNER_IS_SLIM}.
     */
-   private static void applyPlayerBoneVisibility(BoneSnapshots snapshots) {
+   private static void applyPlayerBoneVisibility(RenderPassInfo<LivingEntityRenderState> renderPassInfo, BoneSnapshots snapshots, String character) {
+      // steve subtree is the partner rig, rendered exclusively in GirlSteveGeoLayer during scenes
       snapshots.ifPresent("steve", bone -> bone.skipRender(true).skipChildrenRender(true));
-      // cock/ballL/ballR/bone123/bone99 are children of Torso2 inside steve.
-      // skipChildrenRender on steve already hides them in the main pass, but
-      // GirlSteveGeoLayer restores steve's flags and calls positionAndRender — which
-      // recurses into these children. Hide them explicitly so the skin pass skips them
-      // and they can be drawn separately with a solid flesh colour.
-      snapshots.ifPresent("cock",    b -> b.skipRender(true).skipChildrenRender(true));
-      snapshots.ifPresent("ballL",   b -> b.skipRender(true).skipChildrenRender(true));
-      snapshots.ifPresent("ballR",   b -> b.skipRender(true).skipChildrenRender(true));
-      snapshots.ifPresent("bone123", b -> b.skipRender(true).skipChildrenRender(true));
-      snapshots.ifPresent("bone99",  b -> b.skipRender(true).skipChildrenRender(true));
+      setBoneHidden(renderPassInfo, "steve", true);
+      for (String bone : CUSTOM_GENITAL_BONES) {
+         setBoneHidden(renderPassInfo, bone, true);
+      }
+   }
+
+   private static void applyCustomCompanionRig(
+      RenderPassInfo<LivingEntityRenderState> renderPassInfo,
+      BoneSnapshots snapshots,
+      LivingEntityRenderState renderState
+   ) {
+      // 1. Arm format: Alex (Slim) vs Steve (Classic)
+      boolean isSlim = renderState.getOrDefaultGeckolibData(GirlRenderData.CUSTOM_IS_SLIM, false);
+      for (String bone : CUSTOM_COMPANION_ALEX_ARMS) {
+         setBoneHidden(renderPassInfo, bone, !isSlim);
+      }
+      for (String bone : CUSTOM_COMPANION_STEVE_ARMS) {
+         setBoneHidden(renderPassInfo, bone, isSlim);
+      }
+
+      // 2. Cosmetics: Jenny's Boobs & Booty
+      boolean hasBreasts = renderState.getOrDefaultGeckolibData(GirlRenderData.CUSTOM_HAS_BREASTS, false);
+      float breastScale = renderState.getOrDefaultGeckolibData(GirlRenderData.CUSTOM_BREAST_SCALE, 1.0F);
+      setBoneHidden(renderPassInfo, "boobs", !hasBreasts);
+      if (hasBreasts && breastScale != 1.0F) {
+         snapshots.ifPresent("boobs", b -> b.setScale(breastScale, breastScale, breastScale));
+      }
+
+      boolean hasBooty = renderState.getOrDefaultGeckolibData(GirlRenderData.CUSTOM_HAS_BOOTY, false);
+      float bootyScale = renderState.getOrDefaultGeckolibData(GirlRenderData.CUSTOM_BOOTY_SCALE, 1.0F);
+      setBoneHidden(renderPassInfo, "booty", !hasBooty);
+      if (hasBooty && bootyScale != 1.0F) {
+         snapshots.ifPresent("booty", b -> b.setScale(bootyScale, bootyScale, bootyScale));
+      }
+
+      // 3. Stretches / Dimensions
+      float hx = renderState.getOrDefaultGeckolibData(GirlRenderData.CUSTOM_HEAD_SCALE_X, 1.0F);
+      float hy = renderState.getOrDefaultGeckolibData(GirlRenderData.CUSTOM_HEAD_SCALE_Y, 1.0F);
+      float hz = renderState.getOrDefaultGeckolibData(GirlRenderData.CUSTOM_HEAD_SCALE_Z, 1.0F);
+      if (hx != 1.0F || hy != 1.0F || hz != 1.0F) {
+         snapshots.ifPresent("head", b -> b.setScale(b.getScaleX() * hx, b.getScaleY() * hy, b.getScaleZ() * hz));
+         snapshots.ifPresent("Head2", b -> b.setScale(b.getScaleX() * hx, b.getScaleY() * hy, b.getScaleZ() * hz));
+      }
+
+      float tx = renderState.getOrDefaultGeckolibData(GirlRenderData.CUSTOM_TORSO_SCALE_X, 1.0F);
+      float ty = renderState.getOrDefaultGeckolibData(GirlRenderData.CUSTOM_TORSO_SCALE_Y, 1.0F);
+      float tz = renderState.getOrDefaultGeckolibData(GirlRenderData.CUSTOM_TORSO_SCALE_Z, 1.0F);
+      if (tx != 1.0F || ty != 1.0F || tz != 1.0F) {
+         snapshots.ifPresent("torso", b -> b.setScale(b.getScaleX() * tx, b.getScaleY() * ty, b.getScaleZ() * tz));
+         snapshots.ifPresent("Torso2", b -> b.setScale(b.getScaleX() * tx, b.getScaleY() * ty, b.getScaleZ() * tz));
+      }
+
+      float ax = renderState.getOrDefaultGeckolibData(GirlRenderData.CUSTOM_ARM_SCALE_X, 1.0F);
+      float ay = renderState.getOrDefaultGeckolibData(GirlRenderData.CUSTOM_ARM_SCALE_Y, 1.0F);
+      float az = renderState.getOrDefaultGeckolibData(GirlRenderData.CUSTOM_ARM_SCALE_Z, 1.0F);
+      if (ax != 1.0F || ay != 1.0F || az != 1.0F) {
+         snapshots.ifPresent("armR", b -> b.setScale(b.getScaleX() * ax, b.getScaleY() * ay, b.getScaleZ() * az));
+         snapshots.ifPresent("armL", b -> b.setScale(b.getScaleX() * ax, b.getScaleY() * ay, b.getScaleZ() * az));
+         snapshots.ifPresent("LeftArm", b -> b.setScale(b.getScaleX() * ax, b.getScaleY() * ay, b.getScaleZ() * az));
+         snapshots.ifPresent("RightArm", b -> b.setScale(b.getScaleX() * ax, b.getScaleY() * ay, b.getScaleZ() * az));
+      }
+
+      float lx = renderState.getOrDefaultGeckolibData(GirlRenderData.CUSTOM_LEG_SCALE_X, 1.0F);
+      float ly = renderState.getOrDefaultGeckolibData(GirlRenderData.CUSTOM_LEG_SCALE_Y, 1.0F);
+      float lz = renderState.getOrDefaultGeckolibData(GirlRenderData.CUSTOM_LEG_SCALE_Z, 1.0F);
+      if (lx != 1.0F || ly != 1.0F || lz != 1.0F) {
+         snapshots.ifPresent("legR", b -> b.setScale(b.getScaleX() * lx, b.getScaleY() * ly, b.getScaleZ() * lz));
+         snapshots.ifPresent("legL", b -> b.setScale(b.getScaleX() * lx, b.getScaleY() * ly, b.getScaleZ() * lz));
+         snapshots.ifPresent("LeftLeg", b -> b.setScale(b.getScaleX() * lx, b.getScaleY() * ly, b.getScaleZ() * lz));
+         snapshots.ifPresent("RightLeg", b -> b.setScale(b.getScaleX() * lx, b.getScaleY() * ly, b.getScaleZ() * lz));
+      }
+
+      // 4. Overall scaling
+      float scale = renderState.getOrDefaultGeckolibData(GirlRenderData.CUSTOM_SCALE, 1.0F);
+      if (scale != 1.0F) {
+         snapshots.ifPresent("body", b -> b.setScale(scale, scale, scale));
+         snapshots.ifPresent("steve", b -> b.setScale(scale, scale, scale));
+      }
+   }
+
+   private static void setBoneHidden(RenderPassInfo<?> pass, String name, boolean hidden) {
+      pass.model().getBone(name).ifPresent(b -> {
+         if (hidden) {
+            if (b.frameSnapshot == null) {
+               BoneSnapshot.create(b).apply();
+            }
+            b.frameSnapshot.skipRender(true).skipChildrenRender(true);
+         } else {
+            if (b.frameSnapshot != null) {
+               b.frameSnapshot.skipRender(false).skipChildrenRender(false);
+            }
+         }
+      });
    }
 
    /**
@@ -363,6 +492,24 @@ public final class GirlEntityRenderer extends GeoEntityRenderer<SceneGirlEntity,
       snapshots.ifPresent(hideLowerLeft,  b -> b.skipRender(true).skipChildrenRender(true));
       snapshots.ifPresent(hideRight,      b -> b.skipRender(true).skipChildrenRender(true));
       snapshots.ifPresent(hideLowerRight, b -> b.skipRender(true).skipChildrenRender(true));
+   }
+
+   /**
+    * Rotates the character's head bone (pitch & yaw) when looking around during idle/wandering.
+    */
+   private static void applyHeadRotation(BoneSnapshots snapshots, LivingEntityRenderState renderState, GirlScenePhase phase) {
+      if (phase == GirlScenePhase.IDLE || phase == GirlScenePhase.WALKING || phase == GirlScenePhase.WAITING) {
+         float headPitch = (float) Math.toRadians(Mth.clamp(renderState.xRot, -85.0F, 85.0F));
+         float headYaw = (float) Math.toRadians(Mth.clamp(-renderState.yRot, -85.0F, 85.0F));
+         snapshots.ifPresent("head", bone -> {
+            bone.setRotX(bone.getRotX() + headPitch);
+            bone.setRotY(bone.getRotY() + headYaw);
+         });
+         snapshots.ifPresent("Head2", bone -> {
+            bone.setRotX(bone.getRotX() + headPitch);
+            bone.setRotY(bone.getRotY() + headYaw);
+         });
+      }
    }
 
    /**

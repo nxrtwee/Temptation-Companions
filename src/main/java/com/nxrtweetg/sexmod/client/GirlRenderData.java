@@ -59,6 +59,30 @@ public final class GirlRenderData {
    public static final DataTicket<Integer> GOBLIN_CROWN = DataTicket.create("girl_goblin_crown", new TypeToken<Integer>() {});
    public static final DataTicket<Float> ALLIE_DISMISS_SCALE = DataTicket.create("girl_allie_dismiss_scale", new TypeToken<Float>() {});
 
+   public static final DataTicket<Identifier> CUSTOM_SKIN = DataTicket.create("girl_custom_skin", new TypeToken<Identifier>() {});
+   public static final DataTicket<Boolean> CUSTOM_IS_SLIM = DataTicket.create("girl_custom_is_slim", new TypeToken<Boolean>() {});
+   public static final DataTicket<Float> CUSTOM_SCALE = DataTicket.create("girl_custom_scale", new TypeToken<Float>() {});
+   public static final DataTicket<Boolean> CUSTOM_HAS_BREASTS = DataTicket.create("girl_custom_has_breasts", new TypeToken<Boolean>() {});
+   public static final DataTicket<Float> CUSTOM_BREAST_SCALE = DataTicket.create("girl_custom_breast_scale", new TypeToken<Float>() {});
+   public static final DataTicket<Boolean> CUSTOM_HAS_BOOTY = DataTicket.create("girl_custom_has_booty", new TypeToken<Boolean>() {});
+   public static final DataTicket<Float> CUSTOM_BOOTY_SCALE = DataTicket.create("girl_custom_booty_scale", new TypeToken<Float>() {});
+
+   public static final DataTicket<Float> CUSTOM_HEAD_SCALE_X = DataTicket.create("girl_custom_head_scale_x", new TypeToken<Float>() {});
+   public static final DataTicket<Float> CUSTOM_HEAD_SCALE_Y = DataTicket.create("girl_custom_head_scale_y", new TypeToken<Float>() {});
+   public static final DataTicket<Float> CUSTOM_HEAD_SCALE_Z = DataTicket.create("girl_custom_head_scale_z", new TypeToken<Float>() {});
+
+   public static final DataTicket<Float> CUSTOM_TORSO_SCALE_X = DataTicket.create("girl_custom_torso_scale_x", new TypeToken<Float>() {});
+   public static final DataTicket<Float> CUSTOM_TORSO_SCALE_Y = DataTicket.create("girl_custom_torso_scale_y", new TypeToken<Float>() {});
+   public static final DataTicket<Float> CUSTOM_TORSO_SCALE_Z = DataTicket.create("girl_custom_torso_scale_z", new TypeToken<Float>() {});
+
+   public static final DataTicket<Float> CUSTOM_ARM_SCALE_X = DataTicket.create("girl_custom_arm_scale_x", new TypeToken<Float>() {});
+   public static final DataTicket<Float> CUSTOM_ARM_SCALE_Y = DataTicket.create("girl_custom_arm_scale_y", new TypeToken<Float>() {});
+   public static final DataTicket<Float> CUSTOM_ARM_SCALE_Z = DataTicket.create("girl_custom_arm_scale_z", new TypeToken<Float>() {});
+
+   public static final DataTicket<Float> CUSTOM_LEG_SCALE_X = DataTicket.create("girl_custom_leg_scale_x", new TypeToken<Float>() {});
+   public static final DataTicket<Float> CUSTOM_LEG_SCALE_Y = DataTicket.create("girl_custom_leg_scale_y", new TypeToken<Float>() {});
+   public static final DataTicket<Float> CUSTOM_LEG_SCALE_Z = DataTicket.create("girl_custom_leg_scale_z", new TypeToken<Float>() {});
+
    private GirlRenderData() {
    }
 }

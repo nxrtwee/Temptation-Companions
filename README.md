@@ -6,7 +6,7 @@ her menu, pay her, and the mod takes over with a fully animated, camera-directed
 > **18+ only.** This mod adds explicit adult content. Do not install it if you are a minor, and do
 > not put it on a server where minors play.
 
-Status: **Release 1.0.** Complete roster of 12 companions, fully overhauled pathfinding and bed logic,
+Status: **Release 1.1.** Complete roster of 12 companions, fully overhauled pathfinding and bed logic,
 cinematic camera director, custom items, dynamic skin layering, and multiplayer support.
 
 ## Features
@@ -58,8 +58,8 @@ cinematic camera director, custom items, dynamic skin layering, and multiplayer 
 
 1. Install Fabric Loader for your target Minecraft version (26.3 or 26.2).
 2. Download the appropriate mod build from [Releases](https://github.com/nxrtwee/Temptation-Companions/releases):
-   * For **Minecraft 26.3**: `temptation-companions-1.0-fabric-26.3.jar`
-   * For **Minecraft 26.2**: `temptation-companions-1.0-fabric-26.2.jar`
+   * For **Minecraft 26.3**: `temptation-companions-1.1-fabric-26.3.jar`
+   * For **Minecraft 26.2**: `temptation-companions-1.1-fabric-26.2.jar`
 3. Drop **Fabric API**, the corresponding version of **GeckoLib** (see strict requirements above), and the Temptation Companions jar into your `.minecraft/mods` folder.
 4. Launch the game.
 
