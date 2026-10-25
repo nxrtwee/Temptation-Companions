@@ -66,6 +66,7 @@ public final class GirlRenderData {
    public static final DataTicket<Float> CUSTOM_BREAST_SCALE = DataTicket.create("girl_custom_breast_scale", new TypeToken<Float>() {});
    public static final DataTicket<Boolean> CUSTOM_HAS_BOOTY = DataTicket.create("girl_custom_has_booty", new TypeToken<Boolean>() {});
    public static final DataTicket<Float> CUSTOM_BOOTY_SCALE = DataTicket.create("girl_custom_booty_scale", new TypeToken<Float>() {});
+   public static final DataTicket<Integer> CUSTOM_COSMETICS_COLOR = DataTicket.create("girl_custom_cosmetics_color", new TypeToken<Integer>() {});
 
    public static final DataTicket<Float> CUSTOM_HEAD_SCALE_X = DataTicket.create("girl_custom_head_scale_x", new TypeToken<Float>() {});
    public static final DataTicket<Float> CUSTOM_HEAD_SCALE_Y = DataTicket.create("girl_custom_head_scale_y", new TypeToken<Float>() {});

@@ -22,17 +22,17 @@ public final class CustomSkinManager {
     private static final Logger LOGGER = LoggerFactory.getLogger("SexMod-CustomSkin");
     public static final Identifier DEFAULT_SKIN = Identifier.fromNamespaceAndPath("sexmod", "textures/player/steve.png");
     private static final Map<String, Identifier> LOADED_SKINS = new ConcurrentHashMap<>();
+    private static final Map<String, Long> SKIN_TIMESTAMPS = new ConcurrentHashMap<>();
 
     private CustomSkinManager() {}
+
+    public static boolean isCustomCharacter(String character) {
+        return character != null && (character.startsWith("custom_") || "custom".equals(character));
+    }
 
     public static Identifier getOrLoadSkin(String customId, String skinFileName) {
         if (customId == null || customId.isBlank()) {
             return DEFAULT_SKIN;
-        }
-
-        Identifier existing = LOADED_SKINS.get(customId);
-        if (existing != null) {
-            return existing;
         }
 
         Path path = TCEditorLoader.getSkinsDir().resolve(skinFileName != null ? skinFileName : customId + ".png");
@@ -40,23 +40,33 @@ public final class CustomSkinManager {
             return DEFAULT_SKIN;
         }
 
-        try (InputStream stream = Files.newInputStream(path)) {
-            NativeImage image = NativeImage.read(stream);
-            image = ensureStandardFormat(image);
+        try {
+            long lastMod = Files.getLastModifiedTime(path).toMillis();
+            Identifier existing = LOADED_SKINS.get(customId);
+            Long cachedMod = SKIN_TIMESTAMPS.get(customId);
+            if (existing != null && cachedMod != null && lastMod <= cachedMod) {
+                return existing;
+            }
 
-            String safeId = customId.toLowerCase().replaceAll("[^a-z0-9_.-]", "_");
-            Identifier textureId = Identifier.fromNamespaceAndPath("sexmod", "textures/custom_skin_" + safeId);
+            try (InputStream stream = Files.newInputStream(path)) {
+                NativeImage image = NativeImage.read(stream);
+                image = ensureStandardFormat(image);
 
-            TextureManager tm = Minecraft.getInstance().getTextureManager();
-            tm.release(textureId);
+                String safeId = customId.toLowerCase().replaceAll("[^a-z0-9_.-]", "_");
+                Identifier textureId = Identifier.fromNamespaceAndPath("sexmod", "textures/custom_skin_" + safeId);
 
-            DynamicTexture dynamicTexture = new DynamicTexture(() -> "TC-Skin-" + safeId, image);
-            dynamicTexture.upload();
-            tm.register(textureId, dynamicTexture);
+                TextureManager tm = Minecraft.getInstance().getTextureManager();
+                tm.release(textureId);
 
-            LOADED_SKINS.put(customId, textureId);
-            LOGGER.info("Registered dynamic skin texture for custom girl: {}", textureId);
-            return textureId;
+                DynamicTexture dynamicTexture = new DynamicTexture(() -> "TC-Skin-" + safeId, image);
+                dynamicTexture.upload();
+                tm.register(textureId, dynamicTexture);
+
+                LOADED_SKINS.put(customId, textureId);
+                SKIN_TIMESTAMPS.put(customId, lastMod);
+                LOGGER.info("Registered dynamic skin texture for custom girl: {}", textureId);
+                return textureId;
+            }
         } catch (Exception e) {
             LOGGER.error("Failed to load skin image from {}", path, e);
             return DEFAULT_SKIN;
@@ -66,9 +76,8 @@ public final class CustomSkinManager {
     private static NativeImage ensureStandardFormat(NativeImage source) {
         int width = source.getWidth();
         int height = source.getHeight();
-        if (width == 64 && height == 64) {
-            return source;
-        }
+        NativeImage img = source;
+
         if (width == 64 && height == 32) {
             NativeImage converted = new NativeImage(64, 64, true);
             for (int x = 0; x < 64; x++) {
@@ -83,8 +92,16 @@ public final class CustomSkinManager {
                 }
             }
             source.close();
-            return converted;
+            img = converted;
         }
-        return source;
+
+        // Set unused region (0, 0)..(3, 3) to pure opaque white for cosmetics palette tinting
+        for (int x = 0; x <= 3; x++) {
+            for (int y = 0; y <= 3; y++) {
+                img.setPixel(x, y, 0xFFFFFFFF);
+            }
+        }
+
+        return img;
     }
 }

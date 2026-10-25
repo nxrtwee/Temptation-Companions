@@ -92,7 +92,7 @@ public final class GirlEntityRenderer extends GeoEntityRenderer<SceneGirlEntity,
       "lashR", "lashL", "closedR", "closedL", "browL", "browR"
    );
    private static final String[] CUSTOM_GENITAL_BONES = {
-      "cock", "ballL", "ballR", "bone123", "bone99", "bone148", "bone149", "bone150", "bone151", "bone2", "bone14", "bone16", "bone17"
+      "cock", "ballL", "ballR", "bone123", "bone99", "bone148", "bone149", "bone150", "bone151"
    };
    static final String[] ALEX_ARM_BONES = {
       "leftArmAlex", "leftLowerArmAlex", "rightArmAlex", "rightLowerArmAlex"
@@ -208,6 +208,7 @@ public final class GirlEntityRenderer extends GeoEntityRenderer<SceneGirlEntity,
             renderState.addGeckolibData(GirlRenderData.CUSTOM_LEG_SCALE_X, data.legScaleX());
             renderState.addGeckolibData(GirlRenderData.CUSTOM_LEG_SCALE_Y, data.legScaleY());
             renderState.addGeckolibData(GirlRenderData.CUSTOM_LEG_SCALE_Z, data.legScaleZ());
+            renderState.addGeckolibData(GirlRenderData.CUSTOM_COSMETICS_COLOR, data.cosmeticsColor());
          }
       }
    }
@@ -622,7 +623,7 @@ public final class GirlEntityRenderer extends GeoEntityRenderer<SceneGirlEntity,
    ) {
       LivingEntityRenderState renderState = renderPassInfo.renderState();
       String character = renderState.getOrDefaultGeckolibData(GirlRenderData.CHARACTER, "jenny");
-      if (!"kobold".equals(character) && !"goblin".equals(character)) {
+      if (!"kobold".equals(character) && !"goblin".equals(character) && !CustomSkinManager.isCustomCharacter(character)) {
          super.submitRenderTasks(renderPassInfo, renderTasks, renderType);
          return;
       }
@@ -646,6 +647,7 @@ public final class GirlEntityRenderer extends GeoEntityRenderer<SceneGirlEntity,
          ps.last().set(pose);
          renderPassInfo.renderPosed(() -> {
             for (GeoBone root : model.topLevelBones()) {
+               if ("steve".equals(root.name())) continue;
                renderCustomColoredBone(
                   renderPassInfo, ps, root, vc, packedLight, packedOverlay, character, renderState, defaultColor
                );
@@ -691,7 +693,18 @@ public final class GirlEntityRenderer extends GeoEntityRenderer<SceneGirlEntity,
       if ("goblin".equals(character)) {
          return resolveGoblinBoneColor(boneName, renderState, defaultColor);
       }
+      if (CustomSkinManager.isCustomCharacter(character)) {
+         if (isCustomCosmeticBone(boneName)) {
+            return renderState.getOrDefaultGeckolibData(GirlRenderData.CUSTOM_COSMETICS_COLOR, 0xFFFFFFFF);
+         }
+         return defaultColor;
+      }
       return defaultColor;
+   }
+
+   private static boolean isCustomCosmeticBone(String name) {
+      return name.startsWith("armorBoobs") || name.startsWith("bra") || name.startsWith("midsection")
+         || name.startsWith("midSection") || name.startsWith("armorBooty") || name.startsWith("innerCheek");
    }
 
    private static int resolveKoboldBoneColor(String boneName, LivingEntityRenderState renderState, int defaultColor) {

@@ -18,6 +18,7 @@ import java.util.stream.Stream;
 public final class TCEditorLoader {
     private static final Logger LOGGER = LoggerFactory.getLogger("SexMod-TCEditorLoader");
     private static final Map<String, CustomCharacterData> CHARACTERS = new ConcurrentHashMap<>();
+    private static final Map<String, Long> FILE_TIMESTAMPS = new ConcurrentHashMap<>();
 
     public record CustomCharacterData(
         String id,
@@ -42,6 +43,7 @@ public final class TCEditorLoader {
         float breastScale,
         boolean hasBooty,
         float bootyScale,
+        int cosmeticsColor,
         List<String> enabledScenes,
         List<String> allowedPhases
     ) {}
@@ -62,6 +64,7 @@ public final class TCEditorLoader {
 
     public static void reload() {
         CHARACTERS.clear();
+        FILE_TIMESTAMPS.clear();
         Path charsDir = getCharactersDir();
         if (!Files.exists(charsDir)) {
             try {
@@ -108,6 +111,7 @@ public final class TCEditorLoader {
             float breastScale = json.has("breastScale") ? json.get("breastScale").getAsFloat() : 1.0f;
             boolean hasBooty = json.has("hasBooty") && json.get("hasBooty").getAsBoolean();
             float bootyScale = json.has("bootyScale") ? json.get("bootyScale").getAsFloat() : 1.0f;
+            int cosmeticsColor = json.has("cosmeticsColor") ? json.get("cosmeticsColor").getAsInt() : 0xFFFFFFFF;
 
             List<String> enabledScenes = new ArrayList<>();
             if (json.has("enabledScenes") && json.get("enabledScenes").isJsonArray()) {
@@ -137,10 +141,17 @@ public final class TCEditorLoader {
                 legScaleX, legScaleY, legScaleZ,
                 hasBreasts, breastScale,
                 hasBooty, bootyScale,
+                cosmeticsColor,
                 enabledScenes, allowedPhases
             );
             CHARACTERS.put(id.toLowerCase(), data);
             CHARACTERS.put(name.toLowerCase(), data);
+
+            try {
+                long mtime = Files.getLastModifiedTime(path).toMillis();
+                FILE_TIMESTAMPS.put(id.toLowerCase(), mtime);
+                FILE_TIMESTAMPS.put(name.toLowerCase(), mtime);
+            } catch (Exception ignored) {}
         } catch (Exception e) {
             LOGGER.error("Failed to parse character JSON at {}", path, e);
         }
@@ -148,10 +159,21 @@ public final class TCEditorLoader {
 
     public static CustomCharacterData get(String idOrName) {
         if (idOrName == null) return null;
-        CustomCharacterData data = CHARACTERS.get(idOrName.toLowerCase());
+        String key = idOrName.toLowerCase();
+        Path charPath = getCharactersDir().resolve(key + ".json");
+        if (Files.exists(charPath)) {
+            try {
+                long lastMod = Files.getLastModifiedTime(charPath).toMillis();
+                Long cached = FILE_TIMESTAMPS.get(key);
+                if (cached == null || lastMod > cached) {
+                    loadCharacterFile(charPath);
+                }
+            } catch (Exception ignored) {}
+        }
+        CustomCharacterData data = CHARACTERS.get(key);
         if (data == null) {
             reload();
-            data = CHARACTERS.get(idOrName.toLowerCase());
+            data = CHARACTERS.get(key);
         }
         return data;
     }
