@@ -37,7 +37,7 @@ public final class TribeEggItem extends Item {
          for (double[] offset : OFFSETS) {
             KoboldEntity kobold = ModEntities.KOBOLD.create(serverLevel, EntitySpawnReason.COMMAND);
             if (kobold != null) {
-               kobold.snapTo(center.getX() + 0.5 + offset[0], center.getY(), center.getZ() + 0.5 + offset[1], yaw, 0.0F);
+               kobold.moveTo(center.getX() + 0.5 + offset[0], center.getY(), center.getZ() + 0.5 + offset[1], yaw, 0.0F);
                kobold.setTribeColorIndex(tribeColorIndex);
                kobold.setEyeColorArgb(eyeColorArgb);
                serverLevel.addFreshEntity(kobold);

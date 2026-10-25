@@ -5,8 +5,6 @@ import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.client.player.ClientInput;
 import net.minecraft.client.player.KeyboardInput;
-import net.minecraft.world.entity.player.Input;
-import net.minecraft.world.phys.Vec2;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -23,8 +21,9 @@ abstract class KeyboardInputMixin extends ClientInput {
    @Inject(method = "tick", at = @At("TAIL"))
    private void sexmod$swallowSceneInput(CallbackInfo ci) {
       if (GirlSceneInputController.shouldSwallowMovementInput()) {
-         this.keyPresses = Input.EMPTY;
-         this.moveVector = Vec2.ZERO;
+         this.keyPresses = net.minecraft.world.entity.player.Input.EMPTY;
+         this.leftImpulse = 0.0F;
+         this.forwardImpulse = 0.0F;
       }
    }
 }

@@ -123,7 +123,7 @@ public final class GirlFollowMasterGoal extends Goal {
          }
       }
 
-      this.girl.snapTo(this.master.getX(), this.master.getY(), this.master.getZ(), this.girl.getYRot(), this.girl.getXRot());
+      this.girl.moveTo(this.master.getX(), this.master.getY(), this.master.getZ(), this.girl.getYRot(), this.girl.getXRot());
       this.girl.getNavigation().stop();
    }
 }

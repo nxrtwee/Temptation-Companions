@@ -31,8 +31,8 @@ import net.minecraft.client.resources.language.I18n;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.locale.Language;
-import net.minecraft.world.level.storage.ValueInput;
-import net.minecraft.world.level.storage.ValueOutput;
+import com.nxrtweetg.sexmod.util.TagValueInput;
+import com.nxrtweetg.sexmod.util.TagValueOutput;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
@@ -56,12 +56,11 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.Vec3;
 import software.bernie.geckolib.animatable.GeoEntity;
 import software.bernie.geckolib.animatable.instance.AnimatableInstanceCache;
-import software.bernie.geckolib.animatable.processing.AnimationController;
-import software.bernie.geckolib.animatable.processing.AnimationState;
+import software.bernie.geckolib.animation.AnimationController;
+import software.bernie.geckolib.animation.AnimationState;
 import software.bernie.geckolib.animation.RawAnimation;
-import software.bernie.geckolib.animatable.manager.AnimatableManager.ControllerRegistrar;
-import software.bernie.geckolib.animation.keyframe.event.KeyFrameEvent;
-import software.bernie.geckolib.animation.keyframe.event.data.SoundKeyframeData;
+import software.bernie.geckolib.animation.AnimatableManager.ControllerRegistrar;
+import software.bernie.geckolib.animation.keyframe.event.SoundKeyframeEvent;
 import software.bernie.geckolib.util.GeckoLibUtil;
 
 public abstract class SceneGirlEntity extends GirlEntity implements GeoEntity {
@@ -685,8 +684,9 @@ public abstract class SceneGirlEntity extends GirlEntity implements GeoEntity {
    }
 
    @Override
-   protected void addAdditionalSaveData(ValueOutput output) {
-      super.addAdditionalSaveData(output);
+   public void addAdditionalSaveData(net.minecraft.nbt.CompoundTag tag) {
+      TagValueOutput output = TagValueOutput.wrap(tag, this.registryAccess());
+      super.addAdditionalSaveData(tag);
       output.putString("JennyTrackedActiveAction", this.activeAction == null ? "" : this.activeAction.legacyId());
       output.putString("JennyScenePhase", this.scenePhase.id());
       output.putBoolean("JennySceneFrozen", this.sceneFrozen);
@@ -720,8 +720,9 @@ public abstract class SceneGirlEntity extends GirlEntity implements GeoEntity {
    }
 
    @Override
-   protected void readAdditionalSaveData(ValueInput input) {
-      super.readAdditionalSaveData(input);
+   public void readAdditionalSaveData(net.minecraft.nbt.CompoundTag tag) {
+      TagValueInput input = TagValueInput.wrap(tag, this.registryAccess());
+      super.readAdditionalSaveData(tag);
       input.getString("JennyTrackedActiveAction")
          .ifPresent(s -> this.activeAction = s.isEmpty() ? null : GirlSceneAction.fromLegacyId(s).orElse(null));
       input.getString("JennyScenePhase").ifPresent(s -> this.scenePhase = GirlScenePhase.fromId(s));
@@ -931,35 +932,35 @@ public abstract class SceneGirlEntity extends GirlEntity implements GeoEntity {
       // they all want GirlAnimationController's "blend out of the pose that is on screen" fix rather
       // than GeckoLib's bind pose.
       controllers.add(
-         new GirlAnimationController<SceneGirlEntity>("eyes", 5, state -> state.setAndContinue(this.selectEyesAnimation()))
+         new GirlAnimationController<SceneGirlEntity>(this, "eyes", 5, state -> state.setAndContinue(this.selectEyesAnimation()))
             .setSoundKeyframeHandler(this::handleSoundKeyframe)
       );
       controllers.add(
-         new GirlAnimationController<SceneGirlEntity>("movement", 5, state -> {
+         new GirlAnimationController<SceneGirlEntity>(this, "movement", 5, state -> {
             boolean moving = state.isMoving();
             if (moving) {
                double dx = this.getX() - this.xo;
                double dz = this.getZ() - this.zo;
                double displacement = Math.sqrt(dx * dx + dz * dz);
                double speed = Math.clamp(displacement / 0.12, 0.6, 3.0);
-               state.controller().setAnimationSpeed(speed);
+               state.getController().setAnimationSpeed(speed);
             } else {
-               state.controller().setAnimationSpeed(1.0);
+               state.getController().setAnimationSpeed(1.0);
             }
             return state.setAndContinue(this.selectMovementAnimation(moving));
          })
             .setSoundKeyframeHandler(this::handleSoundKeyframe)
       );
       controllers.add(
-         new GirlAnimationController<SceneGirlEntity>("combat", 3, state -> state.setAndContinue(this.selectCombatAnimation()))
+         new GirlAnimationController<SceneGirlEntity>(this, "combat", 3, state -> state.setAndContinue(this.selectCombatAnimation()))
             .setSoundKeyframeHandler(this::handleSoundKeyframe)
       );
       controllers.add(
-         new GirlAnimationController<SceneGirlEntity>("action", GirlAnimationRole.DEFAULT_TRANSITION_TICKS, state -> {
-            boolean flag = this.consumeBeatReset(state.controller());
+         new GirlAnimationController<SceneGirlEntity>(this, "action", GirlAnimationRole.DEFAULT_TRANSITION_TICKS, state -> {
+            boolean flag = this.consumeBeatReset(state.getController());
             RawAnimation rawanimation = this.selectActionAnimation();
-            this.applyTakeTransition(state.controller(), rawanimation, flag);
-            state.controller().setAnimationSpeed(
+            this.applyTakeTransition(state.getController(), rawanimation, flag);
+            state.getController().setAnimationSpeed(
                (this.activeAction == GirlSceneAction.PRONE_DOGGY && this.resolvedThrusting()) ? 1.35 : 1.0
             );
             return state.setAndContinue(rawanimation);
@@ -2745,9 +2746,9 @@ public abstract class SceneGirlEntity extends GirlEntity implements GeoEntity {
    }
 
 
-   private void handleSoundKeyframe(KeyFrameEvent<SceneGirlEntity, SoundKeyframeData> event) {
+   private void handleSoundKeyframe(SoundKeyframeEvent<SceneGirlEntity> event) {
       if (this.level().isClientSide()) {
-         String s = event.keyframeData().getSound();
+         String s = event.getKeyframeData().getSound();
          if (this.handleCustomSoundKeyframe(s)) {
             return;
          }
@@ -3300,7 +3301,7 @@ public abstract class SceneGirlEntity extends GirlEntity implements GeoEntity {
          if (action == GirlSceneAction.KOBOLD_ANAL) {
             float f1 = player.getYRot();
             Vec3 vec317 = player.position().add(horizontalForward(f1).scale(0.42));
-            this.snapTo(vec317.x, player.getY(), vec317.z, f1, 0.0F);
+            this.moveTo(vec317.x, player.getY(), vec317.z, f1, 0.0F);
             this.coreState().setTargetYaw(f1);
             this.coreState().setPlayerYaw(f1);
             return;
@@ -3308,7 +3309,7 @@ public abstract class SceneGirlEntity extends GirlEntity implements GeoEntity {
 
          if (action == GirlSceneAction.THREESOME) {
             float f = player.getYRot();
-            this.snapTo(player.getX(), player.getY(), player.getZ(), f, 0.0F);
+            this.moveTo(player.getX(), player.getY(), player.getZ(), f, 0.0F);
             this.coreState().setTargetYaw(f);
             this.coreState().setPlayerYaw(f);
             return;
@@ -3317,7 +3318,7 @@ public abstract class SceneGirlEntity extends GirlEntity implements GeoEntity {
          if (action == GirlSceneAction.COWGIRL) {
             float f = player.getYRot();
             float fYaw = Mth.wrapDegrees(f + 180.0F);
-            this.snapTo(player.getX(), player.getY(), player.getZ(), fYaw, 0.0F);
+            this.moveTo(player.getX(), player.getY(), player.getZ(), fYaw, 0.0F);
             this.coreState().setTargetYaw(fYaw);
             this.coreState().setPlayerYaw(f);
             return;
@@ -3343,7 +3344,7 @@ public abstract class SceneGirlEntity extends GirlEntity implements GeoEntity {
          Vec3 vec328 = horizontalRight(f2);
          Vec3 vec33 = player.position().add(horizontalForward(f2).scale(d1 + tuneForward)).add(vec328.scale(tuneSide));
          float f10 = Mth.wrapDegrees(f2 + 180.0F);
-         this.snapTo(vec33.x, player.getY() + tuneVertical, vec33.z, f10, 0.0F);
+         this.moveTo(vec33.x, player.getY() + tuneVertical, vec33.z, f10, 0.0F);
          this.coreState().setTargetYaw(f10);
          this.coreState().setPlayerYaw(f2);
          return;
@@ -3363,7 +3364,7 @@ public abstract class SceneGirlEntity extends GirlEntity implements GeoEntity {
       Vec3 origin = this.requireSceneBedOrigin();
       float yaw = this.requireSceneBedYaw();
       // Scene tuning shifts the body bone on the client, so the server entity stays at the canonical origin
-      this.snapTo(origin.x, origin.y, origin.z, yaw, 0.0F);
+      this.moveTo(origin.x, origin.y, origin.z, yaw, 0.0F);
       this.coreState().setTargetYaw(yaw);
       this.coreState().setPlayerYaw(facesGirlAcrossBed(action) ? Mth.wrapDegrees(yaw + 180.0F) : yaw);
    }
@@ -3410,7 +3411,7 @@ public abstract class SceneGirlEntity extends GirlEntity implements GeoEntity {
    private void snapToBedAnchor() {
       Vec3 stand = this.requireSceneBedStandPos();
       float yaw = this.requireSceneBedYaw();
-      this.snapTo(stand.x, stand.y, stand.z, yaw, 0.0F);
+      this.moveTo(stand.x, stand.y, stand.z, yaw, 0.0F);
       this.coreState().setTargetYaw(yaw);
       this.coreState().setPlayerYaw(Mth.wrapDegrees(yaw + 180.0F));
       this.holdSceneYaw();

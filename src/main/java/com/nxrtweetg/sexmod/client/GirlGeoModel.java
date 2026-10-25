@@ -1,7 +1,7 @@
 package com.nxrtweetg.sexmod.client;
 
 import software.bernie.geckolib.model.GeoModel;
-import software.bernie.geckolib.renderer.base.GeoRenderState;
+import software.bernie.geckolib.renderer.GeoRenderer;
 import com.nxrtweetg.sexmod.girls.SceneGirlEntity;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
@@ -70,13 +70,15 @@ public final class GirlGeoModel extends GeoModel<SceneGirlEntity> {
    }
 
    @Override
-   public ResourceLocation getModelResource(GeoRenderState renderState) {
-      return this.modelSlots[this.resolveSlot(renderState)];
+   public ResourceLocation getModelResource(SceneGirlEntity animatable, GeoRenderer<SceneGirlEntity> renderer) {
+      return this.modelSlots[this.resolveSlot(animatable)];
    }
 
    @Override
-   public ResourceLocation getTextureResource(GeoRenderState renderState) {
-      ResourceLocation customSkin = renderState.getGeckolibData(GirlRenderData.CUSTOM_SKIN);
+   public ResourceLocation getTextureResource(SceneGirlEntity animatable, GeoRenderer<SceneGirlEntity> renderer) {
+      ResourceLocation customSkin = animatable instanceof com.nxrtweetg.sexmod.girls.custom.CustomGirlEntity customGirl && customGirl.getCustomData() != null
+            ? CustomSkinManager.getOrLoadSkin(customGirl.getCustomData().id(), customGirl.getCustomData().skinFileName())
+            : null;
       if (customSkin != null) {
          return customSkin;
       }
@@ -86,16 +88,17 @@ public final class GirlGeoModel extends GeoModel<SceneGirlEntity> {
       }
 
       if ("goblin".equals(this.character)) {
-         return this.resolveSlot(renderState) == 0 ? GOBLIN_TEXTURE : GOBLIN_ARMORED_TEXTURE;
+         return this.resolveSlot(animatable) == 0 ? GOBLIN_TEXTURE : GOBLIN_ARMORED_TEXTURE;
       }
 
       return this.texture;
    }
 
    /** Never out of range: every policy is handed the slot count and the base one clamps. */
-   private int resolveSlot(GeoRenderState renderState) {
-      int variant = renderState.getOrDefaultGeckolibData(GirlRenderData.MODEL_VARIANT, 1);
-      int slot = this.slotPolicy.resolve(renderState, variant, this.modelSlots.length);
+   private int resolveSlot(SceneGirlEntity animatable) {
+      int variant = animatable.trackedModelVariant();
+      if (variant != 0 && variant != 1) variant = animatable.coreState().currentModel();
+      int slot = this.slotPolicy.resolve(animatable, variant, this.modelSlots.length);
       return slot >= 0 && slot < this.modelSlots.length ? slot : 0;
    }
 
@@ -105,7 +108,7 @@ public final class GirlGeoModel extends GeoModel<SceneGirlEntity> {
    }
 
    @Override
-   public ResourceLocation[] getAnimationResourceFallbacks(SceneGirlEntity animatable) {
+   public ResourceLocation[] getAnimationResourceFallbacks(SceneGirlEntity animatable, GeoRenderer<SceneGirlEntity> renderer) {
       return this.animationFallbacks;
    }
 }

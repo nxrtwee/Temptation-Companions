@@ -5,7 +5,7 @@ import net.fabricmc.api.Environment;
 import net.minecraft.client.DeltaTracker;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.renderer.RenderPipelines;
+import net.minecraft.client.renderer.RenderType;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.Mth;
 
@@ -41,17 +41,14 @@ public final class GirlHornyMeterHud {
       boolean finishing = GirlHornyMeter.isFinishing();
 
       int frameY = meter(Mth.lerp(slide, -200.0F, 10.0F));
-      context.blit(
-         RenderPipelines.GUI_TEXTURED, METER, meter(10.0F), frameY, 0.0F, 0.0F, meterSpan(10.0, 146.0), meterSpan(10.0, 175.0), 146, 175, TEX, TEX
+      context.blit(RenderType::guiTextured, METER, meter(10.0F), frameY, 0.0F, 0.0F, meterSpan(10.0, 146.0), meterSpan(10.0, 175.0), 146, 175, TEX, TEX
       );
 
       if (finishing) {
          float rise = Math.min(1.0F, GirlHornyMeter.finishSlide() + deltaTicks / 15.0F);
          GirlHornyMeter.setFinishSlide(rise);
          double barY = Mth.lerp(rise, 18.0F, -300.0F);
-         context.blit(
-            RenderPipelines.GUI_TEXTURED,
-            METER,
+         context.blit(RenderType::guiTextured, METER,
             meter(67.0F),
             meter(barY),
             159.0F,
@@ -67,9 +64,7 @@ public final class GirlHornyMeterHud {
          int barHeight = (int)Mth.lerp(fill, 0.0, 160.0);
          if (barHeight > 0) {
             double barY = Mth.lerp(slide, -45.0F, (float)Mth.lerp(fill, 178.0, 18.0));
-            context.blit(
-               RenderPipelines.GUI_TEXTURED,
-               METER,
+            context.blit(RenderType::guiTextured, METER,
                meter(67.0F),
                meter(barY),
                159.0F,
@@ -88,9 +83,7 @@ public final class GirlHornyMeterHud {
          float capV = (float)Mth.lerp(1.0 - fill, 169.0, 141.0);
 
          for (double capX : new double[]{18.0, 120.0}) {
-            context.blit(
-               RenderPipelines.GUI_TEXTURED,
-               METER,
+            context.blit(RenderType::guiTextured, METER,
                meter(capX),
                meter(capY),
                212.0F,
@@ -108,9 +101,7 @@ public final class GirlHornyMeterHud {
       if (GirlHornyMeter.showThrustButton() && !finishing) {
          float v = minecraft.options.keyShift.isDown() ? 54.0F : 0.0F;
          double thrustX = Mth.lerp(slide, -200.0F, 98.0F);
-         context.blit(
-            RenderPipelines.GUI_TEXTURED,
-            BUTTONS,
+         context.blit(RenderType::guiTextured, BUTTONS,
             button(thrustX),
             button(405.0F),
             0.0F,
@@ -126,9 +117,7 @@ public final class GirlHornyMeterHud {
 
       if (GirlHornyMeter.isFull() && !finishing) {
          float v = 108.0F + (minecraft.options.keyJump.isDown() ? 54.0F : 0.0F);
-         context.blit(
-            RenderPipelines.GUI_TEXTURED,
-            BUTTONS,
+         context.blit(RenderType::guiTextured, BUTTONS,
             button(240.0F),
             button(160.0F),
             0.0F,

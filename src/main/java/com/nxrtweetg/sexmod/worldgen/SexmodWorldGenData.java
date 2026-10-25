@@ -9,7 +9,8 @@ import java.util.Set;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.datafix.DataFixTypes;
 import net.minecraft.world.level.saveddata.SavedData;
-import net.minecraft.world.level.saveddata.SavedDataType;
+import net.minecraft.world.level.saveddata.SavedData;
+import net.minecraft.nbt.NbtOps;
 
 public final class SexmodWorldGenData extends SavedData {
    public record PlacedStructure(String type, int chunkX, int chunkZ) {
@@ -32,12 +33,18 @@ public final class SexmodWorldGenData extends SavedData {
       ).apply(instance, SexmodWorldGenData::new)
    );
 
-   public static final SavedDataType<SexmodWorldGenData> TYPE = new SavedDataType<>(
-      "sexmod:generation",
+   public static final SavedData.Factory<SexmodWorldGenData> TYPE = new SavedData.Factory<>(
       SexmodWorldGenData::new,
-      CODEC,
+      (tag, registries) -> CODEC.parse(registries.createSerializationContext(NbtOps.INSTANCE), tag).result().orElseGet(SexmodWorldGenData::new),
       DataFixTypes.SAVED_DATA_STRUCTURE_FEATURE_INDICES
    );
+
+   @Override
+   public net.minecraft.nbt.CompoundTag save(net.minecraft.nbt.CompoundTag tag, net.minecraft.core.HolderLookup.Provider registries) {
+      CODEC.encodeStart(registries.createSerializationContext(NbtOps.INSTANCE), this)
+         .result().ifPresent(encoded -> tag.merge((net.minecraft.nbt.CompoundTag)encoded));
+      return tag;
+   }
 
    public SexmodWorldGenData() {
    }

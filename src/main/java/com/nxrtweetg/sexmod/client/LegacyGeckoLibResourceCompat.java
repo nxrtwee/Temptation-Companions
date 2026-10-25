@@ -1,6 +1,6 @@
 package com.nxrtweetg.sexmod.client;
 
-import software.bernie.geckolib.cache.GeckoLibResources;
+import software.bernie.geckolib.cache.GeckoLibCache;
 import software.bernie.geckolib.cache.object.BakedGeoModel;
 import software.bernie.geckolib.loading.json.raw.Model;
 import software.bernie.geckolib.loading.json.typeadapter.BakedAnimationsAdapter;
@@ -80,7 +80,7 @@ public final class LegacyGeckoLibResourceCompat {
    /** GeckoLib 5.2 keeps its baked resources in two plain static maps, swapped wholesale here. */
    private static void setGeckoLibCache(String fieldName, Object value) {
       try {
-         Field field = GeckoLibResources.class.getDeclaredField(fieldName);
+         Field field = GeckoLibCache.class.getDeclaredField(fieldName);
          field.setAccessible(true);
          field.set(null, value);
       } catch (ReflectiveOperationException exception) {
@@ -111,6 +111,7 @@ public final class LegacyGeckoLibResourceCompat {
          com.google.gson.Gson animationGson = new GsonBuilder()
             .registerTypeAdapter(BakedAnimations.class, new BakedAnimationsAdapter())
             .create();
+         final com.google.gson.Gson MODEL_GSON = modelGson;
 
          Map<ResourceLocation, BakedGeoModel> models = new LinkedHashMap<>();
          Map<ResourceLocation, BakedAnimations> animations = new LinkedHashMap<>();
@@ -158,9 +159,9 @@ public final class LegacyGeckoLibResourceCompat {
             return;
          }
 
-         Map<ResourceLocation, BakedGeoModel> mergedModels = new LinkedHashMap<>(GeckoLibResources.getBakedModels());
+         Map<ResourceLocation, BakedGeoModel> mergedModels = new LinkedHashMap<>(GeckoLibCache.getBakedModels());
          mergedModels.putAll(models);
-         Map<ResourceLocation, BakedAnimations> mergedAnimations = new LinkedHashMap<>(GeckoLibResources.getBakedAnimations());
+         Map<ResourceLocation, BakedAnimations> mergedAnimations = new LinkedHashMap<>(GeckoLibCache.getBakedAnimations());
          animations.forEach((cacheId, packed) -> mergedAnimations.merge(cacheId, packed, LegacyResourceReloadListener::overlay));
 
          setGeckoLibCache("MODELS", mergedModels);

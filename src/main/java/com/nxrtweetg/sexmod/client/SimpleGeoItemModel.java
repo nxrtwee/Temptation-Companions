@@ -2,7 +2,7 @@ package com.nxrtweetg.sexmod.client;
 
 import software.bernie.geckolib.animatable.GeoAnimatable;
 import software.bernie.geckolib.model.GeoModel;
-import software.bernie.geckolib.renderer.base.GeoRenderState;
+import software.bernie.geckolib.renderer.GeoRenderer;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.resources.ResourceLocation;
@@ -21,12 +21,12 @@ public class SimpleGeoItemModel<T extends Item & GeoAnimatable> extends GeoModel
    }
 
    @Override
-   public ResourceLocation getModelResource(GeoRenderState renderState) {
+   public ResourceLocation getModelResource(T animatable, GeoRenderer<T> renderer) {
       return this.model;
    }
 
    @Override
-   public ResourceLocation getTextureResource(GeoRenderState renderState) {
+   public ResourceLocation getTextureResource(T animatable, GeoRenderer<T> renderer) {
       return this.texture;
    }
 

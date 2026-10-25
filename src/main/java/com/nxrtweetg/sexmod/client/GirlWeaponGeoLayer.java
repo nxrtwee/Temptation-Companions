@@ -2,7 +2,7 @@ package com.nxrtweetg.sexmod.client;
 
 import software.bernie.geckolib.cache.object.BakedGeoModel;
 import software.bernie.geckolib.cache.object.GeoBone;
-import software.bernie.geckolib.renderer.base.GeoRenderer;
+import software.bernie.geckolib.renderer.GeoRenderer;
 import software.bernie.geckolib.renderer.layer.GeoRenderLayer;
 import software.bernie.geckolib.util.RenderUtil;
 import com.mojang.blaze3d.vertex.PoseStack;
@@ -13,33 +13,36 @@ import net.fabricmc.api.Environment;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.entity.EntityRendererProvider.Context;
+import net.minecraft.client.renderer.item.ItemModelResolver;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.item.ItemStackRenderState;
 import net.minecraft.client.renderer.texture.OverlayTexture;
+import net.minecraft.world.item.ItemDisplayContext;
+import net.minecraft.world.item.ItemStack;
 
 /**
  * Draws the equipped sword or bow on the {@code weapon} bone. As in the original the weapon only
- * appears while she is actually fighting ({@code GirlRenderer.a}, gated on the {@code Fighter.M}
- * data parameter), so an equipped sword stays out of sight until she swings it.
- *
- * <p>The stack state itself is filled by {@code GirlEntityRenderer#fillRenderState}, which still has
- * the entity at hand; this layer only places it on the bone.
+ * appears while she is actually fighting, so an equipped sword stays out of sight until she swings it.
  */
 @Environment(EnvType.CLIENT)
-public final class GirlWeaponGeoLayer extends GeoRenderLayer<SceneGirlEntity, Void, GirlEntityRenderer.GirlGeoRenderState> {
+public final class GirlWeaponGeoLayer extends GeoRenderLayer<SceneGirlEntity> {
    private static final String BONE = "weapon";
 
-   public GirlWeaponGeoLayer(Context context, GeoRenderer<SceneGirlEntity, Void, GirlEntityRenderer.GirlGeoRenderState> renderer) {
+   private final ItemModelResolver itemModelResolver;
+
+   public GirlWeaponGeoLayer(Context context, GeoRenderer<SceneGirlEntity> renderer) {
       super(renderer);
+      this.itemModelResolver = context.getItemModelResolver();
    }
 
    @Override
    public void render(
-      GirlEntityRenderer.GirlGeoRenderState renderState, PoseStack poseStack, BakedGeoModel model,
+      PoseStack poseStack, SceneGirlEntity animatable, BakedGeoModel model,
       RenderType renderType, MultiBufferSource bufferSource, VertexConsumer buffer,
-      int packedLight, int packedOverlay, int renderColor
+      float partialTick, int packedLight, int packedOverlay, int renderColor
    ) {
-      ItemStackRenderState stackState = renderState.getGeckolibData(GirlRenderData.WEAPON_STACK_STATE);
-      if (stackState == null) {
+      ItemStack weapon = weaponFor(animatable);
+      if (weapon.isEmpty()) {
          return;
       }
 
@@ -50,7 +53,20 @@ public final class GirlWeaponGeoLayer extends GeoRenderLayer<SceneGirlEntity, Vo
 
       poseStack.pushPose();
       RenderUtil.prepMatrixForBone(poseStack, bone);
+      ItemStackRenderState stackState = new ItemStackRenderState();
+      this.itemModelResolver.updateForTopItem(
+         stackState, weapon, ItemDisplayContext.THIRD_PERSON_RIGHT_HAND, false, Minecraft.getInstance().level, animatable, 0
+      );
       stackState.render(poseStack, bufferSource, packedLight, OverlayTexture.NO_OVERLAY);
       poseStack.popPose();
+   }
+
+   /** The weapon she is actually fighting with, mirroring the original's {@code GirlRenderer.a} gate. */
+   private static ItemStack weaponFor(SceneGirlEntity girl) {
+      return switch (girl.resolvedActivity()) {
+         case COMBAT_MELEE -> girl.getItemBySlot(net.minecraft.world.entity.EquipmentSlot.MAINHAND);
+         case COMBAT_BOW -> girl.getItemBySlot(net.minecraft.world.entity.EquipmentSlot.OFFHAND);
+         default -> ItemStack.EMPTY;
+      };
    }
 }

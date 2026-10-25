@@ -4,8 +4,8 @@ import software.bernie.geckolib.animatable.GeoItem;
 import software.bernie.geckolib.animatable.SingletonGeoAnimatable;
 import software.bernie.geckolib.animatable.client.GeoRenderProvider;
 import software.bernie.geckolib.animatable.instance.AnimatableInstanceCache;
-import software.bernie.geckolib.animatable.manager.AnimatableManager;
-import software.bernie.geckolib.animatable.processing.AnimationController;
+import software.bernie.geckolib.animation.AnimatableManager;
+import software.bernie.geckolib.animation.AnimationController;
 import software.bernie.geckolib.animation.PlayState;
 import software.bernie.geckolib.renderer.GeoItemRenderer;
 import software.bernie.geckolib.util.GeckoLibUtil;
@@ -25,10 +25,9 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.TooltipFlag;
-import net.minecraft.world.item.component.TooltipDisplay;
 import net.minecraft.world.level.Level;
 
-public final class DragonStaffItem extends Item implements GeoItem {
+public final class DragonStaffItem extends Item implements GeoItem, software.bernie.geckolib.animatable.client.GeoRenderProvider {
    private final AnimatableInstanceCache cache = GeckoLibUtil.createInstanceCache(this);
 
    public DragonStaffItem(Properties properties) {
@@ -38,7 +37,7 @@ public final class DragonStaffItem extends Item implements GeoItem {
 
    @Override
    public void registerControllers(AnimatableManager.ControllerRegistrar controllers) {
-      controllers.add(new AnimationController<>("controller", 0, state -> PlayState.CONTINUE));
+      controllers.add(new AnimationController<>(this, "controller", 0, state -> PlayState.CONTINUE));
    }
 
    @Override
@@ -90,7 +89,7 @@ public final class DragonStaffItem extends Item implements GeoItem {
    }
 
    @Override
-   public void appendHoverText(ItemStack stack, TooltipContext context, TooltipDisplay display, Consumer<Component> tooltipAdder, TooltipFlag flag) {
-      tooltipAdder.accept(Component.translatable("item.sexmod.dragon_staff.desc"));
+   public void appendHoverText(ItemStack stack, TooltipContext context, java.util.List<Component> tooltipComponents, TooltipFlag flag) {
+      tooltipComponents.add(Component.translatable("item.sexmod.dragon_staff.desc"));
    }
 }

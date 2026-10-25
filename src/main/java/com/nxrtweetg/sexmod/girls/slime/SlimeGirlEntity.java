@@ -29,8 +29,8 @@ import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.storage.ValueInput;
-import net.minecraft.world.level.storage.ValueOutput;
+import com.nxrtweetg.sexmod.util.TagValueInput;
+import com.nxrtweetg.sexmod.util.TagValueOutput;
 import net.minecraft.world.phys.Vec3;
 
 /**
@@ -239,7 +239,7 @@ public final class SlimeGirlEntity extends SceneGirlEntity {
 
    /** {@code fn.func_180430_e} is empty, so a hop that lands badly costs her nothing. */
    @Override
-   public boolean causeFallDamage(double fallDistance, float multiplier, DamageSource source) {
+   public boolean causeFallDamage(float fallDistance, float multiplier, DamageSource source) {
       return false;
    }
 
@@ -277,14 +277,16 @@ public final class SlimeGirlEntity extends SceneGirlEntity {
    }
 
    @Override
-   protected void addAdditionalSaveData(ValueOutput output) {
-      super.addAdditionalSaveData(output);
+   public void addAdditionalSaveData(net.minecraft.nbt.CompoundTag tag) {
+      TagValueOutput output = TagValueOutput.wrap(tag, this.registryAccess());
+      super.addAdditionalSaveData(tag);
       output.putInt("hornyLevel", this.hornyLevel());
    }
 
    @Override
-   protected void readAdditionalSaveData(ValueInput input) {
-      super.readAdditionalSaveData(input);
+   public void readAdditionalSaveData(net.minecraft.nbt.CompoundTag tag) {
+      TagValueInput input = TagValueInput.wrap(tag, this.registryAccess());
+      super.readAdditionalSaveData(tag);
       this.setHornyLevel(input.getIntOr("hornyLevel", 0));
       // The shared loader re-dresses an idle girl, because for everyone else the dressed model is the
       // resting state. Hers is not: once she has undressed she stays undressed ({@code fn.g()} only ever

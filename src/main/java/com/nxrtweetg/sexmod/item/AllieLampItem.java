@@ -4,8 +4,8 @@ import software.bernie.geckolib.animatable.GeoItem;
 import software.bernie.geckolib.animatable.SingletonGeoAnimatable;
 import software.bernie.geckolib.animatable.client.GeoRenderProvider;
 import software.bernie.geckolib.animatable.instance.AnimatableInstanceCache;
-import software.bernie.geckolib.animatable.manager.AnimatableManager;
-import software.bernie.geckolib.animatable.processing.AnimationController;
+import software.bernie.geckolib.animation.AnimatableManager;
+import software.bernie.geckolib.animation.AnimationController;
 import software.bernie.geckolib.animation.PlayState;
 import software.bernie.geckolib.renderer.GeoItemRenderer;
 import software.bernie.geckolib.util.GeckoLibUtil;
@@ -26,7 +26,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.Vec3;
 
-public final class AllieLampItem extends Item implements GeoItem {
+public final class AllieLampItem extends Item implements GeoItem, software.bernie.geckolib.animatable.client.GeoRenderProvider {
    private final AnimatableInstanceCache cache = GeckoLibUtil.createInstanceCache(this);
 
    public AllieLampItem(Properties properties) {
@@ -36,7 +36,7 @@ public final class AllieLampItem extends Item implements GeoItem {
 
    @Override
    public void registerControllers(AnimatableManager.ControllerRegistrar controllers) {
-      controllers.add(new AnimationController<>("controller", 0, state -> PlayState.CONTINUE));
+      controllers.add(new AnimationController<>(this, "controller", 0, state -> PlayState.CONTINUE));
    }
 
    @Override
@@ -85,7 +85,7 @@ public final class AllieLampItem extends Item implements GeoItem {
             }
             double targetY = pos.getY();
             float yaw = player.getYRot() + 180.0F;
-            allie.snapTo(targetX, targetY, targetZ, yaw, 0.0F);
+            allie.moveTo(targetX, targetY, targetZ, yaw, 0.0F);
             allie.setYRot(yaw);
             allie.setYHeadRot(yaw);
             allie.setYBodyRot(yaw);

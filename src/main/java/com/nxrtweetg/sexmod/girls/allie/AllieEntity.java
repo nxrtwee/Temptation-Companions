@@ -351,8 +351,9 @@ public final class AllieEntity extends SceneGirlEntity {
    }
 
    @Override
-   protected void addAdditionalSaveData(net.minecraft.world.level.storage.ValueOutput output) {
-      super.addAdditionalSaveData(output);
+   public void addAdditionalSaveData(net.minecraft.nbt.CompoundTag tag) {
+      com.nxrtweetg.sexmod.util.TagValueOutput output = com.nxrtweetg.sexmod.util.TagValueOutput.wrap(tag, this.registryAccess());
+      super.addAdditionalSaveData(tag);
       if (this.summonerPlayerUuid != null) {
          output.putString("AllieSummoner", this.summonerPlayerUuid.toString());
       }
@@ -360,8 +361,9 @@ public final class AllieEntity extends SceneGirlEntity {
    }
 
    @Override
-   protected void readAdditionalSaveData(net.minecraft.world.level.storage.ValueInput input) {
-      super.readAdditionalSaveData(input);
+   public void readAdditionalSaveData(net.minecraft.nbt.CompoundTag tag) {
+      com.nxrtweetg.sexmod.util.TagValueInput input = com.nxrtweetg.sexmod.util.TagValueInput.wrap(tag, this.registryAccess());
+      super.readAdditionalSaveData(tag);
       input.getString("AllieSummoner").ifPresent(s -> {
          try {
             this.summonerPlayerUuid = java.util.UUID.fromString(s);

@@ -111,8 +111,8 @@ public final class SexmodCommands {
                      BlockPos pos2 = BlockPosArgument.getBlockPos(context, "pos2");
                      String name = StringArgumentType.getString(context, "name");
                      GirlHomeRegion region = GirlHomeRegion.create(name, player.level().dimension().location().toString(), pos1, pos2);
-                     SexmodHomeData.get(player.level()).addHome(region);
-                     SexmodNetworking.spawnHomeBoundaryParticles(player.level(), region);
+                     SexmodHomeData.get(player.serverLevel()).addHome(region);
+                     SexmodNetworking.spawnHomeBoundaryParticles(player.serverLevel(), region);
                      SexmodNetworking.broadcastHomes(source.getServer());
                      source.sendSuccess(() -> Component.literal("Home '" + name + "' created [" + region.sizeX() + "x" + region.sizeY() + "x" + region.sizeZ() + "]"), true);
                      return 1;
@@ -129,8 +129,8 @@ public final class SexmodCommands {
                      BlockPos pos1 = parseCoordString(c1, player.blockPosition());
                      BlockPos pos2 = parseCoordString(c2, player.blockPosition());
                      GirlHomeRegion region = GirlHomeRegion.create(name, player.level().dimension().location().toString(), pos1, pos2);
-                     SexmodHomeData.get(player.level()).addHome(region);
-                     SexmodNetworking.spawnHomeBoundaryParticles(player.level(), region);
+                     SexmodHomeData.get(player.serverLevel()).addHome(region);
+                     SexmodNetworking.spawnHomeBoundaryParticles(player.serverLevel(), region);
                      SexmodNetworking.broadcastHomes(source.getServer());
                      source.sendSuccess(() -> Component.literal("Home '" + name + "' created [" + region.sizeX() + "x" + region.sizeY() + "x" + region.sizeZ() + "]"), true);
                      return 1;
@@ -229,7 +229,7 @@ public final class SexmodCommands {
 
    private static int spawnGirl(CommandSourceStack source, String character) throws CommandSyntaxException {
       ServerPlayer player = source.getPlayerOrException();
-      ServerLevel level = player.level();
+      ServerLevel level = player.serverLevel();
       EntityType<? extends SceneGirlEntity> type = ModEntities.all().get(character);
       SceneGirlEntity girl = type.create(level, EntitySpawnReason.COMMAND);
       if (girl == null) {
@@ -243,7 +243,7 @@ public final class SexmodCommands {
          }
       }
 
-      girl.snapTo(player.getX() + 1.5, player.getY(), player.getZ() + 1.5, player.getYRot(), 0.0F);
+      girl.moveTo(player.getX() + 1.5, player.getY(), player.getZ() + 1.5, player.getYRot(), 0.0F);
       level.addFreshEntity(girl);
       player.displayClientMessage(Component.literal("Spawned " + girl.getName().getString() + "."), false);
       return 1;
@@ -251,14 +251,14 @@ public final class SexmodCommands {
 
    private static int spawnCustomGirl(CommandSourceStack source, String characterName) throws CommandSyntaxException {
       ServerPlayer player = source.getPlayerOrException();
-      ServerLevel level = player.level();
+      ServerLevel level = player.serverLevel();
       com.nxrtweetg.sexmod.girls.custom.CustomGirlEntity girl = ModEntities.CUSTOM_GIRL.create(level, EntitySpawnReason.COMMAND);
       if (girl == null) {
          return 0;
       }
 
       girl.setCustomId(characterName);
-      girl.snapTo(player.getX() + 1.5, player.getY(), player.getZ() + 1.5, player.getYRot(), 0.0F);
+      girl.moveTo(player.getX() + 1.5, player.getY(), player.getZ() + 1.5, player.getYRot(), 0.0F);
       level.addFreshEntity(girl);
       player.displayClientMessage(Component.literal("Spawned custom companion " + girl.getName().getString() + "."), false);
       return 1;
@@ -274,8 +274,8 @@ public final class SexmodCommands {
          Component coords = Component.literal("[" + targetPos.getX() + ", ~, " + targetPos.getZ() + "]")
             .withStyle(style -> style
                .withColor(net.minecraft.ChatFormatting.GREEN)
-               .withClickEvent(new net.minecraft.network.chat.ClickEvent.SuggestCommand(tpCmd))
-               .withHoverEvent(new net.minecraft.network.chat.HoverEvent.ShowText(Component.literal("Click to teleport"))));
+               .withClickEvent(new net.minecraft.network.chat.ClickEvent(net.minecraft.network.chat.ClickEvent.Action.SUGGEST_COMMAND, tpCmd))
+               .withHoverEvent(new net.minecraft.network.chat.HoverEvent(net.minecraft.network.chat.HoverEvent.Action.SHOW_TEXT, Component.literal("Click to teleport"))));
 
          source.sendSuccess(() -> Component.literal("The nearest " + structName + " is at ").append(coords).append(" (" + dist + " blocks away)"), false);
          return 1;

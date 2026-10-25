@@ -4,8 +4,8 @@ import com.nxrtweetg.sexmod.girls.inventory.GirlInventoryMenu;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
-import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Inventory;
@@ -29,9 +29,7 @@ public final class GirlInventoryScreen extends AbstractContainerScreen<GirlInven
 
    @Override
    protected void renderBg(GuiGraphics context, float delta, int mouseX, int mouseY) {
-      context.blit(
-         RenderPipelines.GUI_TEXTURED,
-         GIRL_INVENTORY,
+      context.blit(RenderType::guiTextured, GIRL_INVENTORY,
          this.leftPos,
          this.topPos,
          BACKGROUND_U,

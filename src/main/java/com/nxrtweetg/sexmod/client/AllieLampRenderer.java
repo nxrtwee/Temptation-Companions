@@ -2,13 +2,13 @@ package com.nxrtweetg.sexmod.client;
 
 import software.bernie.geckolib.cache.object.BakedGeoModel;
 import software.bernie.geckolib.renderer.GeoItemRenderer;
-import software.bernie.geckolib.renderer.base.GeoRenderState;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.nxrtweetg.sexmod.item.AllieLampItem;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.client.renderer.MultiBufferSource;
+import net.minecraft.client.renderer.RenderType;
 import net.minecraft.resources.ResourceLocation;
 
 @Environment(EnvType.CLIENT)
@@ -25,11 +25,10 @@ public final class AllieLampRenderer extends GeoItemRenderer<AllieLampItem> {
 
    @Override
    public void preRender(
-      GeoRenderState renderState, PoseStack poseStack, BakedGeoModel model,
-      MultiBufferSource bufferSource, VertexConsumer buffer,
-      boolean isReRender, int packedLight, int packedOverlay, int renderColor
+      PoseStack poseStack, AllieLampItem animatable, BakedGeoModel model, MultiBufferSource bufferSource,
+      VertexConsumer buffer, boolean isReRender, float partialTick, int packedLight, int packedOverlay, int renderColor
    ) {
-      super.preRender(renderState, poseStack, model, bufferSource, buffer, isReRender, packedLight, packedOverlay, renderColor);
+      super.preRender(poseStack, animatable, model, bufferSource, buffer, isReRender, partialTick, packedLight, packedOverlay, renderColor);
       // Severed arm bones from the Blockbench model are permanently hidden across all perspectives.
       // The lamp is held cleanly in the player's real hand without fake arms or looping inspection animations.
       for (String boneName : ARM_BONES) {

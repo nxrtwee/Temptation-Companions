@@ -5,8 +5,8 @@ import net.fabricmc.api.Environment;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.AbstractButton;
+import net.minecraft.client.renderer.RenderType;
 
-import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.Mth;
@@ -18,6 +18,7 @@ import net.minecraft.util.Mth;
  */
 @Environment(EnvType.CLIENT)
 public final class GirlCommandButton extends AbstractButton {
+   private static final ResourceLocation WIDGETS = ResourceLocation.parse("textures/gui/widgets.png");
    private static final ResourceLocation GIRL_INVENTORY = ResourceLocation.fromNamespaceAndPath("sexmod", "textures/gui/girlinventory.png");
    private static final int TEXTURE_SIZE = 256;
    private static final int ICON_SIZE = 16;
@@ -69,13 +70,21 @@ public final class GirlCommandButton extends AbstractButton {
          return;
       }
 
-      context.blitSprite(
-         RenderPipelines.GUI_TEXTURED,
-         ResourceLocation.withDefaultNamespace(this.isHoveredOrFocused() ? "widget/button_highlighted" : "widget/button"),
-         this.getX(), this.getY(), this.getWidth(), this.getHeight()
+      int vOffset = 46 + (this.isActive() ? 0 : 20) + (this.isHoveredOrFocused() ? 20 : 0);
+      context.blit(
+         RenderType::guiTextured,
+         WIDGETS,
+         this.getX(), this.getY(), 0, vOffset,
+         this.getWidth() / 2, this.getHeight(), 256, 256
       );
       context.blit(
-         RenderPipelines.GUI_TEXTURED,
+         RenderType::guiTextured,
+         WIDGETS,
+         this.getX() + this.getWidth() / 2, this.getY(), 200 - this.getWidth() / 2, vOffset,
+         this.getWidth() - this.getWidth() / 2, this.getHeight(), 256, 256
+      );
+      context.blit(
+         RenderType::guiTextured,
          GIRL_INVENTORY,
          this.getX() + this.getWidth() - ICON_SIZE - ICON_MARGIN,
          this.getY() + (this.getHeight() - ICON_SIZE) / 2,

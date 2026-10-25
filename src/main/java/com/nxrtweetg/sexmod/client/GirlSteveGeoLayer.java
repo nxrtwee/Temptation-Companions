@@ -2,7 +2,7 @@ package com.nxrtweetg.sexmod.client;
 
 import software.bernie.geckolib.cache.object.BakedGeoModel;
 import software.bernie.geckolib.cache.object.GeoBone;
-import software.bernie.geckolib.renderer.base.GeoRenderer;
+import software.bernie.geckolib.renderer.GeoRenderer;
 import software.bernie.geckolib.renderer.layer.GeoRenderLayer;
 import software.bernie.geckolib.util.RenderUtil;
 import com.mojang.blaze3d.vertex.PoseStack;
@@ -28,7 +28,7 @@ import net.minecraft.resources.ResourceLocation;
  * </ol>
  */
 @Environment(EnvType.CLIENT)
-public final class GirlSteveGeoLayer extends GeoRenderLayer<SceneGirlEntity, Void, GirlEntityRenderer.GirlGeoRenderState> {
+public final class GirlSteveGeoLayer extends GeoRenderLayer<SceneGirlEntity> {
    private static final String BONE_STEVE = "steve";
 
    private static final ResourceLocation JENNY_ATLAS = ResourceLocation.fromNamespaceAndPath("sexmod", "textures/entity/jenny/jenny.png");
@@ -39,28 +39,27 @@ public final class GirlSteveGeoLayer extends GeoRenderLayer<SceneGirlEntity, Voi
 
    /**
     * Body bones hidden in the genital pass (self + all children).
-    * boyCam is child of Head2 - covered by Head2's child hiding.
     * Torso2 is handled separately via a mesh-only hide (cubes skipped, children still walked).
     */
    private static final String[] BODY_BONES_TO_HIDE = {"Head2", "LeftArm", "RightArm", "LeftLeg", "RightLeg", "blocks"};
 
-   public GirlSteveGeoLayer(GeoRenderer<SceneGirlEntity, Void, GirlEntityRenderer.GirlGeoRenderState> renderer) {
+   public GirlSteveGeoLayer(GeoRenderer<SceneGirlEntity> renderer) {
       super(renderer);
    }
 
-   private ResourceLocation resolveTexture(GirlEntityRenderer.GirlGeoRenderState renderState) {
+   private ResourceLocation resolveTexture(SceneGirlEntity animatable) {
       // All characters (including jenny after UV repack) use standard player skin layout.
-      ResourceLocation playerSkin = renderState.getGeckolibData(GirlRenderData.PARTNER_SKIN);
+      ResourceLocation playerSkin = GirlSceneCameraController.getLockedPartnerSkin();
       return playerSkin != null ? playerSkin : PLAYER_SKIN;
    }
 
    @Override
    public void render(
-      GirlEntityRenderer.GirlGeoRenderState renderState, PoseStack poseStack, BakedGeoModel model,
+      PoseStack poseStack, SceneGirlEntity animatable, BakedGeoModel model,
       RenderType renderType, MultiBufferSource bufferSource, VertexConsumer buffer,
-      int packedLight, int packedOverlay, int renderColor
+      float partialTick, int packedLight, int packedOverlay, int renderColor
    ) {
-      if (!renderState.getOrDefaultGeckolibData(GirlRenderData.RENDER_PLAYER, false)) {
+      if (!animatable.shouldRenderPlayerTracked()) {
          return;
       }
 
@@ -69,26 +68,26 @@ public final class GirlSteveGeoLayer extends GeoRenderLayer<SceneGirlEntity, Voi
          return;
       }
 
-      boolean partnerIsSlim = renderState.getOrDefaultGeckolibData(GirlRenderData.PARTNER_IS_SLIM, false);
+      boolean partnerIsSlim = GirlSceneCameraController.isLockedPartnerSlim();
 
       // Pass 1: player skin - full body, genital bones hidden and the wrong arm variant hidden.
-      RenderType skinType = this.renderer.getRenderType(renderState, this.resolveTexture(renderState));
+      RenderType skinType = this.renderer.getRenderType(animatable, this.resolveTexture(animatable), bufferSource, partialTick);
       if (skinType != null) {
          VertexConsumer skinBuffer = bufferSource.getBuffer(skinType);
          setBonesHidden(model, GENITAL_BONES, true);
          GirlEntityRenderer.applyPartnerArmModel(model, partnerIsSlim);
-         renderSubtree(renderState, poseStack, steve, bufferSource, skinBuffer, packedLight, packedOverlay, renderColor);
+         renderSubtree(poseStack, steve, bufferSource, skinBuffer, packedLight, packedOverlay, renderColor);
          setBonesHidden(model, GENITAL_BONES, false);
       }
 
       // Pass 2: steve.png - only genitals (all characters including jenny).
-      RenderType steveType = this.renderer.getRenderType(renderState, PLAYER_SKIN);
+      RenderType steveType = this.renderer.getRenderType(animatable, PLAYER_SKIN, bufferSource, partialTick);
       if (steveType != null) {
          VertexConsumer steveBuffer = bufferSource.getBuffer(steveType);
          setBonesHidden(model, GENITAL_BONES, false);
          setMeshOnly(model, "Torso2", true);
          setBonesHidden(model, BODY_BONES_TO_HIDE, true);
-         renderSubtree(renderState, poseStack, steve, bufferSource, steveBuffer, packedLight, packedOverlay, renderColor);
+         renderSubtree(poseStack, steve, bufferSource, steveBuffer, packedLight, packedOverlay, renderColor);
          setBonesHidden(model, BODY_BONES_TO_HIDE, false);
          setMeshOnly(model, "Torso2", false);
          setBonesHidden(model, GENITAL_BONES, true);
@@ -96,25 +95,23 @@ public final class GirlSteveGeoLayer extends GeoRenderLayer<SceneGirlEntity, Voi
    }
 
    /**
-    * GeckoLib 5.2's own recursion skips a hidden bone together with its children, which the mesh-only
-    * hide of Torso2 cannot express - so the subtree is walked by hand: cubes of visible bones,
-    * children of bones that are not hiding them.
+    * The subtree is walked by hand: cubes of visible bones, children of bones that are not hiding
+    * them - which is what the mesh-only hide of Torso2 needs.
     */
    private void renderSubtree(
-      GirlEntityRenderer.GirlGeoRenderState renderState, PoseStack poseStack, GeoBone bone,
-      MultiBufferSource bufferSource, VertexConsumer buffer,
+      PoseStack poseStack, GeoBone bone, MultiBufferSource bufferSource, VertexConsumer buffer,
       int packedLight, int packedOverlay, int renderColor
    ) {
       if (!bone.isHidden()) {
          poseStack.pushPose();
          RenderUtil.prepMatrixForBone(poseStack, bone);
-         this.renderer.renderCubesOfBone(renderState, bone, poseStack, buffer, packedLight, packedOverlay, renderColor);
+         this.renderer.renderCubesOfBone(poseStack, bone, buffer, packedLight, packedOverlay, renderColor);
          poseStack.popPose();
       }
 
       if (!bone.isHidingChildren()) {
          for (GeoBone child : bone.getChildBones()) {
-            renderSubtree(renderState, poseStack, child, bufferSource, buffer, packedLight, packedOverlay, renderColor);
+            renderSubtree(poseStack, child, bufferSource, buffer, packedLight, packedOverlay, renderColor);
          }
       }
    }

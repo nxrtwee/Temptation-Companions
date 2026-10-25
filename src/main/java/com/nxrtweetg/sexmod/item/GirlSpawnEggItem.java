@@ -25,7 +25,7 @@ public final class GirlSpawnEggItem extends Item {
          if (girl != null) {
             BlockPos pos = context.getClickedPos().relative(context.getClickedFace());
             float yaw = context.getPlayer() == null ? 0.0F : context.getPlayer().getYRot() + 180.0F;
-            girl.snapTo(pos.getX() + 0.5, pos.getY(), pos.getZ() + 0.5, yaw, 0.0F);
+            girl.moveTo(pos.getX() + 0.5, pos.getY(), pos.getZ() + 0.5, yaw, 0.0F);
             girl.setPersistenceRequired();
             context.getLevel().addFreshEntity(girl);
             Player player = context.getPlayer();

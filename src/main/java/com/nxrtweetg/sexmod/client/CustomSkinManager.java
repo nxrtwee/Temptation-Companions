@@ -50,7 +50,7 @@ public final class CustomSkinManager {
             TextureManager tm = Minecraft.getInstance().getTextureManager();
             tm.release(textureId);
 
-            DynamicTexture dynamicTexture = new DynamicTexture(() -> "TC-Skin-" + safeId, image);
+            DynamicTexture dynamicTexture = new DynamicTexture(image);
             dynamicTexture.upload();
             tm.register(textureId, dynamicTexture);
 

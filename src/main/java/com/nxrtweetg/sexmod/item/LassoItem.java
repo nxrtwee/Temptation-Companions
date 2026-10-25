@@ -16,7 +16,6 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
-import net.minecraft.util.ProblemReporter;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.Entity;
@@ -28,12 +27,11 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.item.component.CustomData;
-import net.minecraft.world.item.component.TooltipDisplay;
 import net.minecraft.world.item.context.UseOnContext;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.storage.TagValueInput;
-import net.minecraft.world.level.storage.TagValueOutput;
-import net.minecraft.world.level.storage.ValueInput;
+import com.nxrtweetg.sexmod.util.TagValueInput;
+import com.nxrtweetg.sexmod.util.TagValueOutput;
+import com.nxrtweetg.sexmod.util.TagValueInput;
 
 /**
  * Item that captures any companion into a lasso upon right-click.
@@ -53,7 +51,7 @@ public final class LassoItem extends Item {
    public static boolean hasGirl(ItemStack stack) {
       CustomData data = stack.get(DataComponents.CUSTOM_DATA);
       if (data != null && !data.isEmpty()) {
-         return data.copyTag().getBooleanOr(TAG_HAS_GIRL, false);
+         return data.copyTag().getBoolean(TAG_HAS_GIRL);
       }
       return false;
    }
@@ -61,15 +59,15 @@ public final class LassoItem extends Item {
    public static String getGirlName(ItemStack stack) {
       CustomData data = stack.get(DataComponents.CUSTOM_DATA);
       if (data != null && !data.isEmpty()) {
-         return data.copyTag().getStringOr(TAG_GIRL_NAME, "");
+         return data.copyTag().getString(TAG_GIRL_NAME);
       }
       return "";
    }
 
    public static void storeGirl(ItemStack stack, GirlEntity girl) {
       girl.setStayingAtHome(false);
-      TagValueOutput output = TagValueOutput.createWithContext(ProblemReporter.DISCARDING, girl.level().registryAccess());
-      girl.saveWithoutId(output);
+      TagValueOutput output = TagValueOutput.wrap(new net.minecraft.nbt.CompoundTag(), girl.level().registryAccess());
+      girl.saveWithoutId(output.tag());
       CompoundTag entityTag = output.buildResult();
 
       CompoundTag tag = new CompoundTag();
@@ -106,7 +104,7 @@ public final class LassoItem extends Item {
          }
       }
 
-      player.level().playSound(null, player.blockPosition(), SoundEvents.LEAD_TIED, SoundSource.PLAYERS, 1.0F, 1.2F);
+      player.level().playSound(null, player.blockPosition(), SoundEvents.CHAIN_PLACE, SoundSource.PLAYERS, 1.0F, 1.2F);
       player.displayClientMessage(
          Component.translatable("chat.sexmod.lasso.returned", girl.getName().getString()).withStyle(ChatFormatting.YELLOW),
          false
@@ -138,7 +136,7 @@ public final class LassoItem extends Item {
          serverLevel.sendParticles(ParticleTypes.HEART,
             girl.getX(), girl.getY() + 1.0, girl.getZ(),
             12, 0.3, 0.4, 0.3, 0.05);
-         level.playSound(null, girl.blockPosition(), SoundEvents.LEAD_TIED, SoundSource.PLAYERS, 1.0F, 1.2F);
+         level.playSound(null, girl.blockPosition(), SoundEvents.CHAIN_PLACE, SoundSource.PLAYERS, 1.0F, 1.2F);
 
          girl.discard();
       }
@@ -163,8 +161,8 @@ public final class LassoItem extends Item {
          }
 
          CompoundTag tag = data.copyTag();
-         String typeId = tag.getStringOr(TAG_ENTITY_TYPE, "");
-         CompoundTag entityTag = tag.getCompoundOrEmpty(TAG_ENTITY_DATA);
+         String typeId = tag.getString(TAG_ENTITY_TYPE);
+         CompoundTag entityTag = tag.getCompound(TAG_ENTITY_DATA);
 
          EntityType<?> type = BuiltInRegistries.ENTITY_TYPE.get(ResourceLocation.parse(typeId))
             .map(Holder.Reference::value)
@@ -174,8 +172,8 @@ public final class LassoItem extends Item {
             Entity spawned = type.create(serverLevel, EntitySpawnReason.TRIGGERED);
             if (spawned instanceof GirlEntity girl) {
                if (!entityTag.isEmpty()) {
-                  ValueInput input = TagValueInput.create(ProblemReporter.DISCARDING, serverLevel.registryAccess(), entityTag);
-                  girl.load(input);
+                  TagValueInput input = TagValueInput.wrap(entityTag, serverLevel.registryAccess());
+                  girl.load(input.tag());
                }
 
                BlockPos clicked = context.getClickedPos();
@@ -199,7 +197,7 @@ public final class LassoItem extends Item {
                serverLevel.sendParticles(ParticleTypes.CLOUD,
                   girl.getX(), girl.getY() + 0.5, girl.getZ(),
                   15, 0.3, 0.4, 0.3, 0.05);
-               level.playSound(null, spawnPos, SoundEvents.LEAD_BREAK, SoundSource.PLAYERS, 1.0F, 1.0F);
+               level.playSound(null, spawnPos, SoundEvents.CHAIN_BREAK, SoundSource.PLAYERS, 1.0F, 1.0F);
 
                // Reset lasso to empty
                stack.remove(DataComponents.CUSTOM_DATA);
@@ -211,13 +209,13 @@ public final class LassoItem extends Item {
    }
 
    @Override
-   public void appendHoverText(ItemStack stack, TooltipContext context, TooltipDisplay display, Consumer<Component> tooltipAdder, TooltipFlag flag) {
+   public void appendHoverText(ItemStack stack, TooltipContext context, java.util.List<Component> tooltipComponents, TooltipFlag flag) {
       if (hasGirl(stack)) {
          String name = getGirlName(stack);
-         tooltipAdder.accept(Component.translatable("item.sexmod.lasso.contains", name).withStyle(ChatFormatting.GOLD));
-         tooltipAdder.accept(Component.translatable("item.sexmod.lasso.release_hint").withStyle(ChatFormatting.GRAY));
+         tooltipComponents.add(Component.translatable("item.sexmod.lasso.contains", name).withStyle(ChatFormatting.GOLD));
+         tooltipComponents.add(Component.translatable("item.sexmod.lasso.release_hint").withStyle(ChatFormatting.GRAY));
       } else {
-         tooltipAdder.accept(Component.translatable("item.sexmod.lasso.empty").withStyle(ChatFormatting.GRAY));
+         tooltipComponents.add(Component.translatable("item.sexmod.lasso.empty").withStyle(ChatFormatting.GRAY));
       }
    }
 }

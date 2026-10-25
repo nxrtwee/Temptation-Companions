@@ -40,8 +40,8 @@ import net.minecraft.world.entity.monster.Creeper;
 import net.minecraft.world.entity.monster.Monster;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.storage.ValueInput;
-import net.minecraft.world.level.storage.ValueOutput;
+import com.nxrtweetg.sexmod.util.TagValueInput;
+import com.nxrtweetg.sexmod.util.TagValueOutput;
 
 public abstract class GirlEntity extends PathfinderMob {
    private static final double DEFAULT_WALK_SPEED = 0.35;
@@ -347,8 +347,9 @@ public abstract class GirlEntity extends PathfinderMob {
 
 
    @Override
-   protected void addAdditionalSaveData(ValueOutput output) {
-      super.addAdditionalSaveData(output);
+   public void addAdditionalSaveData(net.minecraft.nbt.CompoundTag tag) {
+      TagValueOutput output = TagValueOutput.wrap(tag, this.registryAccess());
+      super.addAdditionalSaveData(tag);
       output.putInt("CurrentModel", this.coreState.currentModel());
       output.putString("GirlName", this.coreState.girlName());
       output.putBoolean("ShouldBeAtTarget", this.coreState.shouldBeAtTarget());
@@ -373,7 +374,7 @@ public abstract class GirlEntity extends PathfinderMob {
       output.putString("AssignedHomeName", this.assignedHomeName);
       output.putString("Activity", this.activity.id());
 
-      ValueOutput equipmentOutput = output.child("Equipment");
+      TagValueOutput equipmentOutput = output.child("Equipment");
 
       for (int slot = 0; slot < this.equipment.getContainerSize(); slot++) {
          ItemStack stack = this.equipment.getItem(slot);
@@ -383,7 +384,7 @@ public abstract class GirlEntity extends PathfinderMob {
          }
       }
 
-      ValueOutput animationOutput = output.child("AnimationState");
+      TagValueOutput animationOutput = output.child("AnimationState");
 
       for (Entry<GirlAnimationParameter, Boolean> entry : this.coreState.animationState().snapshot().entrySet()) {
          animationOutput.putBoolean(entry.getKey().name(), entry.getValue());
@@ -391,8 +392,9 @@ public abstract class GirlEntity extends PathfinderMob {
    }
 
    @Override
-   protected void readAdditionalSaveData(ValueInput input) {
-      super.readAdditionalSaveData(input);
+   public void readAdditionalSaveData(net.minecraft.nbt.CompoundTag tag) {
+      TagValueInput input = TagValueInput.wrap(tag, this.registryAccess());
+      super.readAdditionalSaveData(tag);
       this.coreState.setCurrentModel(input.getIntOr("CurrentModel", this.coreState.currentModel()));
       input.getString("GirlName").ifPresent(this.coreState::setGirlName);
       this.coreState.setShouldBeAtTarget(input.getBooleanOr("ShouldBeAtTarget", false));
@@ -423,14 +425,14 @@ public abstract class GirlEntity extends PathfinderMob {
       this.activity = loadedActivity == GirlActivity.PEARL ? GirlActivity.NONE : loadedActivity;
       this.entityData.set(TRACKED_ACTIVITY, this.activity.id());
       this.equipment.clearContent();
-      ValueInput equipmentInput = input.childOrEmpty("Equipment");
+      TagValueInput equipmentInput = input.childOrEmpty("Equipment");
 
       for (int slot = 0; slot < this.equipment.getContainerSize(); slot++) {
          int index = slot;
          equipmentInput.read(String.valueOf(slot), ItemStack.CODEC).ifPresent(stack -> this.equipment.setItem(index, stack));
       }
 
-      ValueInput animationInput = input.childOrEmpty("AnimationState");
+      TagValueInput animationInput = input.childOrEmpty("AnimationState");
 
       for (GirlAnimationParameter girlanimationparameter : GirlAnimationParameter.values()) {
          this.coreState

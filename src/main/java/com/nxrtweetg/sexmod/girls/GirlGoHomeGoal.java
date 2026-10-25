@@ -104,9 +104,9 @@ public final class GirlGoHomeGoal extends Goal {
       }
       world.playSound(null, this.girl.blockPosition(), SoundEvents.ENDERMAN_TELEPORT, SoundSource.NEUTRAL, 1.0F, 1.0F);
 
-      this.girl.snapTo(homeCenter.x, homeCenter.y, homeCenter.z, this.girl.getYRot(), this.girl.getXRot());
+      this.girl.moveTo(homeCenter.x, homeCenter.y, homeCenter.z, this.girl.getYRot(), this.girl.getXRot());
       this.girl.setDeltaMovement(Vec3.ZERO);
-      this.girl.fallDistance = 0.0;
+      this.girl.fallDistance = 0.0F;
 
       for (int i = 0; i < PORTAL_PARTICLES; i++) {
          world.sendParticles(

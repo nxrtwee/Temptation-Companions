@@ -67,7 +67,7 @@ public final class SexmodNetworking {
          case "action.names.gohome":
             girl.setStayingAtHome(true);
             if (!girl.assignedHomeName().isEmpty()) {
-               com.nxrtweetg.sexmod.home.GirlHomeRegion region = com.nxrtweetg.sexmod.home.SexmodHomeData.get(player.level()).getHome(girl.assignedHomeName());
+               com.nxrtweetg.sexmod.home.GirlHomeRegion region = com.nxrtweetg.sexmod.home.SexmodHomeData.get(player.serverLevel()).getHome(girl.assignedHomeName());
                if (region != null) {
                   girl.coreState().setHomePos(region.center());
                }
@@ -113,7 +113,7 @@ public final class SexmodNetworking {
    }
 
    private static void handleHomeAction(ServerPlayer player, HomeActionPayload payload) {
-      ServerLevel level = player.level();
+      ServerLevel level = player.serverLevel();
       com.nxrtweetg.sexmod.home.SexmodHomeData homeData = com.nxrtweetg.sexmod.home.SexmodHomeData.get(level);
 
       switch (payload.action()) {

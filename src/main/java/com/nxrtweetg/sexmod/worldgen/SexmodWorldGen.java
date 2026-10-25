@@ -144,7 +144,7 @@ public final class SexmodWorldGen {
             return;
          }
          for (net.minecraft.server.level.ServerPlayer player : server.getPlayerList().getPlayers()) {
-            ServerLevel level = player.level();
+            ServerLevel level = player.serverLevel();
             ResourceKey<Level> dim = level.dimension();
             if (dim != Level.OVERWORLD && dim != Level.NETHER) {
                continue;
@@ -175,7 +175,7 @@ public final class SexmodWorldGen {
    }
 
    private static void onOverworldChunkLoad(ServerLevel level, ChunkPos chunkPos) {
-      SexmodWorldGenData data = level.getDataStorage().computeIfAbsent(SexmodWorldGenData.TYPE);
+      SexmodWorldGenData data = level.getDataStorage().computeIfAbsent(SexmodWorldGenData.TYPE, "sexmod:generation");
       long chunkKey = chunkPos.toLong();
       if (data.isChunkProcessed(chunkKey)) {
          return;
@@ -202,7 +202,7 @@ public final class SexmodWorldGen {
    }
 
    private static void onNetherChunkLoad(ServerLevel level, ChunkPos chunkPos) {
-      SexmodWorldGenData data = level.getDataStorage().computeIfAbsent(SexmodWorldGenData.TYPE);
+      SexmodWorldGenData data = level.getDataStorage().computeIfAbsent(SexmodWorldGenData.TYPE, "sexmod:generation");
       long chunkKey = chunkPos.toLong();
       if (data.isChunkProcessed(chunkKey)) {
          return;
@@ -233,7 +233,7 @@ public final class SexmodWorldGen {
       for (double[] offset : offsets) {
          KoboldEntity kobold = ModEntities.KOBOLD.create(level, EntitySpawnReason.STRUCTURE);
          if (kobold != null) {
-            kobold.snapTo(x + 0.5 + offset[0], y, z + 0.5 + offset[1], random.nextFloat() * 360.0F, 0.0F);
+            kobold.moveTo(x + 0.5 + offset[0], y, z + 0.5 + offset[1], random.nextFloat() * 360.0F, 0.0F);
             kobold.setTribeColorIndex(tribeColor);
             kobold.setEyeColorArgb(eyeColor);
             kobold.setPersistenceRequired();
@@ -282,7 +282,7 @@ public final class SexmodWorldGen {
       BlockPos goblinPos = origin.offset(5, 1, 5);
       GoblinEntity goblin = ModEntities.GOBLIN.create(level, EntitySpawnReason.STRUCTURE);
       if (goblin != null) {
-         goblin.snapTo(goblinPos.getX() + 0.5, goblinPos.getY(), goblinPos.getZ() + 0.5, random.nextFloat() * 360.0F, 0.0F);
+         goblin.moveTo(goblinPos.getX() + 0.5, goblinPos.getY(), goblinPos.getZ() + 0.5, random.nextFloat() * 360.0F, 0.0F);
          goblin.setPersistenceRequired();
          goblin.coreState().setHomePos(goblinPos);
          level.addFreshEntity(goblin);
@@ -377,7 +377,7 @@ public final class SexmodWorldGen {
             if (level.getBlockState(ground).isSolid() && !level.getBlockState(ground).liquid()) {
                BeeEntity bee = ModEntities.BEE.create(level, EntitySpawnReason.NATURAL);
                if (bee != null) {
-                  bee.snapTo(x + 0.5, y, z + 0.5, random.nextFloat() * 360.0F, 0.0F);
+                  bee.moveTo(x + 0.5, y, z + 0.5, random.nextFloat() * 360.0F, 0.0F);
                   bee.setPersistenceRequired();
                   level.addFreshEntity(bee);
                }
@@ -396,7 +396,7 @@ public final class SexmodWorldGen {
             if (level.getBlockState(ground).isSolid() || level.getBlockState(ground).is(Blocks.WATER)) {
                SlimeGirlEntity slime = ModEntities.SLIME.create(level, EntitySpawnReason.NATURAL);
                if (slime != null) {
-                  slime.snapTo(x + 0.5, y, z + 0.5, random.nextFloat() * 360.0F, 0.0F);
+                  slime.moveTo(x + 0.5, y, z + 0.5, random.nextFloat() * 360.0F, 0.0F);
                   slime.setPersistenceRequired();
                   level.addFreshEntity(slime);
                }
@@ -435,14 +435,14 @@ public final class SexmodWorldGen {
             if (spawnGalath) {
                GalathEntity galath = ModEntities.GALATH.create(level, EntitySpawnReason.NATURAL);
                if (galath != null) {
-                  galath.snapTo(x + 0.5, y, z + 0.5, random.nextFloat() * 360.0F, 0.0F);
+                  galath.moveTo(x + 0.5, y, z + 0.5, random.nextFloat() * 360.0F, 0.0F);
                   galath.setPersistenceRequired();
                   level.addFreshEntity(galath);
                }
             } else {
                ManglelieEntity manglelie = ModEntities.MANGLELIE.create(level, EntitySpawnReason.NATURAL);
                if (manglelie != null) {
-                  manglelie.snapTo(x + 0.5, y, z + 0.5, random.nextFloat() * 360.0F, 0.0F);
+                  manglelie.moveTo(x + 0.5, y, z + 0.5, random.nextFloat() * 360.0F, 0.0F);
                   manglelie.setPersistenceRequired();
                   level.addFreshEntity(manglelie);
                }
@@ -517,7 +517,7 @@ public final class SexmodWorldGen {
          if (existing.isEmpty()) {
             SceneGirlEntity girl = def.girlType().create(level, EntitySpawnReason.STRUCTURE);
             if (girl != null) {
-               girl.snapTo(girlPos.getX() + 0.5, girlPos.getY(), girlPos.getZ() + 0.5, 0.0F, 0.0F);
+               girl.moveTo(girlPos.getX() + 0.5, girlPos.getY(), girlPos.getZ() + 0.5, 0.0F, 0.0F);
                girl.setPersistenceRequired();
                girl.coreState().setHomePos(girlPos);
                level.addFreshEntity(girl);
@@ -570,7 +570,7 @@ public final class SexmodWorldGen {
    }
 
    public static BlockPos findNearestStructure(ServerLevel level, BlockPos fromPos, String name) {
-      SexmodWorldGenData data = level.getDataStorage().computeIfAbsent(SexmodWorldGenData.TYPE);
+      SexmodWorldGenData data = level.getDataStorage().computeIfAbsent(SexmodWorldGenData.TYPE, "sexmod:generation");
       SexmodWorldGenData.PlacedStructure closest = null;
       double closestDistSq = Double.MAX_VALUE;
       int chunkX = fromPos.getX() >> 4;
@@ -616,7 +616,7 @@ public final class SexmodWorldGen {
                            BlockPos goblinPos = origin.offset(5, 1, 5);
                            GoblinEntity goblin = ModEntities.GOBLIN.create(level, EntitySpawnReason.STRUCTURE);
                            if (goblin != null) {
-                              goblin.snapTo(goblinPos.getX() + 0.5, goblinPos.getY(), goblinPos.getZ() + 0.5, 0.0F, 0.0F);
+                              goblin.moveTo(goblinPos.getX() + 0.5, goblinPos.getY(), goblinPos.getZ() + 0.5, 0.0F, 0.0F);
                               goblin.setPersistenceRequired();
                               goblin.coreState().setHomePos(goblinPos);
                               level.addFreshEntity(goblin);

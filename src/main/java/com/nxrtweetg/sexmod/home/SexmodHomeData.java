@@ -12,7 +12,8 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.util.datafix.DataFixTypes;
 import net.minecraft.world.level.saveddata.SavedData;
-import net.minecraft.world.level.saveddata.SavedDataType;
+import net.minecraft.world.level.saveddata.SavedData;
+import net.minecraft.nbt.NbtOps;
 
 /**
  * SavedData storing player-defined companion home regions.
@@ -26,12 +27,18 @@ public final class SexmodHomeData extends SavedData {
       ).apply(instance, SexmodHomeData::new)
    );
 
-   public static final SavedDataType<SexmodHomeData> TYPE = new SavedDataType<>(
-      "sexmod:homes",
+   public static final SavedData.Factory<SexmodHomeData> TYPE = new SavedData.Factory<>(
       SexmodHomeData::new,
-      CODEC,
+      (tag, registries) -> CODEC.parse(registries.createSerializationContext(NbtOps.INSTANCE), tag).result().orElseGet(SexmodHomeData::new),
       DataFixTypes.SAVED_DATA_STRUCTURE_FEATURE_INDICES
    );
+
+   @Override
+   public net.minecraft.nbt.CompoundTag save(net.minecraft.nbt.CompoundTag tag, net.minecraft.core.HolderLookup.Provider registries) {
+      CODEC.encodeStart(registries.createSerializationContext(NbtOps.INSTANCE), this)
+         .result().ifPresent(encoded -> tag.merge((net.minecraft.nbt.CompoundTag)encoded));
+      return tag;
+   }
 
    public SexmodHomeData() {
    }
@@ -44,7 +51,7 @@ public final class SexmodHomeData extends SavedData {
 
    public static SexmodHomeData get(ServerLevel level) {
       ServerLevel overworld = level.getServer().overworld();
-      return overworld.getDataStorage().computeIfAbsent(TYPE);
+      return overworld.getDataStorage().computeIfAbsent(TYPE, "sexmod:homes");
    }
 
    public List<GirlHomeRegion> getHomesList() {

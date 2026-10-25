@@ -2,9 +2,7 @@ package com.nxrtweetg.sexmod.client;
 
 import software.bernie.geckolib.cache.object.BakedGeoModel;
 import software.bernie.geckolib.cache.object.GeoBone;
-import software.bernie.geckolib.renderer.GeoItemRenderer;
-import software.bernie.geckolib.renderer.base.GeoRenderState;
-import software.bernie.geckolib.renderer.base.GeoRenderer;
+import software.bernie.geckolib.renderer.GeoRenderer;
 import software.bernie.geckolib.renderer.layer.GeoRenderLayer;
 import software.bernie.geckolib.util.RenderUtil;
 import com.mojang.blaze3d.vertex.PoseStack;
@@ -22,28 +20,24 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.Mth;
 
 @Environment(EnvType.CLIENT)
-public final class DragonStaffCrystalLayer extends GeoRenderLayer<DragonStaffItem, GeoItemRenderer.RenderData, GeoRenderState> {
+public final class DragonStaffCrystalLayer extends GeoRenderLayer<DragonStaffItem> {
    private static final ResourceLocation END_CRYSTAL_LOCATION = ResourceLocation.fromNamespaceAndPath("minecraft", "textures/entity/end_crystal/end_crystal.png");
    private EndCrystalModel crystalModel;
    private final EndCrystalRenderState renderState = new EndCrystalRenderState();
 
-   public DragonStaffCrystalLayer(GeoRenderer<DragonStaffItem, GeoItemRenderer.RenderData, GeoRenderState> renderer) {
+   public DragonStaffCrystalLayer(GeoRenderer<DragonStaffItem> renderer) {
       super(renderer);
    }
 
    @Override
    public void render(
-      GeoRenderState renderState, PoseStack poseStack, BakedGeoModel model,
+      PoseStack poseStack, DragonStaffItem animatable, BakedGeoModel model,
       RenderType renderType, MultiBufferSource bufferSource, VertexConsumer buffer,
-      int packedLight, int packedOverlay, int renderColor
+      float partialTick, int packedLight, int packedOverlay, int renderColor
    ) {
-      BakedGeoModel bakedModel = this.getDefaultBakedModel(renderState);
-      if (bakedModel == null) {
-         return;
-      }
-      GeoBone energyBone = bakedModel.getBone("energy").orElse(null);
+      GeoBone energyBone = model.getBone("energy").orElse(null);
       if (energyBone == null) {
-         energyBone = bakedModel.getBone("staff").orElse(null);
+         energyBone = model.getBone("staff").orElse(null);
       }
       if (energyBone == null) {
          return;
@@ -81,8 +75,8 @@ public final class DragonStaffCrystalLayer extends GeoRenderLayer<DragonStaffIte
       this.crystalModel.outerGlass.resetPose();
       this.crystalModel.innerGlass.resetPose();
       this.crystalModel.cube.resetPose();
-      // 1.21.8's crystal state carries no age or light, so the spin the renderer used to read from
-      // it is applied to the parts directly, exactly as vanilla EndCrystalRenderer does.
+      // 1.21.4's crystal state carries no age or light, so the spin the vanilla renderer derived
+      // from them is applied to the parts directly.
       float spin = animTicks * 3.0F;
       this.crystalModel.outerGlass.yRot = spin * Mth.DEG_TO_RAD;
       this.crystalModel.innerGlass.yRot = -spin * 0.2F * Mth.DEG_TO_RAD;

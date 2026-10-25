@@ -40,8 +40,8 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.ClipContext;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.storage.ValueInput;
-import net.minecraft.world.level.storage.ValueOutput;
+import com.nxrtweetg.sexmod.util.TagValueInput;
+import com.nxrtweetg.sexmod.util.TagValueOutput;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.Vec3;
 
@@ -171,7 +171,7 @@ public final class BeeEntity extends SceneGirlEntity {
 
    /** {@code fz.func_180430_e} is empty: she is airborne by nature and never takes a landing badly. */
    @Override
-   public boolean causeFallDamage(double fallDistance, float multiplier, DamageSource source) {
+   public boolean causeFallDamage(float fallDistance, float multiplier, DamageSource source) {
       return false;
    }
 
@@ -283,13 +283,14 @@ public final class BeeEntity extends SceneGirlEntity {
    }
 
    @Override
-   protected void addAdditionalSaveData(ValueOutput output) {
-      super.addAdditionalSaveData(output);
+   public void addAdditionalSaveData(net.minecraft.nbt.CompoundTag tag) {
+      TagValueOutput output = TagValueOutput.wrap(tag, this.registryAccess());
+      super.addAdditionalSaveData(tag);
       output.putBoolean("isTamed", this.isTamed());
       output.putBoolean("hasChest", this.hasChest());
       output.putFloat("arousal", this.arousal);
       output.putInt("tamingTicks", this.tamingTicks);
-      ValueOutput satchelOutput = output.child("Satchel");
+      TagValueOutput satchelOutput = output.child("Satchel");
 
       for (int slot = 0; slot < this.satchel.getContainerSize(); slot++) {
          ItemStack stack = this.satchel.getItem(slot);
@@ -300,14 +301,15 @@ public final class BeeEntity extends SceneGirlEntity {
    }
 
    @Override
-   protected void readAdditionalSaveData(ValueInput input) {
-      super.readAdditionalSaveData(input);
+   public void readAdditionalSaveData(net.minecraft.nbt.CompoundTag tag) {
+      TagValueInput input = TagValueInput.wrap(tag, this.registryAccess());
+      super.readAdditionalSaveData(tag);
       this.setTamed(input.getBooleanOr("isTamed", false));
       this.setHasChest(input.getBooleanOr("hasChest", false));
       this.arousal = input.getFloatOr("arousal", AROUSAL_START);
       this.tamingTicks = input.getIntOr("tamingTicks", 0);
       this.satchel.clearContent();
-      ValueInput satchelInput = input.childOrEmpty("Satchel");
+      TagValueInput satchelInput = input.childOrEmpty("Satchel");
 
       for (int slot = 0; slot < this.satchel.getContainerSize(); slot++) {
          int index = slot;

@@ -13,7 +13,7 @@ public final class GirlInteractionService {
    }
 
    public static Optional<SceneGirlEntity> findNearestGirl(ServerPlayer player, double radius) {
-      ServerLevel serverlevel = player.level();
+      ServerLevel serverlevel = player.serverLevel();
       // one who has no menu is not a candidate: she would otherwise shadow the girl the command meant
       List<SceneGirlEntity> list = serverlevel.getEntitiesOfClass(
          SceneGirlEntity.class, player.getBoundingBox().inflate(radius), entity -> entity.isAlive() && entity.hasInteractionMenu()

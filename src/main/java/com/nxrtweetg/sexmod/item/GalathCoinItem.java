@@ -18,7 +18,6 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.TooltipFlag;
-import net.minecraft.world.item.component.TooltipDisplay;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.Vec3;
 
@@ -102,7 +101,7 @@ public final class GalathCoinItem extends Item {
          } else {
             GalathEntity galath = ModEntities.GALATH.create(serverLevel, EntitySpawnReason.COMMAND);
             if (galath != null) {
-               galath.snapTo(targetX, targetY, targetZ, yaw, 0.0F);
+               galath.moveTo(targetX, targetY, targetZ, yaw, 0.0F);
                galath.setYRot(yaw);
                galath.setYBodyRot(yaw);
                galath.setYHeadRot(yaw);
@@ -114,7 +113,7 @@ public final class GalathCoinItem extends Item {
                // Also summon Manglelie nearby on the ground
                ManglelieEntity mang = ModEntities.MANGLELIE.create(serverLevel, EntitySpawnReason.COMMAND);
                if (mang != null) {
-                  mang.snapTo(galath.getX() + 1.0, galath.getY(), galath.getZ(), yaw, 0.0F);
+                  mang.moveTo(galath.getX() + 1.0, galath.getY(), galath.getZ(), yaw, 0.0F);
                   mang.setYRot(yaw);
                   mang.setYBodyRot(yaw);
                   mang.setYHeadRot(yaw);
@@ -135,7 +134,7 @@ public final class GalathCoinItem extends Item {
    }
 
    @Override
-   public void appendHoverText(ItemStack stack, TooltipContext context, TooltipDisplay display, Consumer<Component> tooltipAdder, TooltipFlag flag) {
-      tooltipAdder.accept(Component.translatable("item.sexmod.galath_coin.desc"));
+   public void appendHoverText(ItemStack stack, TooltipContext context, java.util.List<Component> tooltipComponents, TooltipFlag flag) {
+      tooltipComponents.add(Component.translatable("item.sexmod.galath_coin.desc"));
    }
 }

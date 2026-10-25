@@ -15,8 +15,8 @@ import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.storage.ValueInput;
-import net.minecraft.world.level.storage.ValueOutput;
+import com.nxrtweetg.sexmod.util.TagValueInput;
+import com.nxrtweetg.sexmod.util.TagValueOutput;
 
 public final class KoboldEntity extends SceneGirlEntity {
    private static final EntityDataAccessor<Integer> TRACKED_TRIBE_COLOR = SynchedEntityData.defineId(
@@ -111,15 +111,17 @@ public final class KoboldEntity extends SceneGirlEntity {
    }
 
    @Override
-   protected void addAdditionalSaveData(ValueOutput output) {
-      super.addAdditionalSaveData(output);
+   public void addAdditionalSaveData(net.minecraft.nbt.CompoundTag tag) {
+      TagValueOutput output = TagValueOutput.wrap(tag, this.registryAccess());
+      super.addAdditionalSaveData(tag);
       output.putInt("tribeColor", this.tribeColorIndex());
       output.putInt("eyeColor", this.eyeColorArgb());
    }
 
    @Override
-   protected void readAdditionalSaveData(ValueInput input) {
-      super.readAdditionalSaveData(input);
+   public void readAdditionalSaveData(net.minecraft.nbt.CompoundTag tag) {
+      TagValueInput input = TagValueInput.wrap(tag, this.registryAccess());
+      super.readAdditionalSaveData(tag);
       this.setTribeColorIndex(input.getIntOr("tribeColor", this.tribeColorIndex()));
       this.setEyeColorArgb(input.getIntOr("eyeColor", this.eyeColorArgb()));
    }
