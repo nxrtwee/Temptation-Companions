@@ -301,4 +301,9 @@ public final class GirlSettingsScreen extends Screen {
    public boolean isPauseScreen() {
       return false;
    }
+
+   /** The screen draws its own panel; the 1.21.6+ menu blur sits in renderBackground. */
+   @Override
+   public void renderBackground(GuiGraphics context, int mouseX, int mouseY, float delta) {
+   }
 }

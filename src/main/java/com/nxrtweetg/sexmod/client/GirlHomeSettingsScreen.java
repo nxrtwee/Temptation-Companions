@@ -335,4 +335,8 @@ public final class GirlHomeSettingsScreen extends Screen {
       return false;
    }
 
+   /** The screen draws its own panel; the 1.21.6+ menu blur sits in renderBackground. */
+   @Override
+   public void renderBackground(GuiGraphics context, int mouseX, int mouseY, float delta) {
+   }
 }

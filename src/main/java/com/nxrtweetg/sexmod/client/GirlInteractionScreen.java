@@ -90,7 +90,12 @@ public final class GirlInteractionScreen extends Screen {
       this.hasMaster = girl.trackedHasMaster();
    }
 
-   /** The original menu draws straight over the world: no blur, no darkening. */
+   /** The original menu draws straight over the world: no blur, no darkening. On 1.21.6+ the
+    * gaussian blur lives in renderBackground, not in renderTransparentBackground. */
+   @Override
+   public void renderBackground(GuiGraphics context, int mouseX, int mouseY, float delta) {
+   }
+
    @Override
    public void renderTransparentBackground(GuiGraphics context) {
    }
