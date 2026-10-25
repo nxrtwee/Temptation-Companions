@@ -3,6 +3,7 @@ package com.nxrtweetg.sexmod.client;
 import com.nxrtweetg.sexmod.girls.scene.GirlSceneAction;
 import com.nxrtweetg.sexmod.girls.scene.GirlScenePhase;
 import com.nxrtweetg.sexmod.config.SexmodConfig;
+import software.bernie.geckolib.animatable.processing.AnimationState;
 import software.bernie.geckolib.cache.object.BakedGeoModel;
 import software.bernie.geckolib.cache.object.GeoBone;
 import software.bernie.geckolib.cache.object.GeoQuad;
@@ -156,6 +157,7 @@ public final class GirlEntityRenderer extends GeoEntityRenderer<SceneGirlEntity,
    public GirlEntityRenderer(Context context, GirlGeoModel model) {
       super(context, model);
       this.shadowRadius = 0.45F;
+      model.setRigListener(this);
       this.addRenderLayer(new GirlPaymentGeoLayer(context, this));
       this.addRenderLayer(new GirlWeaponGeoLayer(context, this));
       this.addRenderLayer(new GirlSteveGeoLayer(this));
@@ -339,12 +341,16 @@ public final class GirlEntityRenderer extends GeoEntityRenderer<SceneGirlEntity,
 
    /**
     * The per-frame bone pass: everything the 1.12.2 renderer did to the rig after the animation ran.
-    * GeckoLib 5.2 has already ticked the animation processor by the time this runs, and the bones are
-    * mutable, so every adjustment is a direct write.
+    *
+    * <p>GeckoLib 5.2 ticks animations inside {@code actuallyRender}, which runs AFTER
+    * {@code adjustPositionForRender}, and writes every animated bone absolutely (animation value +
+    * initial snapshot) - so transform edits made in adjustPositionForRender are wiped before the
+    * model is drawn. {@link GirlGeoModel#setCustomAnimations} is GeckoLib's hook at the end of that
+    * same animation pass, so the edits below land on the final pose and survive into the render.
+    * Called from the model; the renderer carries the camera-anchor fields the recursion reads later.
     */
-   @Override
-   public void adjustPositionForRender(GirlGeoRenderState renderState, PoseStack poseStack, BakedGeoModel model, boolean isReRender) {
-      super.adjustPositionForRender(renderState, poseStack, model, isReRender);
+   public void applyRigPass(BakedGeoModel model, AnimationState<SceneGirlEntity> animationState) {
+      GirlGeoRenderState renderState = (GirlGeoRenderState)animationState.renderState();
 
       GirlSceneAction action = renderState.getGeckolibData(GirlRenderData.ACTIVE_ACTION);
       GirlScenePhase phase = renderState.getOrDefaultGeckolibData(GirlRenderData.SCENE_PHASE, GirlScenePhase.IDLE);
@@ -652,9 +658,11 @@ public final class GirlEntityRenderer extends GeoEntityRenderer<SceneGirlEntity,
 
    /**
     * 1.21.x equivalent of the bone position listener: the anchor bone's world position is evaluated
-    * when the recursion reaches it, from the same matrices the cubes are drawn with.
+    * when the recursion reaches it, from the same matrices the cubes are drawn with. Also called from
+    * {@link GirlSteveGeoLayer} - the partner's head bones live under the hidden steve subtree, which
+    * the main recursion never reaches.
     */
-   private void captureCameraAnchor(GirlGeoRenderState renderState, PoseStack poseStack, GeoBone bone) {
+   void captureCameraAnchor(GirlGeoRenderState renderState, PoseStack poseStack, GeoBone bone) {
       if (this.cameraAnchorBone == null || !this.cameraAnchorBone.equals(bone.getName())) {
          return;
       }

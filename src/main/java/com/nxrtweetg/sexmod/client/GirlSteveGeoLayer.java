@@ -44,8 +44,11 @@ public final class GirlSteveGeoLayer extends GeoRenderLayer<SceneGirlEntity, Voi
     */
    private static final String[] BODY_BONES_TO_HIDE = {"Head2", "LeftArm", "RightArm", "LeftLeg", "RightLeg", "blocks"};
 
-   public GirlSteveGeoLayer(GeoRenderer<SceneGirlEntity, Void, GirlEntityRenderer.GirlGeoRenderState> renderer) {
+   private final GirlEntityRenderer girlRenderer;
+
+   public GirlSteveGeoLayer(GirlEntityRenderer renderer) {
       super(renderer);
+      this.girlRenderer = renderer;
    }
 
    private ResourceLocation resolveTexture(GirlEntityRenderer.GirlGeoRenderState renderState) {
@@ -71,27 +74,37 @@ public final class GirlSteveGeoLayer extends GeoRenderLayer<SceneGirlEntity, Voi
 
       boolean partnerIsSlim = renderState.getOrDefaultGeckolibData(GirlRenderData.PARTNER_IS_SLIM, false);
 
-      // Pass 1: player skin - full body, genital bones hidden and the wrong arm variant hidden.
-      RenderType skinType = this.renderer.getRenderType(renderState, this.resolveTexture(renderState));
-      if (skinType != null) {
-         VertexConsumer skinBuffer = bufferSource.getBuffer(skinType);
-         setBonesHidden(model, GENITAL_BONES, true);
-         GirlEntityRenderer.applyPartnerArmModel(model, partnerIsSlim);
-         renderSubtree(renderState, poseStack, steve, bufferSource, skinBuffer, packedLight, packedOverlay, renderColor);
-         setBonesHidden(model, GENITAL_BONES, false);
-      }
+      // The rig pass keeps this whole subtree hidden so the girl's own texture pass skips it; reveal
+      // it for our passes and restore afterwards. Layers run after the main recursion, so nothing
+      // else observes the flags in between.
+      steve.setHidden(false);
+      steve.setChildrenHidden(false);
+      try {
+         // Pass 1: player skin - full body, genital bones hidden and the wrong arm variant hidden.
+         RenderType skinType = this.renderer.getRenderType(renderState, this.resolveTexture(renderState));
+         if (skinType != null) {
+            VertexConsumer skinBuffer = bufferSource.getBuffer(skinType);
+            setBonesHidden(model, GENITAL_BONES, true);
+            GirlEntityRenderer.applyPartnerArmModel(model, partnerIsSlim);
+            renderSubtree(renderState, poseStack, steve, bufferSource, skinBuffer, packedLight, packedOverlay, renderColor);
+            setBonesHidden(model, GENITAL_BONES, false);
+         }
 
-      // Pass 2: steve.png - only genitals (all characters including jenny).
-      RenderType steveType = this.renderer.getRenderType(renderState, PLAYER_SKIN);
-      if (steveType != null) {
-         VertexConsumer steveBuffer = bufferSource.getBuffer(steveType);
-         setBonesHidden(model, GENITAL_BONES, false);
-         setMeshOnly(model, "Torso2", true);
-         setBonesHidden(model, BODY_BONES_TO_HIDE, true);
-         renderSubtree(renderState, poseStack, steve, bufferSource, steveBuffer, packedLight, packedOverlay, renderColor);
-         setBonesHidden(model, BODY_BONES_TO_HIDE, false);
-         setMeshOnly(model, "Torso2", false);
-         setBonesHidden(model, GENITAL_BONES, true);
+         // Pass 2: steve.png - only genitals (all characters including jenny).
+         RenderType steveType = this.renderer.getRenderType(renderState, PLAYER_SKIN);
+         if (steveType != null) {
+            VertexConsumer steveBuffer = bufferSource.getBuffer(steveType);
+            setBonesHidden(model, GENITAL_BONES, false);
+            setMeshOnly(model, "Torso2", true);
+            setBonesHidden(model, BODY_BONES_TO_HIDE, true);
+            renderSubtree(renderState, poseStack, steve, bufferSource, steveBuffer, packedLight, packedOverlay, renderColor);
+            setBonesHidden(model, BODY_BONES_TO_HIDE, false);
+            setMeshOnly(model, "Torso2", false);
+            setBonesHidden(model, GENITAL_BONES, true);
+         }
+      } finally {
+         steve.setHidden(true);
+         steve.setChildrenHidden(true);
       }
    }
 
@@ -105,6 +118,10 @@ public final class GirlSteveGeoLayer extends GeoRenderLayer<SceneGirlEntity, Voi
       MultiBufferSource bufferSource, VertexConsumer buffer,
       int packedLight, int packedOverlay, int renderColor
    ) {
+      // Head2/boyCam (the scene camera anchors) hang off the steve subtree, which the main recursion
+      // never reaches while it is hidden - capture them here, before this bone's own matrix is applied.
+      this.girlRenderer.captureCameraAnchor(renderState, poseStack, bone);
+
       if (!bone.isHidden()) {
          poseStack.pushPose();
          RenderUtil.prepMatrixForBone(poseStack, bone);

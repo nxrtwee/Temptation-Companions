@@ -1,5 +1,7 @@
 package com.nxrtweetg.sexmod.client;
 
+import software.bernie.geckolib.animatable.processing.AnimationState;
+import software.bernie.geckolib.cache.object.BakedGeoModel;
 import software.bernie.geckolib.model.GeoModel;
 import software.bernie.geckolib.renderer.base.GeoRenderState;
 import com.nxrtweetg.sexmod.girls.SceneGirlEntity;
@@ -40,6 +42,7 @@ public final class GirlGeoModel extends GeoModel<SceneGirlEntity> {
    private final ResourceLocation animations;
    private final ResourceLocation[] animationFallbacks;
    private final String character;
+   private GirlEntityRenderer rigListener;
 
    /** The common case: two slots read straight off the variant. */
    public GirlGeoModel(String character, String... modelNames) {
@@ -107,5 +110,25 @@ public final class GirlGeoModel extends GeoModel<SceneGirlEntity> {
    @Override
    public ResourceLocation[] getAnimationResourceFallbacks(SceneGirlEntity animatable) {
       return this.animationFallbacks;
+   }
+
+   /** Set by the owning renderer so the post-animation rig pass can reach its camera-anchor state. */
+   public void setRigListener(GirlEntityRenderer renderer) {
+      this.rigListener = renderer;
+   }
+
+   /**
+    * GeckoLib 5.2's post-animation hook: runs at the end of every animation pass, after the processor
+    * has written the final bone transforms and before the renderer walks the bones. Everything the rig
+    * does to bones has to happen here - an adjustPositionForRender edit would be overwritten by the
+    * animation's absolute bone writes, which run later in the same frame on this GeckoLib line.
+    */
+   @Override
+   public void setCustomAnimations(AnimationState<SceneGirlEntity> animationState) {
+      if (this.rigListener != null) {
+         GirlEntityRenderer.GirlGeoRenderState renderState = (GirlEntityRenderer.GirlGeoRenderState)animationState.renderState();
+         BakedGeoModel model = this.getBakedModel(this.getModelResource(renderState));
+         this.rigListener.applyRigPass(model, animationState);
+      }
    }
 }
