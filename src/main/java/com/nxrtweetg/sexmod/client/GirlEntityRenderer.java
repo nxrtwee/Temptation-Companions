@@ -139,6 +139,18 @@ public final class GirlEntityRenderer extends GeoEntityRenderer<SceneGirlEntity,
       public Map<DataTicket<?>, Object> getDataMap() {
          return this.geckolib$impl.getDataMap();
       }
+
+      /**
+       * GeckoLib's EntityRenderState mixin injects its own (class-level, thus higher-priority)
+       * implementation of this method into LivingEntityRenderState, reading the mixin's own
+       * empty data map while our hasGeckolibData answers from ours - which made a present-but-
+       * unread ticket come back as null. Route it through the same map everything else uses.
+       */
+      @Override
+      public <D> D getOrDefaultGeckolibData(DataTicket<D> ticket, D fallback) {
+         D value = this.getGeckolibData(ticket);
+         return value != null ? value : fallback;
+      }
    }
 
    public GirlEntityRenderer(Context context, GirlGeoModel model) {
