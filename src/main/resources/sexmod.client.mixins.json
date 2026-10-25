@@ -9,7 +9,6 @@
     "KeyboardInputMixin",
     "MinecraftMixin",
     "OptionsMixin",
-    "RenderPassMixin",
   ],
   "injectors": {
     "defaultRequire": 1
