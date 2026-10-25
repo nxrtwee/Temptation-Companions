@@ -130,7 +130,9 @@ public final class GirlEntityRenderer extends GeoEntityRenderer<SceneGirlEntity,
 
       @Override
       public <D> D getGeckolibData(DataTicket<D> ticket) {
-         return this.geckolib$impl.getGeckolibData(ticket);
+         // GeckoLib 5.2's Impl throws when the ticket was never added; the 5.5 line returns
+         // null. Callers throughout the mod treat a missing value as null, so bypass the throw.
+         return (D)this.geckolib$impl.getDataMap().get(ticket);
       }
 
       @Override
