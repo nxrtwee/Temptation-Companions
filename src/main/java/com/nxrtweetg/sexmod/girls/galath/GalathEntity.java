@@ -1,6 +1,6 @@
 package com.nxrtweetg.sexmod.girls.galath;
 
-import com.geckolib.animation.RawAnimation;
+import software.bernie.geckolib.animation.RawAnimation;
 import com.nxrtweetg.sexmod.girls.ModDataSerializers;
 import com.nxrtweetg.sexmod.girls.SceneGirlEntity;
 import com.nxrtweetg.sexmod.girls.anim.GirlAnimationRole;

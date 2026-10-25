@@ -14,7 +14,7 @@ import net.fabricmc.api.Environment;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.ActiveTextCollector;
-import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.inventory.tooltip.TooltipRenderUtil;
@@ -98,7 +98,7 @@ public final class GirlInteractionScreen extends Screen {
    }
 
    @Override
-   public void extractTransparentBackground(GuiGraphicsExtractor context) {
+   public void renderTransparentBackground(GuiGraphics context) {
    }
 
    @Override
@@ -156,7 +156,7 @@ public final class GirlInteractionScreen extends Screen {
    }
 
    @Override
-   public void extractRenderState(GuiGraphicsExtractor context, int mouseX, int mouseY, float delta) {
+   public void render(GuiGraphics context, int mouseX, int mouseY, float delta) {
       this.slideMain = Math.min(1.0F, this.slideMain + delta / SLIDE_TICKS);
       if (this.slideMain >= 1.0F) {
          this.slideCommands = Math.min(1.0F, this.slideCommands + delta / SLIDE_TICKS);
@@ -192,32 +192,32 @@ public final class GirlInteractionScreen extends Screen {
             );
          }
 
-         this.extractEquipment(context);
+         this.renderEquipment(context);
       }
 
       // Before the widgets: the original pushed the price plates to zLevel -300 so the buttons sit on
       // top of them, and in 26.2 the equivalent is simply submitting them first.
-      this.extractPrices(context);
-      super.extractRenderState(context, mouseX, mouseY, delta);
+      this.renderPrices(context);
+      super.render(context, mouseX, mouseY, delta);
    }
 
    /**
     * Her gear rides in the frame on the left, one stack per typed slot. The original read these off
     * six data parameters (Fighter.L/R/X/T/U/W); vanilla now syncs the same stacks for us.
     */
-   private void extractEquipment(GuiGraphicsExtractor context) {
+   private void renderEquipment(GuiGraphics context) {
       int x = Mth.lerpInt(this.slideMain, -30, 120) - 105;
 
       for (int slot = 0; slot < EQUIPMENT_SLOT_Y.length; slot++) {
          ItemStack stack = this.girl.getItemBySlot(EQUIPMENT_SLOTS[slot]);
          if (!stack.isEmpty()) {
-            context.item(stack, x, EQUIPMENT_SLOT_Y[slot]);
+            context.renderItem(stack, x, EQUIPMENT_SLOT_Y[slot]);
          }
       }
    }
 
    /** Prices sit left of each action button on their own tooltip backdrop, as in the original. */
-   private void extractPrices(GuiGraphicsExtractor context) {
+   private void renderPrices(GuiGraphics context) {
       if (this.slideCommands <= 0.0F) {
          return;
       }
@@ -236,9 +236,9 @@ public final class GirlInteractionScreen extends Screen {
             Component label = Component.literal(price.getCount() + "x    ");
             int labelX = textX + TOOLTIP_OFFSET;
             int labelY = textY - TOOLTIP_OFFSET;
-            TooltipRenderUtil.extractTooltipBackground(context, labelX, labelY, this.font.width(label), TOOLTIP_LINE_HEIGHT, null);
+            TooltipRenderUtil.renderTooltipBackground(context, labelX, labelY, this.font.width(label), TOOLTIP_LINE_HEIGHT, null);
             textCollector.accept(labelX, labelY, label);
-            context.item(price, itemX, labelY - PRICE_ITEM_RISE);
+            context.renderItem(price, itemX, labelY - PRICE_ITEM_RISE);
          }
 
          textY -= ACTION_BUTTON_SPACING;
@@ -342,7 +342,7 @@ public final class GirlInteractionScreen extends Screen {
       this.actionChosen = true;
       LocalPlayer player = Minecraft.getInstance().player;
       if (player != null && !GirlPayment.canAfford(player, price)) {
-         player.sendSystemMessage(Component.literal("<" + this.girlName + "> " + I18n.get(this.girl.dialogueKey("cannotafford"))));
+         player.displayClientMessage(Component.literal("<" + this.girlName + "> " + I18n.get(this.girl.dialogueKey("cannotafford"))), false);
          player.level()
             .playLocalSound(
                player.blockPosition(),

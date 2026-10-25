@@ -3,14 +3,14 @@ package com.nxrtweetg.sexmod.client;
 import com.nxrtweetg.sexmod.girls.scene.GirlSceneAction;
 import com.nxrtweetg.sexmod.girls.scene.GirlScenePhase;
 import com.nxrtweetg.sexmod.config.SexmodConfig;
-import com.geckolib.animation.state.BoneSnapshot;
-import com.geckolib.cache.model.BakedGeoModel;
-import com.geckolib.cache.model.GeoBone;
-import com.geckolib.constant.DataTickets;
-import com.geckolib.renderer.GeoEntityRenderer;
-import com.geckolib.renderer.base.BoneSnapshots;
-import com.geckolib.renderer.base.RenderPassInfo;
-import com.geckolib.util.RenderUtil;
+import software.bernie.geckolib.animation.state.BoneSnapshot;
+import software.bernie.geckolib.cache.model.BakedGeoModel;
+import software.bernie.geckolib.cache.model.GeoBone;
+import software.bernie.geckolib.constant.DataTickets;
+import software.bernie.geckolib.renderer.GeoEntityRenderer;
+import software.bernie.geckolib.renderer.base.BoneSnapshots;
+import software.bernie.geckolib.renderer.base.RenderPassInfo;
+import software.bernie.geckolib.util.RenderUtil;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import java.util.HashMap;
@@ -36,7 +36,7 @@ import net.minecraft.client.renderer.entity.EntityRendererProvider.Context;
 import net.minecraft.client.renderer.rendertype.RenderType;
 import net.minecraft.client.renderer.rendertype.RenderTypes;
 import net.minecraft.client.renderer.entity.state.LivingEntityRenderState;
-import net.minecraft.client.renderer.state.level.CameraRenderState;
+import net.minecraft.client.renderer.state.CameraRenderState;
 import net.minecraft.resources.Identifier;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.EquipmentSlot;
@@ -631,10 +631,6 @@ public final class GirlEntityRenderer extends GeoEntityRenderer<SceneGirlEntity,
          return;
       }
       BakedGeoModel model = renderPassInfo.model();
-      if (model.isMissingno()) {
-         super.submitRenderTasks(renderPassInfo, renderTasks, renderType);
-         return;
-      }
 
       int packedLight = renderPassInfo.packedLight();
       int packedOverlay = renderPassInfo.packedOverlay();
@@ -766,7 +762,7 @@ public final class GirlEntityRenderer extends GeoEntityRenderer<SceneGirlEntity,
    private static void applyArmorSlot(
       BoneSnapshots snapshots,
       LivingEntityRenderState renderState,
-      com.geckolib.constant.dataticket.DataTicket<Integer> ticket,
+      software.bernie.geckolib.constant.dataticket.DataTicket<Integer> ticket,
       String[] armorBones,
       String[] fleshBones
    ) {

@@ -27,7 +27,7 @@ public final class SexmodHomeData extends SavedData {
    );
 
    public static final SavedDataType<SexmodHomeData> TYPE = new SavedDataType<>(
-      Identifier.fromNamespaceAndPath("sexmod", "homes"),
+      "sexmod:homes",
       SexmodHomeData::new,
       CODEC,
       DataFixTypes.SAVED_DATA_STRUCTURE_FEATURE_INDICES

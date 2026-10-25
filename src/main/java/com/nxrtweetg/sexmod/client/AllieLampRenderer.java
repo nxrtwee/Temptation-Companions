@@ -1,10 +1,10 @@
 package com.nxrtweetg.sexmod.client;
 
-import com.geckolib.animation.state.BoneSnapshot;
-import com.geckolib.cache.model.GeoBone;
-import com.geckolib.renderer.GeoItemRenderer;
-import com.geckolib.renderer.base.GeoRenderState;
-import com.geckolib.renderer.base.RenderPassInfo;
+import software.bernie.geckolib.animation.state.BoneSnapshot;
+import software.bernie.geckolib.cache.model.GeoBone;
+import software.bernie.geckolib.renderer.GeoItemRenderer;
+import software.bernie.geckolib.renderer.base.GeoRenderState;
+import software.bernie.geckolib.renderer.base.RenderPassInfo;
 import com.nxrtweetg.sexmod.item.AllieLampItem;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;

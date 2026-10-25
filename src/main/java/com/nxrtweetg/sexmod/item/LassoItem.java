@@ -107,8 +107,9 @@ public final class LassoItem extends Item {
       }
 
       player.level().playSound(null, player.blockPosition(), SoundEvents.LEAD_TIED, SoundSource.PLAYERS, 1.0F, 1.2F);
-      player.sendSystemMessage(
-         Component.translatable("chat.sexmod.lasso.returned", girl.getName().getString()).withStyle(ChatFormatting.YELLOW)
+      player.displayClientMessage(
+         Component.translatable("chat.sexmod.lasso.returned", girl.getName().getString()).withStyle(ChatFormatting.YELLOW),
+         false
       );
 
       girl.discard();

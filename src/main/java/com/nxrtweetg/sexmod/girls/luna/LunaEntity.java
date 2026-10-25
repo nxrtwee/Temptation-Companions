@@ -9,7 +9,7 @@ import com.nxrtweetg.sexmod.girls.scene.GirlInteractionService;
 import com.nxrtweetg.sexmod.girls.scene.GirlPayment;
 import com.nxrtweetg.sexmod.girls.scene.GirlSceneAction;
 import com.nxrtweetg.sexmod.girls.state.GirlActivity;
-import com.geckolib.animation.RawAnimation;
+import software.bernie.geckolib.animation.RawAnimation;
 import java.util.EnumSet;
 import java.util.Map;
 import java.util.List;
@@ -230,7 +230,7 @@ public final class LunaEntity extends SceneGirlEntity {
       }
 
       this.beginCustomInteraction(player, HEAD_PAT);
-      player.sendSystemMessage(Component.literal("Started " + this.getName().getString() + " action: " + HEAD_PAT));
+      player.displayClientMessage(Component.literal("Started " + this.getName().getString() + " action: " + HEAD_PAT), false);
       return true;
    }
 }

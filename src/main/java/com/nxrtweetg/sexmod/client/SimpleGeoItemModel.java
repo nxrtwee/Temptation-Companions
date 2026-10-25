@@ -1,8 +1,8 @@
 package com.nxrtweetg.sexmod.client;
 
-import com.geckolib.animatable.GeoAnimatable;
-import com.geckolib.model.GeoModel;
-import com.geckolib.renderer.base.GeoRenderState;
+import software.bernie.geckolib.animatable.GeoAnimatable;
+import software.bernie.geckolib.model.GeoModel;
+import software.bernie.geckolib.renderer.base.GeoRenderState;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.resources.Identifier;

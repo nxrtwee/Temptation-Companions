@@ -1,6 +1,6 @@
 package com.nxrtweetg.sexmod.girls.allie;
 
-import com.geckolib.animation.RawAnimation;
+import software.bernie.geckolib.animation.RawAnimation;
 import com.nxrtweetg.sexmod.girls.SceneGirlEntity;
 import com.nxrtweetg.sexmod.girls.anim.GirlAnimationSet;
 import com.nxrtweetg.sexmod.girls.anim.GirlSoundSet;

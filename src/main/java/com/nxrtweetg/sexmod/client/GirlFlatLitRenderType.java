@@ -1,6 +1,6 @@
 package com.nxrtweetg.sexmod.client;
 
-import com.mojang.blaze3d.pipeline.ColorTargetState;
+import com.mojang.blaze3d.pipeline.BlendFunction;
 import com.mojang.blaze3d.pipeline.RenderPipeline;
 import com.mojang.blaze3d.shaders.ShaderType;
 import com.mojang.blaze3d.vertex.VertexFormat;
@@ -84,10 +84,24 @@ public final class GirlFlatLitRenderType {
    private static RenderPipeline flatLit(RenderPipeline source) {
       RenderPipeline.Builder builder = RenderPipeline.builder()
          .withLocation(Identifier.fromNamespaceAndPath("sexmod", "pipeline/entity_flat_lit"))
-         .withDepthStencilState(Optional.ofNullable(source.getDepthStencilState()))
+         .withDepthTestFunction(source.getDepthTestFunction())
+         .withDepthWrite(source.isWriteDepth())
+         .withColorWrite(source.isWriteColor(), source.isWriteAlpha())
          .withPolygonMode(source.getPolygonMode())
          .withCull(source.isCull())
          .withVertexFormat(source.getVertexFormat(), source.getVertexFormatMode());
+
+      Optional<BlendFunction> blend = source.getBlendFunction();
+      if (blend.isPresent()) {
+         builder.withBlend(blend.get());
+      } else {
+         builder.withoutBlend();
+      }
+
+      builder.withColorLogic(source.getColorLogic());
+      if (source.getDepthBiasConstant() != 0.0F || source.getDepthBiasScaleFactor() != 0.0F) {
+         builder.withDepthBias(source.getDepthBiasConstant(), source.getDepthBiasScaleFactor());
+      }
 
       Identifier vertexShader = source.getVertexShader();
       if (vertexShader != null) {
@@ -108,11 +122,6 @@ public final class GirlFlatLitRenderType {
          } else {
             builder.withUniform(uniform.name(), uniform.type());
          }
-      }
-
-      ColorTargetState target = source.getColorTargetState();
-      if (target != null) {
-         builder.withColorTargetState(target);
       }
 
       ShaderDefines defines = source.getShaderDefines();

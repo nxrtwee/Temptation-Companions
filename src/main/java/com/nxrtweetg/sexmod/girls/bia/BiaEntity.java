@@ -7,7 +7,7 @@ import com.nxrtweetg.sexmod.girls.scene.GirlCustomPhase;
 import com.nxrtweetg.sexmod.girls.scene.GirlEdgeApproach;
 import com.nxrtweetg.sexmod.girls.scene.GirlInteractionService;
 import com.nxrtweetg.sexmod.girls.scene.GirlSceneAction;
-import com.geckolib.animation.RawAnimation;
+import software.bernie.geckolib.animation.RawAnimation;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
@@ -309,7 +309,7 @@ public final class BiaEntity extends SceneGirlEntity {
 
       this.pendingTalkAction = null;
       this.beginCustomInteraction(player, actionId);
-      player.sendSystemMessage(Component.literal("Started " + this.getName().getString() + " action: " + actionId));
+      player.displayClientMessage(Component.literal("Started " + this.getName().getString() + " action: " + actionId), false);
       return true;
    }
 

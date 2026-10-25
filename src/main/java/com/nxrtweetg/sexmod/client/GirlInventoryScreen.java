@@ -3,7 +3,7 @@ package com.nxrtweetg.sexmod.client;
 import com.nxrtweetg.sexmod.girls.inventory.GirlInventoryMenu;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
-import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.network.chat.Component;
@@ -22,11 +22,13 @@ public final class GirlInventoryScreen extends AbstractContainerScreen<GirlInven
    private static final int PANEL_HEIGHT = 114;
 
    public GirlInventoryScreen(GirlInventoryMenu menu, Inventory playerInventory, Component title) {
-      super(menu, playerInventory, title, PANEL_WIDTH, PANEL_HEIGHT);
+      super(menu, playerInventory, title);
+      this.imageWidth = PANEL_WIDTH;
+      this.imageHeight = PANEL_HEIGHT;
    }
 
    @Override
-   public void extractContents(GuiGraphicsExtractor context, int mouseX, int mouseY, float delta) {
+   protected void renderBg(GuiGraphics context, float delta, int mouseX, int mouseY) {
       context.blit(
          RenderPipelines.GUI_TEXTURED,
          GIRL_INVENTORY,
@@ -39,10 +41,9 @@ public final class GirlInventoryScreen extends AbstractContainerScreen<GirlInven
          TEXTURE_SIZE,
          TEXTURE_SIZE
       );
-      super.extractContents(context, mouseX, mouseY, delta);
    }
 
    @Override
-   protected void extractLabels(GuiGraphicsExtractor context, int mouseX, int mouseY) {
+   protected void renderLabels(GuiGraphics context, int mouseX, int mouseY) {
    }
 }

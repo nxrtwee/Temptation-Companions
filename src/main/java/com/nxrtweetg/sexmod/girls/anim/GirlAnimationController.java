@@ -1,9 +1,9 @@
 package com.nxrtweetg.sexmod.girls.anim;
 
-import com.geckolib.animatable.GeoAnimatable;
-import com.geckolib.animation.AnimationController;
-import com.geckolib.animation.RawAnimation;
-import com.geckolib.animation.state.AnimationPoint;
+import software.bernie.geckolib.animatable.GeoAnimatable;
+import software.bernie.geckolib.animation.AnimationController;
+import software.bernie.geckolib.animation.RawAnimation;
+import software.bernie.geckolib.animation.state.AnimationPoint;
 
 /**
  * A controller that blends out of the pose that is on screen, the way GeckoLib 3 did.
@@ -42,7 +42,7 @@ public class GirlAnimationController<T extends GeoAnimatable> extends AnimationC
    }
 
    @Override
-   protected void initializeNewAnimation(T animatable, com.geckolib.renderer.base.GeoRenderState renderState, com.geckolib.model.GeoModel<T> model, double animTime, int transitionTicks) {
+   protected void initializeNewAnimation(T animatable, software.bernie.geckolib.renderer.base.GeoRenderState renderState, software.bernie.geckolib.model.GeoModel<T> model, double animTime, int transitionTicks) {
       try {
          super.initializeNewAnimation(animatable, renderState, model, animTime, transitionTicks);
       } catch (Exception e) {

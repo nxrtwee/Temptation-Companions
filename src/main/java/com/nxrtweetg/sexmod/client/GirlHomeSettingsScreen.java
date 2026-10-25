@@ -9,7 +9,7 @@ import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.screens.Screen;
@@ -269,7 +269,7 @@ public final class GirlHomeSettingsScreen extends Screen {
    }
 
    @Override
-   public void extractRenderState(GuiGraphicsExtractor context, int mouseX, int mouseY, float delta) {
+   public void render(GuiGraphics context, int mouseX, int mouseY, float delta) {
       int panelLeft = Math.max(10, (this.width - PANEL_WIDTH) / 2);
       int panelTop = Math.max(6, (this.height - PANEL_HEIGHT) / 2);
 
@@ -282,7 +282,7 @@ public final class GirlHomeSettingsScreen extends Screen {
       context.fill(panelLeft + PANEL_WIDTH - 1, panelTop, panelLeft + PANEL_WIDTH, panelTop + PANEL_HEIGHT, 0xFF4A4E69);
 
       // Title & Subtitle
-      context.text(this.font, Component.literal(I18n.get("gui.sexmod.home.title")), panelLeft + PADDING, panelTop + 7, 0xFFE0E0E0);
+      context.drawString(this.font, Component.literal(I18n.get("gui.sexmod.home.title")), panelLeft + PADDING, panelTop + 7, 0xFFE0E0E0);
       if (this.girl != null) {
          String sub = I18n.get("gui.sexmod.home.companion", this.girl.getName().getString());
          if (!this.girl.assignedHomeName().isEmpty()) {
@@ -291,23 +291,23 @@ public final class GirlHomeSettingsScreen extends Screen {
          if (this.girl.isStayingAtHome()) {
             sub += " §a[" + I18n.get("gui.sexmod.home.staying_badge") + "]";
          }
-         context.text(this.font, Component.literal(sub), panelLeft + PADDING, panelTop + 18, 0xFFA0A0A0);
+         context.drawString(this.font, Component.literal(sub), panelLeft + PADDING, panelTop + 18, 0xFFA0A0A0);
       }
 
       // Column Headers
       int col1X = panelLeft + PADDING;
       int col2X = panelLeft + PANEL_WIDTH / 2 + 10;
-      context.text(this.font, Component.literal(I18n.get("gui.sexmod.home.list_title")), col1X, panelTop + 30, 0xFFE0E0E0);
-      context.text(this.font, Component.literal(I18n.get("gui.sexmod.home.create_title")), col2X, panelTop + 30, 0xFFE0E0E0);
+      context.drawString(this.font, Component.literal(I18n.get("gui.sexmod.home.list_title")), col1X, panelTop + 30, 0xFFE0E0E0);
+      context.drawString(this.font, Component.literal(I18n.get("gui.sexmod.home.create_title")), col2X, panelTop + 30, 0xFFE0E0E0);
 
       // Section labels in column 2
       int y2 = panelTop + 40;
       y2 += 22 + 1;
-      context.text(this.font, Component.literal(I18n.get("gui.sexmod.home.pos1_label")), col2X, y2, 0xFFAAAAAA);
+      context.drawString(this.font, Component.literal(I18n.get("gui.sexmod.home.pos1_label")), col2X, y2, 0xFFAAAAAA);
       y2 += 10 + 20 + 22 + 1;
-      context.text(this.font, Component.literal(I18n.get("gui.sexmod.home.pos2_label")), col2X, y2, 0xFFAAAAAA);
+      context.drawString(this.font, Component.literal(I18n.get("gui.sexmod.home.pos2_label")), col2X, y2, 0xFFAAAAAA);
 
-      super.extractRenderState(context, mouseX, mouseY, delta);
+      super.render(context, mouseX, mouseY, delta);
    }
 
    @Override

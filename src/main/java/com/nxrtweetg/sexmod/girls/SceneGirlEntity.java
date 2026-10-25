@@ -54,15 +54,15 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.Vec3;
-import com.geckolib.animatable.GeoEntity;
-import com.geckolib.animatable.instance.AnimatableInstanceCache;
-import com.geckolib.animation.AnimationController;
-import com.geckolib.animation.state.AnimationTest;
-import com.geckolib.animation.RawAnimation;
-import com.geckolib.animatable.manager.AnimatableManager.ControllerRegistrar;
-import com.geckolib.animation.state.KeyFrameEvent;
-import com.geckolib.cache.animation.keyframeevent.SoundKeyframeData;
-import com.geckolib.util.GeckoLibUtil;
+import software.bernie.geckolib.animatable.GeoEntity;
+import software.bernie.geckolib.animatable.instance.AnimatableInstanceCache;
+import software.bernie.geckolib.animation.AnimationController;
+import software.bernie.geckolib.animation.state.AnimationTest;
+import software.bernie.geckolib.animation.RawAnimation;
+import software.bernie.geckolib.animatable.manager.AnimatableManager.ControllerRegistrar;
+import software.bernie.geckolib.animation.state.KeyFrameEvent;
+import software.bernie.geckolib.cache.animation.keyframeevent.SoundKeyframeData;
+import software.bernie.geckolib.util.GeckoLibUtil;
 
 public abstract class SceneGirlEntity extends GirlEntity implements GeoEntity {
    private static final int PAYMENT_AUTO_FINISH_TICKS = 184;
@@ -767,17 +767,17 @@ public abstract class SceneGirlEntity extends GirlEntity implements GeoEntity {
 
    public void applySceneInput(ServerPlayer player, boolean climaxRequest) {
       if (this.coreState().activePlayerId() == null || !this.coreState().activePlayerId().equals(player.getUUID())) {
-         player.sendSystemMessage(Component.literal("You are not controlling this Jenny scene."));
+         player.displayClientMessage(Component.literal("You are not controlling this Jenny scene."), false);
       } else if (this.activeAction == null || this.scenePhase == GirlScenePhase.IDLE) {
-         player.sendSystemMessage(Component.literal("Jenny is not in an active scene."));
+         player.displayClientMessage(Component.literal("Jenny is not in an active scene."), false);
       } else if (this.scenePhase == GirlScenePhase.POSITIONING) {
-         player.sendSystemMessage(Component.literal("Jenny is still getting into position."));
+         player.displayClientMessage(Component.literal("Jenny is still getting into position."), false);
       } else if (this.scenePhase == GirlScenePhase.PAYMENT) {
-         player.sendSystemMessage(Component.literal("Jenny is still finishing the payment scene."));
+         player.displayClientMessage(Component.literal("Jenny is still finishing the payment scene."), false);
       } else if (this.scenePhase == GirlScenePhase.INTRO && !this.introWaitsForThrust()) {
-         player.sendSystemMessage(Component.literal("Jenny is still in the intro animation."));
+         player.displayClientMessage(Component.literal("Jenny is still in the intro animation."), false);
       } else if (this.activeAction == GirlSceneAction.STRIP) {
-         player.sendSystemMessage(Component.literal("Strip plays automatically."));
+         player.displayClientMessage(Component.literal("Strip plays automatically."), false);
       } else if (climaxRequest) {
          // the client only sends this on a full arousal meter, matching the original's jump-to-finish
          this.scenePhase = GirlScenePhase.CLIMAX;
@@ -842,9 +842,9 @@ public abstract class SceneGirlEntity extends GirlEntity implements GeoEntity {
       if (this.coreState().activePlayerId() != null && this.coreState().activePlayerId().equals(player.getUUID())) {
          this.fadeSignalCounter++;
          this.resetScene();
-         player.sendSystemMessage(Component.literal("Jenny scene reset."));
+         player.displayClientMessage(Component.literal("Jenny scene reset."), false);
       } else {
-         player.sendSystemMessage(Component.literal("You are not controlling this Jenny scene."));
+         player.displayClientMessage(Component.literal("You are not controlling this Jenny scene."), false);
       }
    }
 
@@ -921,7 +921,7 @@ public abstract class SceneGirlEntity extends GirlEntity implements GeoEntity {
          if (this.activeAction != null && this.scenePhase != GirlScenePhase.IDLE) {
             this.sceneFrozen = !this.sceneFrozen;
             this.syncTrackedState();
-            player.sendSystemMessage(Component.literal(this.sceneFrozen ? "Jenny scene frozen." : "Jenny scene resumed."));
+            player.displayClientMessage(Component.literal(this.sceneFrozen ? "Jenny scene frozen." : "Jenny scene resumed."), false);
          }
       }
    }
@@ -1341,7 +1341,7 @@ public abstract class SceneGirlEntity extends GirlEntity implements GeoEntity {
    }
 
    private void finishScene(ServerPlayer player) {
-      player.sendSystemMessage(Component.literal(this.getName().getString() + " scene finished: " + this.activeAction.legacyId()));
+      player.displayClientMessage(Component.literal(this.getName().getString() + " scene finished: " + this.activeAction.legacyId()), false);
       this.resetScene();
    }
 
@@ -3113,7 +3113,7 @@ public abstract class SceneGirlEntity extends GirlEntity implements GeoEntity {
       if (this.level().isClientSide()) {
          net.minecraft.client.Minecraft minecraft = net.minecraft.client.Minecraft.getInstance();
          if (minecraft.player != null) {
-            minecraft.player.sendSystemMessage(net.minecraft.network.chat.Component.literal("<" + this.getName().getString() + "> " + line));
+            minecraft.player.displayClientMessage(net.minecraft.network.chat.Component.literal("<" + this.getName().getString() + "> " + line), false);
          }
       }
    }
@@ -3144,7 +3144,7 @@ public abstract class SceneGirlEntity extends GirlEntity implements GeoEntity {
    private void broadcastLine(String line) {
       Player player = Minecraft.getInstance().player;
       if (player != null && player.distanceToSqr(this) <= 1600.0) {
-         player.sendSystemMessage(Component.literal(line));
+         player.displayClientMessage(Component.literal(line), false);
       }
    }
 

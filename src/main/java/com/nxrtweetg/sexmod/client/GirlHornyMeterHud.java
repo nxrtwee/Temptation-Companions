@@ -4,7 +4,7 @@ import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.client.DeltaTracker;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.resources.Identifier;
 import net.minecraft.util.Mth;
@@ -25,7 +25,7 @@ public final class GirlHornyMeterHud {
    private GirlHornyMeterHud() {
    }
 
-   static void render(GuiGraphicsExtractor context, DeltaTracker tickCounter) {
+   static void render(GuiGraphics context, DeltaTracker tickCounter) {
       if (!GirlHornyMeter.isVisible()) {
          GirlHornyMeter.resetAnimation();
          return;

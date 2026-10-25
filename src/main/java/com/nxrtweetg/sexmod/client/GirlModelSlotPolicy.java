@@ -1,6 +1,6 @@
 package com.nxrtweetg.sexmod.client;
 
-import com.geckolib.renderer.base.GeoRenderState;
+import software.bernie.geckolib.renderer.base.GeoRenderState;
 import com.nxrtweetg.sexmod.girls.scene.GirlSceneAction;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;

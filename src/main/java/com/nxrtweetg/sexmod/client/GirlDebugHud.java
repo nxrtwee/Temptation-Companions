@@ -6,11 +6,11 @@ import java.util.Optional;
 import java.util.UUID;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
-import net.fabricmc.fabric.api.client.rendering.v1.hud.HudElementRegistry;
+import net.fabricmc.fabric.api.client.rendering.v1.HudRenderCallback;
 import net.minecraft.resources.Identifier;
 import net.minecraft.client.DeltaTracker;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Player;
 
@@ -23,10 +23,10 @@ public final class GirlDebugHud {
    }
 
    public static void register() {
-      HudElementRegistry.addLast(Identifier.fromNamespaceAndPath("sexmod", "debug_hud"), GirlDebugHud::render);
+      HudRenderCallback.EVENT.register(GirlDebugHud::render);
    }
 
-   private static void render(GuiGraphicsExtractor context, DeltaTracker tickCounter) {
+   private static void render(GuiGraphics context, DeltaTracker tickCounter) {
       Minecraft minecraft = Minecraft.getInstance();
       if (minecraft.player != null && minecraft.level != null && !minecraft.options.hideGui) {
          Optional<SceneGirlEntity> optional = findNearestGirl(minecraft.player);
@@ -34,13 +34,13 @@ public final class GirlDebugHud {
             SceneGirlEntity girl = optional.get();
             int i = 10;
             int j = 10;
-            context.text(minecraft.font, Component.literal("Girl Debug"), i, j, -1, true);
-            context.text(minecraft.font, Component.literal("Busy: " + girl.isBusyTracked()), i, j + 12, -1, false);
-            context.text(
+            context.drawString(minecraft.font, Component.literal("Girl Debug"), i, j, -1, true);
+            context.drawString(minecraft.font, Component.literal("Busy: " + girl.isBusyTracked()), i, j + 12, -1, false);
+            context.drawString(
                minecraft.font, Component.literal("Action: " + girl.trackedActiveAction().map(Enum::name).orElse("NONE")), i, j + 24, -1, false
             );
-            context.text(minecraft.font, Component.literal("Follow-up: " + girl.trackedFollowUpAction().name()), i, j + 36, -1, false);
-            context.text(
+            context.drawString(minecraft.font, Component.literal("Follow-up: " + girl.trackedFollowUpAction().name()), i, j + 36, -1, false);
+            context.drawString(
                minecraft.font,
                Component.literal("Payment: " + girl.trackedPaymentAmount() + "x " + girl.trackedPaymentItem().name()),
                i,
@@ -48,7 +48,7 @@ public final class GirlDebugHud {
                -1,
                false
             );
-            context.text(
+            context.drawString(
                minecraft.font,
                Component.literal("Owner: " + girl.trackedActivePlayer().map(uuid -> uuid.toString().substring(0, 8)).orElse("NONE")),
                i,
@@ -56,7 +56,7 @@ public final class GirlDebugHud {
                -1,
                false
             );
-            context.text(
+            context.drawString(
                minecraft.font,
                Component.literal("Freecam: " + (GirlSceneFreecam.isActive() ? "ON [G]" : "OFF [G]") + "  Radius 30"),
                i,
@@ -64,7 +64,7 @@ public final class GirlDebugHud {
                -1,
                false
             );
-            context.text(
+            context.drawString(
                minecraft.font,
                Component.literal(String.format("Speed XZ: %.2f  [[/]]", GirlSceneFreecam.horizontalSpeed())),
                i,
@@ -72,7 +72,7 @@ public final class GirlDebugHud {
                -1,
                false
             );
-            context.text(
+            context.drawString(
                minecraft.font,
                Component.literal(String.format("Speed Y: %.2f  [; / ']", GirlSceneFreecam.verticalSpeed())),
                i,
@@ -80,7 +80,7 @@ public final class GirlDebugHud {
                -1,
                false
             );
-            context.text(
+            context.drawString(
                minecraft.font,
                Component.literal(String.format(
                   "FADE out=%.0f hold=%.0f in=%.0f  [KP4/6  KP2/8  KP1/3]  KP5=preview",

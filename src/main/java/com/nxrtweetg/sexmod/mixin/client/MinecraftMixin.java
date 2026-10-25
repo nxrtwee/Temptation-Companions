@@ -39,7 +39,7 @@ abstract class MinecraftMixin {
       }
    }
 
-   @Inject(method = "pickBlockOrEntity", at = @At("HEAD"), cancellable = true)
+   @Inject(method = "pickBlock", at = @At("HEAD"), cancellable = true)
    private void sexmod$blockScenePickBlock(CallbackInfo ci) {
       if (GirlSceneInputController.shouldBlockGameplayInput()) {
          ci.cancel();

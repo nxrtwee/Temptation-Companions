@@ -24,7 +24,7 @@ public final class GirlInteractionService {
    public static boolean tryBeginInteraction(ServerPlayer player, GirlSceneAction action) {
       Optional<SceneGirlEntity> optional = findNearestGirl(player, 8.0);
       if (optional.isEmpty()) {
-         player.sendSystemMessage(Component.literal("No girl found nearby."));
+         player.displayClientMessage(Component.literal("No girl found nearby."), false);
          return false;
       } else {
          return tryBeginInteraction(player, optional.get(), action);
@@ -33,14 +33,14 @@ public final class GirlInteractionService {
 
    public static boolean tryBeginInteraction(ServerPlayer player, SceneGirlEntity girl, GirlSceneAction action) {
       if (!action.enabled()) {
-         player.sendSystemMessage(Component.literal("That scene is not available."));
+         player.displayClientMessage(Component.literal("That scene is not available."), false);
          return false;
       }
 
       // A girl who sells nothing cannot be asked for anything: the original gives her no interaction
       // handler at all, and her scenes start from her own tick.
       if (!girl.hasInteractionMenu()) {
-         player.sendSystemMessage(Component.literal(girl.getName().getString() + " does not deal with you."));
+         player.displayClientMessage(Component.literal(girl.getName().getString() + " does not deal with you."), false);
          return false;
       }
 
@@ -53,8 +53,9 @@ public final class GirlInteractionService {
       if (variant.isPresent()) {
          Optional<GirlBedTable.Anchor> anchor = GirlBedTable.find(girl, variant.get());
          if (anchor.isEmpty()) {
-            player.sendSystemMessage(
-               Component.literal("<" + name + "> ").append(Component.translatable(girl.dialogueKey(variant.get().failureDialogueKey())))
+            player.displayClientMessage(
+               Component.literal("<" + name + "> ").append(Component.translatable(girl.dialogueKey(variant.get().failureDialogueKey()))),
+               false
             );
             return false;
          }
@@ -66,19 +67,19 @@ public final class GirlInteractionService {
 
       int paymentAmount = girl.hasPaymentPhase(action) ? girl.paymentAmountFor(action) : 0;
       if (paymentAmount > 0 && !GirlPayment.charge(player, new net.minecraft.world.item.ItemStack(girl.paymentItemFor(action).item(), paymentAmount))) {
-         player.sendSystemMessage(Component.literal("<" + name + "> you cannot afford that..."));
+         player.displayClientMessage(Component.literal("<" + name + "> you cannot afford that..."), false);
          return false;
       }
 
       girl.beginInteraction(player, action);
-      player.sendSystemMessage(Component.literal("Started " + name + " action: " + action.legacyId()));
+      player.displayClientMessage(Component.literal("Started " + name + " action: " + action.legacyId()), false);
       return true;
    }
 
    public static boolean canInteract(ServerPlayer player, SceneGirlEntity girl) {
       String name = girl.getName().getString();
       if (!girl.isAlive()) {
-         player.sendSystemMessage(Component.literal(name + " is no longer available."));
+         player.displayClientMessage(Component.literal(name + " is no longer available."), false);
          return false;
       }
 
@@ -87,17 +88,17 @@ public final class GirlInteractionService {
       }
 
       if (girl.coreState().activePlayerId() != null && !girl.coreState().activePlayerId().equals(player.getUUID())) {
-         player.sendSystemMessage(Component.literal(name + " is already busy."));
+         player.displayClientMessage(Component.literal(name + " is already busy."), false);
          return false;
       }
 
       if (girl.coreState().activePlayerId() != null && girl.coreState().activePlayerId().equals(player.getUUID()) && girl.hasActiveScene()) {
-         player.sendSystemMessage(Component.literal("Finish or reset the current scene before starting another one."));
+         player.displayClientMessage(Component.literal("Finish or reset the current scene before starting another one."), false);
          return false;
       }
 
       if (player.distanceToSqr(girl) > 64.0) {
-         player.sendSystemMessage(Component.literal("You are too far away from " + name + "."));
+         player.displayClientMessage(Component.literal("You are too far away from " + name + "."), false);
          return false;
       }
       return true;

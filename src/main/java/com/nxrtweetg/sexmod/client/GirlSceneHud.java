@@ -9,11 +9,11 @@ import java.util.Optional;
 import java.util.UUID;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
-import net.fabricmc.fabric.api.client.rendering.v1.hud.HudElementRegistry;
+import net.fabricmc.fabric.api.client.rendering.v1.HudRenderCallback;
 import net.minecraft.resources.Identifier;
 import net.minecraft.client.DeltaTracker;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Player;
 
@@ -23,10 +23,10 @@ public final class GirlSceneHud {
    }
 
    public static void register() {
-      HudElementRegistry.addLast(Identifier.fromNamespaceAndPath("sexmod", "scene_hud"), GirlSceneHud::render);
+      HudRenderCallback.EVENT.register(GirlSceneHud::render);
    }
 
-   private static void render(GuiGraphicsExtractor context, DeltaTracker tickCounter) {
+   private static void render(GuiGraphics context, DeltaTracker tickCounter) {
       Minecraft minecraft = Minecraft.getInstance();
       if (minecraft.player != null && minecraft.level != null && !minecraft.options.hideGui) {
          GirlHornyMeterHud.render(context, tickCounter);
@@ -84,9 +84,9 @@ public final class GirlSceneHud {
       }
    }
 
-   private static void drawRight(GuiGraphicsExtractor context, Minecraft minecraft, String text, int right, int y, int color) {
+   private static void drawRight(GuiGraphics context, Minecraft minecraft, String text, int right, int y, int color) {
       Component component = Component.literal(text);
-      context.text(minecraft.font, component, right - minecraft.font.width(component), y, color);
+      context.drawString(minecraft.font, component, right - minecraft.font.width(component), y, color);
    }
 
    static Optional<SceneGirlEntity> findOwnedGirl(Player player) {

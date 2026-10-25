@@ -11,7 +11,7 @@ import java.util.function.DoubleSupplier;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.screens.Screen;
@@ -176,7 +176,7 @@ public final class GirlSceneControlScreen extends Screen {
    }
 
    @Override
-   public void extractRenderState(GuiGraphicsExtractor context, int mouseX, int mouseY, float delta) {
+   public void render(GuiGraphics context, int mouseX, int mouseY, float delta) {
       Optional<SceneGirlEntity> owned = this.currentGirl();
       if (owned.isEmpty()) {
          this.onClose();
@@ -196,9 +196,9 @@ public final class GirlSceneControlScreen extends Screen {
       int textLeft = panelLeft + PADDING;
 
       context.fill(panelLeft, panelTop, panelLeft + PANEL_WIDTH, panelTop + panelHeight, -1072689130);
-      context.text(this.font, Component.literal("Scene Controls"), textLeft, panelTop + PADDING, 16777215);
-      context.text(this.font, Component.literal(action != null ? actionLabel(action) : "Head Pat"), textLeft, panelTop + 24, -4733488);
-      context.text(
+      context.drawString(this.font, Component.literal("Scene Controls"), textLeft, panelTop + PADDING, 16777215);
+      context.drawString(this.font, Component.literal(action != null ? actionLabel(action) : "Head Pat"), textLeft, panelTop + 24, -4733488);
+      context.drawString(
          this.font,
          Component.literal(
             (girl.isSceneFrozenTracked() ? "Frozen" : "Live") + "  -  " + phaseLabel(cameraConfigPhase(girl.trackedScenePhase())) + " profile  -  " + girl.characterId()
@@ -207,7 +207,7 @@ public final class GirlSceneControlScreen extends Screen {
          panelTop + 36,
          -3165574
       );
-      super.extractRenderState(context, mouseX, mouseY, delta);
+      super.render(context, mouseX, mouseY, delta);
    }
 
    @Override
@@ -216,7 +216,7 @@ public final class GirlSceneControlScreen extends Screen {
    }
 
    @Override
-   public void extractBackground(GuiGraphicsExtractor context, int mouseX, int mouseY, float delta) {
+   public void renderBackground(GuiGraphics context, int mouseX, int mouseY, float delta) {
    }
 
    private Optional<SceneGirlEntity> currentGirl() {

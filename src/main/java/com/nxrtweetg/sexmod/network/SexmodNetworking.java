@@ -16,11 +16,11 @@ public final class SexmodNetworking {
    }
 
    public static void register() {
-      PayloadTypeRegistry.serverboundPlay().register(JennyStartInteractionPayload.ID, JennyStartInteractionPayload.CODEC);
-      PayloadTypeRegistry.serverboundPlay().register(JennySceneInputPayload.ID, JennySceneInputPayload.CODEC);
-      PayloadTypeRegistry.serverboundPlay().register(GirlCommandPayload.ID, GirlCommandPayload.CODEC);
-      PayloadTypeRegistry.serverboundPlay().register(HomeActionPayload.ID, HomeActionPayload.CODEC);
-      PayloadTypeRegistry.clientboundPlay().register(SyncHomesPayload.ID, SyncHomesPayload.CODEC);
+      PayloadTypeRegistry.playC2S().register(JennyStartInteractionPayload.ID, JennyStartInteractionPayload.CODEC);
+      PayloadTypeRegistry.playC2S().register(JennySceneInputPayload.ID, JennySceneInputPayload.CODEC);
+      PayloadTypeRegistry.playC2S().register(GirlCommandPayload.ID, GirlCommandPayload.CODEC);
+      PayloadTypeRegistry.playC2S().register(HomeActionPayload.ID, HomeActionPayload.CODEC);
+      PayloadTypeRegistry.playS2C().register(SyncHomesPayload.ID, SyncHomesPayload.CODEC);
       ServerPlayNetworking.registerGlobalReceiver(JennyStartInteractionPayload.ID, (payload, context) -> {
          ServerPlayer serverplayer = context.player();
          context.server().execute(() -> handleStartInteraction(serverplayer, payload));
@@ -41,12 +41,12 @@ public final class SexmodNetworking {
 
    private static void handleGirlCommand(ServerPlayer player, GirlCommandPayload payload) {
       if (!(player.level().getEntity(payload.entityId()) instanceof GirlEntity girl)) {
-         player.sendSystemMessage(Component.literal("She is no longer available."));
+         player.displayClientMessage(Component.literal("She is no longer available."), false);
          return;
       }
 
       if (girl.distanceToSqr(player) > 144.0) {
-         player.sendSystemMessage(Component.literal("You are too far away."));
+         player.displayClientMessage(Component.literal("You are too far away."), false);
          return;
       }
 
@@ -108,7 +108,7 @@ public final class SexmodNetworking {
             }
             break;
          default:
-            player.sendSystemMessage(Component.literal("Unknown command."));
+            player.displayClientMessage(Component.literal("Unknown command."), false);
       }
    }
 
@@ -122,7 +122,7 @@ public final class SexmodNetworking {
          }
          case "create" -> {
             if (payload.homeName().isBlank()) {
-               player.sendSystemMessage(Component.translatable("chat.sexmod.home.invalid_name"));
+               player.displayClientMessage(Component.translatable("chat.sexmod.home.invalid_name"), false);
                return;
             }
             com.nxrtweetg.sexmod.home.GirlHomeRegion region = com.nxrtweetg.sexmod.home.GirlHomeRegion.create(
@@ -134,15 +134,15 @@ public final class SexmodNetworking {
             homeData.addHome(region);
             spawnHomeBoundaryParticles(level, region);
             broadcastHomes(level.getServer());
-            player.sendSystemMessage(Component.translatable("chat.sexmod.home.created", region.name()));
+            player.displayClientMessage(Component.translatable("chat.sexmod.home.created", region.name()), false);
          }
          case "delete" -> {
             boolean removed = homeData.removeHome(payload.homeName());
             if (removed) {
                broadcastHomes(level.getServer());
-               player.sendSystemMessage(Component.translatable("chat.sexmod.home.deleted", payload.homeName()));
+               player.displayClientMessage(Component.translatable("chat.sexmod.home.deleted", payload.homeName()), false);
             } else {
-               player.sendSystemMessage(Component.translatable("chat.sexmod.home.not_found", payload.homeName()));
+               player.displayClientMessage(Component.translatable("chat.sexmod.home.not_found", payload.homeName()), false);
             }
          }
          case "assign" -> {
@@ -173,7 +173,7 @@ public final class SexmodNetworking {
                spawnHomeBoundaryParticles(level, region);
             }
          }
-         default -> player.sendSystemMessage(Component.literal("Unknown home action: " + payload.action()));
+         default -> player.displayClientMessage(Component.literal("Unknown home action: " + payload.action()), false);
       }
    }
 
@@ -215,7 +215,7 @@ public final class SexmodNetworking {
 
    /** Same shape as the girls' in-world dialogue: {@code <Name> line}. */
    private static void sayLine(ServerPlayer player, String name, Component line) {
-      player.sendSystemMessage(Component.literal("<" + name + "> ").append(line));
+      player.displayClientMessage(Component.literal("<" + name + "> ").append(line), false);
    }
 
    private static void handleStartInteraction(ServerPlayer player, JennyStartInteractionPayload payload) {
@@ -223,7 +223,7 @@ public final class SexmodNetworking {
          GirlSceneAction girlsceneaction = GirlSceneAction.fromLegacyId(payload.actionId()).orElse(null);
          if (girlsceneaction == null) {
             if (!girl.tryBeginCustomInteraction(player, payload.actionId())) {
-               player.sendSystemMessage(Component.literal("Unknown scene action."));
+               player.displayClientMessage(Component.literal("Unknown scene action."), false);
             }
          } else if (!girl.interceptSceneChoice(player, girlsceneaction)) {
             // she is free to answer for herself first: Bia's talk ends in a menu of scenes, and the
@@ -231,7 +231,7 @@ public final class SexmodNetworking {
             GirlInteractionService.tryBeginInteraction(player, girl, girlsceneaction);
          }
       } else {
-         player.sendSystemMessage(Component.literal("She is no longer available."));
+         player.displayClientMessage(Component.literal("She is no longer available."), false);
       }
    }
 
@@ -270,7 +270,7 @@ public final class SexmodNetworking {
                   // keyframes only fire client-side, so this is the server's cue to advance the beat
                   girl.applySceneKeyframe(player, payload.inputId().substring(SceneGirlEntity.KEYFRAME_INPUT_PREFIX.length()));
                } else {
-                  player.sendSystemMessage(Component.literal("Unknown Jenny scene input."));
+                  player.displayClientMessage(Component.literal("Unknown Jenny scene input."), false);
                }
          }
       }

@@ -69,10 +69,10 @@ public final class CustomGirlEntity extends SceneGirlEntity {
     }
 
     @Override
-    protected com.geckolib.animation.RawAnimation selectCustomMovementAnimation(boolean moving) {
+    protected software.bernie.geckolib.animation.RawAnimation selectCustomMovementAnimation(boolean moving) {
         return moving
-            ? com.geckolib.animation.RawAnimation.begin().thenLoop("animation.custom.walk")
-            : com.geckolib.animation.RawAnimation.begin().thenLoop("animation.custom.idle");
+            ? software.bernie.geckolib.animation.RawAnimation.begin().thenLoop("animation.custom.walk")
+            : software.bernie.geckolib.animation.RawAnimation.begin().thenLoop("animation.custom.idle");
     }
 
     @Override

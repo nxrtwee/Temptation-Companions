@@ -2,9 +2,9 @@ package com.nxrtweetg.sexmod.client;
 
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
-import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.AbstractButton;
-import net.minecraft.client.gui.TextAlignment;
 import net.minecraft.client.input.InputWithModifiers;
 import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.network.chat.Component;
@@ -54,7 +54,7 @@ public final class GirlCommandButton extends AbstractButton {
    }
 
    @Override
-   protected void extractContents(GuiGraphicsExtractor context, int mouseX, int mouseY, float delta) {
+   protected void renderContents(GuiGraphics context, int mouseX, int mouseY, float delta) {
       if (this.slide <= 0.0F || !this.visible || this.getX() + this.getWidth() <= 0) {
          return;
       }
@@ -69,7 +69,7 @@ public final class GirlCommandButton extends AbstractButton {
          return;
       }
 
-      this.extractDefaultSprite(context);
+      this.renderDefaultSprite(context);
       context.blit(
          RenderPipelines.GUI_TEXTURED,
          GIRL_INVENTORY,
@@ -88,13 +88,13 @@ public final class GirlCommandButton extends AbstractButton {
          // across the icon too and run the text underneath it.
          int labelRight = this.getX() + this.getWidth() - ICON_SIZE - ICON_MARGIN;
          if (labelRight > this.getX() + LABEL_MARGIN) {
-            context.textRendererForWidget(this, GuiGraphicsExtractor.HoveredTextEffects.NONE)
-               .accept(
-                  TextAlignment.CENTER,
-                  (this.getX() + LABEL_MARGIN + labelRight) / 2,
-                  this.getY() + (this.getHeight() - LABEL_HEIGHT) / 2,
-                  this.getMessage()
-               );
+            context.drawCenteredString(
+               Minecraft.getInstance().font,
+               this.getMessage(),
+               (this.getX() + LABEL_MARGIN + labelRight) / 2,
+               this.getY() + (this.getHeight() - LABEL_HEIGHT) / 2,
+               16777215
+            );
          }
       }
    }

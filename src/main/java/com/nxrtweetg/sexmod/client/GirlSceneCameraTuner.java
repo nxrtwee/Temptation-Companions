@@ -25,7 +25,7 @@ public final class GirlSceneCameraTuner {
          double d0 = GirlSceneCameraConfig.adjustDistance(girl.characterId(), girlsceneaction, girlscenephase, delta);
          if (client.player != null) {
             client.player
-               .sendOverlayMessage(Component.literal(String.format("%s %s camera distance: %.1fx", girlsceneaction.legacyId(), phaseLabel(girlscenephase), d0)));
+               .displayClientMessage(Component.literal(String.format("%s %s camera distance: %.1fx", girlsceneaction.legacyId(), phaseLabel(girlscenephase), d0)), true);
          }
       }
    }
@@ -38,7 +38,7 @@ public final class GirlSceneCameraTuner {
          double d0 = GirlSceneCameraConfig.adjustVerticalOffset(girl.characterId(), girlsceneaction, girlscenephase, delta);
          if (client.player != null) {
             client.player
-               .sendOverlayMessage(Component.literal(String.format("%s %s camera height: %+.2f", girlsceneaction.legacyId(), phaseLabel(girlscenephase), d0)));
+               .displayClientMessage(Component.literal(String.format("%s %s camera height: %+.2f", girlsceneaction.legacyId(), phaseLabel(girlscenephase), d0)), true);
          }
       }
    }
@@ -51,7 +51,7 @@ public final class GirlSceneCameraTuner {
          double d0 = GirlSceneCameraConfig.adjustLateralOffset(girl.characterId(), girlsceneaction, girlscenephase, delta);
          if (client.player != null) {
             client.player
-               .sendOverlayMessage(Component.literal(String.format("%s %s camera side offset: %+.2f", girlsceneaction.legacyId(), phaseLabel(girlscenephase), d0)));
+               .displayClientMessage(Component.literal(String.format("%s %s camera side offset: %+.2f", girlsceneaction.legacyId(), phaseLabel(girlscenephase), d0)), true);
          }
       }
    }
@@ -64,7 +64,7 @@ public final class GirlSceneCameraTuner {
          double d0 = GirlSceneCameraConfig.adjustHelperVerticalOffset(girl.characterId(), girlsceneaction, girlscenephase, delta);
          if (client.player != null) {
             client.player
-               .sendOverlayMessage(Component.literal(String.format("%s %s helper height: %+.2f", girlsceneaction.legacyId(), phaseLabel(girlscenephase), d0)));
+               .displayClientMessage(Component.literal(String.format("%s %s helper height: %+.2f", girlsceneaction.legacyId(), phaseLabel(girlscenephase), d0)), true);
          }
       }
    }
@@ -77,7 +77,7 @@ public final class GirlSceneCameraTuner {
          double d0 = GirlSceneCameraConfig.adjustHelperScale(girl.characterId(), girlsceneaction, girlscenephase, delta);
          if (client.player != null) {
             client.player
-               .sendOverlayMessage(Component.literal(String.format("%s %s partner scale: %.2f", girlsceneaction.legacyId(), phaseLabel(girlscenephase), d0)));
+               .displayClientMessage(Component.literal(String.format("%s %s partner scale: %.2f", girlsceneaction.legacyId(), phaseLabel(girlscenephase), d0)), true);
          }
       }
    }
@@ -90,7 +90,7 @@ public final class GirlSceneCameraTuner {
          double d0 = GirlSceneCameraConfig.adjustGirlScale(girl.characterId(), girlsceneaction, girlscenephase, delta);
          if (client.player != null) {
             client.player
-               .sendOverlayMessage(Component.literal(String.format("%s %s girl scale: %.2f", girlsceneaction.legacyId(), phaseLabel(girlscenephase), d0)));
+               .displayClientMessage(Component.literal(String.format("%s %s girl scale: %.2f", girlsceneaction.legacyId(), phaseLabel(girlscenephase), d0)), true);
          }
       }
    }
@@ -101,7 +101,7 @@ public final class GirlSceneCameraTuner {
       if (girlsceneaction != null) {
          GirlSceneCameraConfig.resetScales(girl.characterId(), girlsceneaction, activeCameraPhase(girl));
          if (client.player != null) {
-            client.player.sendOverlayMessage(Component.literal("Scale reset to 1.00"));
+            client.player.displayClientMessage(Component.literal("Scale reset to 1.00"), true);
          }
       }
    }
@@ -114,7 +114,7 @@ public final class GirlSceneCameraTuner {
          double d0 = GirlSceneCameraConfig.adjustHelperForwardOffset(girl.characterId(), girlsceneaction, girlscenephase, delta);
          if (client.player != null) {
             client.player
-               .sendOverlayMessage(Component.literal(String.format("%s %s helper forward: %+.2f", girlsceneaction.legacyId(), phaseLabel(girlscenephase), d0)));
+               .displayClientMessage(Component.literal(String.format("%s %s helper forward: %+.2f", girlsceneaction.legacyId(), phaseLabel(girlscenephase), d0)), true);
          }
       }
    }
@@ -127,7 +127,7 @@ public final class GirlSceneCameraTuner {
          double d0 = GirlSceneCameraConfig.adjustHelperSideOffset(girl.characterId(), girlsceneaction, girlscenephase, delta);
          if (client.player != null) {
             client.player
-               .sendOverlayMessage(Component.literal(String.format("%s %s helper side: %+.2f", girlsceneaction.legacyId(), phaseLabel(girlscenephase), d0)));
+               .displayClientMessage(Component.literal(String.format("%s %s helper side: %+.2f", girlsceneaction.legacyId(), phaseLabel(girlscenephase), d0)), true);
          }
       }
    }
@@ -138,7 +138,7 @@ public final class GirlSceneCameraTuner {
       if (girlsceneaction != null) {
          double d0 = GirlSceneBodyConfig.adjustBreastScale(girl.characterId(), girlsceneaction, delta);
          if (client.player != null) {
-            client.player.sendOverlayMessage(Component.literal(String.format("%s breasts: %.2f", girlsceneaction.legacyId(), d0)));
+            client.player.displayClientMessage(Component.literal(String.format("%s breasts: %.2f", girlsceneaction.legacyId(), d0)), true);
          }
       }
    }
@@ -149,7 +149,7 @@ public final class GirlSceneCameraTuner {
       if (girlsceneaction != null) {
          double d0 = GirlSceneBodyConfig.adjustBootyScale(girl.characterId(), girlsceneaction, delta);
          if (client.player != null) {
-            client.player.sendOverlayMessage(Component.literal(String.format("%s booty: %.2f", girlsceneaction.legacyId(), d0)));
+            client.player.displayClientMessage(Component.literal(String.format("%s booty: %.2f", girlsceneaction.legacyId(), d0)), true);
          }
       }
    }

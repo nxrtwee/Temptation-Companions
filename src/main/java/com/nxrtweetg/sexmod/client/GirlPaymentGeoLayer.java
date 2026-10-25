@@ -1,10 +1,10 @@
 package com.nxrtweetg.sexmod.client;
 
-import com.geckolib.cache.model.GeoBone;
-import com.geckolib.renderer.base.GeoRenderer;
-import com.geckolib.renderer.base.PerBoneRender;
-import com.geckolib.renderer.base.RenderPassInfo;
-import com.geckolib.renderer.layer.GeoRenderLayer;
+import software.bernie.geckolib.cache.model.GeoBone;
+import software.bernie.geckolib.renderer.base.GeoRenderer;
+import software.bernie.geckolib.renderer.base.PerBoneRender;
+import software.bernie.geckolib.renderer.base.RenderPassInfo;
+import software.bernie.geckolib.renderer.layer.GeoRenderLayer;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.nxrtweetg.sexmod.girls.SceneGirlEntity;
 import com.nxrtweetg.sexmod.girls.state.GirlPaymentItem;

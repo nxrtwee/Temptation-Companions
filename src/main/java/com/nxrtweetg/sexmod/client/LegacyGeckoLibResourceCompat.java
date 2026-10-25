@@ -1,13 +1,16 @@
 package com.nxrtweetg.sexmod.client;
 
-import com.geckolib.cache.BakedAnimationCache;
-import com.geckolib.cache.BakedModelCache;
-import com.geckolib.cache.GeckoLibResources;
-import com.geckolib.cache.animation.Animation;
-import com.geckolib.cache.animation.BakedAnimations;
-import com.geckolib.cache.model.BakedGeoModel;
-import com.geckolib.loading.loader.GeckoLibGsonLoader;
-import com.geckolib.loading.math.MathParser;
+import software.bernie.geckolib.cache.BakedAnimationCache;
+import software.bernie.geckolib.cache.BakedModelCache;
+import software.bernie.geckolib.cache.GeckoLibResources;
+import software.bernie.geckolib.cache.animation.Animation;
+import software.bernie.geckolib.cache.model.BakedGeoModel;
+import software.bernie.geckolib.loading.json.raw.Model;
+import software.bernie.geckolib.loading.json.typeadapter.BakedAnimationsAdapter;
+import software.bernie.geckolib.loading.object.BakedAnimations;
+import software.bernie.geckolib.loading.object.BakedModelFactory;
+import software.bernie.geckolib.loading.object.GeometryTree;
+import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
 import com.nxrtweetg.sexmod.SexmodMod;
 import com.nxrtweetg.sexmod.girls.anim.GirlAnimationLengths;
@@ -18,7 +21,7 @@ import java.util.Map;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.fabricmc.fabric.api.resource.v1.ResourceLoader;
-import net.fabricmc.fabric.api.resource.v1.reloader.SimpleReloadListener;
+import net.fabricmc.fabric.api.resource.v1.reloader.SimpleResourceReloader;
 import net.minecraft.resources.Identifier;
 import net.minecraft.server.packs.PackType;
 import net.minecraft.server.packs.resources.PreparableReloadListener.SharedState;
@@ -46,8 +49,8 @@ public final class LegacyGeckoLibResourceCompat {
 
    public static void initialize() {
       ResourceLoader loader = ResourceLoader.get(PackType.CLIENT_RESOURCES);
-      loader.registerReloadListener(LISTENER_ID, new LegacyResourceReloadListener());
-      loader.addListenerOrdering(GECKOLIB_LISTENER_ID, LISTENER_ID);
+      loader.registerReloader(LISTENER_ID, new LegacyResourceReloadListener());
+      loader.addReloaderOrdering(GECKOLIB_LISTENER_ID, LISTENER_ID);
    }
 
    private static Identifier normalizeLegacyModelId(Identifier resourceId) {
@@ -96,13 +99,14 @@ public final class LegacyGeckoLibResourceCompat {
    ) {
    }
 
-   private static final class LegacyResourceReloadListener extends SimpleReloadListener<PreparedLegacyResources> {
+   private static final class LegacyResourceReloadListener extends SimpleResourceReloader<PreparedLegacyResources> {
       @Override
       protected PreparedLegacyResources prepare(SharedState sharedState) {
          ResourceManager resourceManager = sharedState.resourceManager();
          GirlAnimationLengths.reloadFromResourceManager(resourceManager);
-         GeckoLibGsonLoader loader = new GeckoLibGsonLoader();
-         MathParser mathParser = MathParser.createWithDeduplication();
+         com.google.gson.Gson animationGson = new GsonBuilder()
+            .registerTypeAdapter(BakedAnimations.class, BakedAnimationsAdapter.deserializer())
+            .create();
          Map<Identifier, BakedGeoModel> models = new LinkedHashMap<>();
          Map<Identifier, BakedAnimations> animations = new LinkedHashMap<>();
 
@@ -114,14 +118,17 @@ public final class LegacyGeckoLibResourceCompat {
 
             try {
                Identifier modernId = toModernModelResourceId(cacheId);
-               JsonObject json = loader.deserializeGeckoLibModelFile(modernId, entry.getValue());
-               BakedGeoModel model = loader.bakeGeckoLibModelFile(modernId, json);
+               Model rawModel;
+               try (java.io.Reader reader = entry.getValue().openAsReader()) {
+                  rawModel = GeckoLibResources.GSON.fromJson(reader, Model.class);
+               }
+               BakedGeoModel model = BakedModelFactory.DEFAULT_FACTORY.constructGeoModel(GeometryTree.fromModel(rawModel));
                models.put(cacheId, model);
 
                for (String aliasPath : LEGACY_MODEL_ALIASES.getOrDefault(cacheId.getPath(), List.of())) {
                   models.putIfAbsent(cacheId.withPath(aliasPath), model);
                }
-            } catch (RuntimeException exception) {
+            } catch (Exception exception) {
                SexmodMod.LOGGER.warn("Failed to load legacy model resource {}", entry.getKey(), exception);
             }
          }
@@ -134,10 +141,12 @@ public final class LegacyGeckoLibResourceCompat {
 
             try {
                Identifier modernId = toModernAnimationResourceId(cacheId);
-               JsonObject json = loader.deserializeGeckoLibAnimationFile(modernId, entry.getValue());
-               BakedAnimations bakedAnimations = loader.bakeGeckoLibAnimationsFile(modernId, json, mathParser);
+               BakedAnimations bakedAnimations;
+               try (java.io.Reader reader = entry.getValue().openAsReader()) {
+                  bakedAnimations = animationGson.fromJson(reader, BakedAnimations.class);
+               }
                animations.put(cacheId, bakedAnimations);
-            } catch (RuntimeException exception) {
+            } catch (Exception exception) {
                SexmodMod.LOGGER.warn("Failed to load legacy animation resource {}", entry.getKey(), exception);
             }
          }

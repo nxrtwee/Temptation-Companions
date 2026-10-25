@@ -1,6 +1,6 @@
 package com.nxrtweetg.sexmod.girls.slime;
 
-import com.geckolib.animation.RawAnimation;
+import software.bernie.geckolib.animation.RawAnimation;
 import com.nxrtweetg.sexmod.girls.GirlFollowMasterGoal;
 import com.nxrtweetg.sexmod.girls.GirlGoHomeGoal;
 import com.nxrtweetg.sexmod.girls.GirlMeleeAttackGoal;

@@ -1,6 +1,6 @@
 package com.nxrtweetg.sexmod.girls.anim;
 
-import com.geckolib.animation.RawAnimation;
+import software.bernie.geckolib.animation.RawAnimation;
 import java.util.EnumMap;
 import java.util.Map;
 import java.util.Set;

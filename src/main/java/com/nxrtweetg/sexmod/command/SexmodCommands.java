@@ -245,7 +245,7 @@ public final class SexmodCommands {
 
       girl.snapTo(player.getX() + 1.5, player.getY(), player.getZ() + 1.5, player.getYRot(), 0.0F);
       level.addFreshEntity(girl);
-      player.sendSystemMessage(Component.literal("Spawned " + girl.getName().getString() + "."));
+      player.displayClientMessage(Component.literal("Spawned " + girl.getName().getString() + "."), false);
       return 1;
    }
 
@@ -260,7 +260,7 @@ public final class SexmodCommands {
       girl.setCustomId(characterName);
       girl.snapTo(player.getX() + 1.5, player.getY(), player.getZ() + 1.5, player.getYRot(), 0.0F);
       level.addFreshEntity(girl);
-      player.sendSystemMessage(Component.literal("Spawned custom companion " + girl.getName().getString() + "."));
+      player.displayClientMessage(Component.literal("Spawned custom companion " + girl.getName().getString() + "."), false);
       return 1;
    }
 

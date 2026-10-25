@@ -1,13 +1,13 @@
 package com.nxrtweetg.sexmod.client;
 
-import com.geckolib.cache.model.BakedGeoModel;
-import com.geckolib.cache.model.GeoBone;
-import com.geckolib.renderer.GeoItemRenderer;
-import com.geckolib.renderer.base.GeoRenderState;
-import com.geckolib.renderer.base.GeoRenderer;
-import com.geckolib.renderer.base.PerBoneRender;
-import com.geckolib.renderer.base.RenderPassInfo;
-import com.geckolib.renderer.layer.GeoRenderLayer;
+import software.bernie.geckolib.cache.model.BakedGeoModel;
+import software.bernie.geckolib.cache.model.GeoBone;
+import software.bernie.geckolib.renderer.GeoItemRenderer;
+import software.bernie.geckolib.renderer.base.GeoRenderState;
+import software.bernie.geckolib.renderer.base.GeoRenderer;
+import software.bernie.geckolib.renderer.base.PerBoneRender;
+import software.bernie.geckolib.renderer.base.RenderPassInfo;
+import software.bernie.geckolib.renderer.layer.GeoRenderLayer;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.nxrtweetg.sexmod.item.DragonStaffItem;
 import java.util.function.BiConsumer;
@@ -85,7 +85,7 @@ public final class DragonStaffCrystalLayer extends GeoRenderLayer<DragonStaffIte
          this.crystalModel,
          this.renderState,
          poseStack,
-         END_CRYSTAL_LOCATION,
+         net.minecraft.client.renderer.rendertype.RenderTypes.entityCutoutNoCull(END_CRYSTAL_LOCATION),
          info.packedLight(),
          OverlayTexture.NO_OVERLAY,
          -1,

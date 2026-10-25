@@ -7,7 +7,7 @@ import java.util.Optional;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.resources.language.I18n;
@@ -246,7 +246,7 @@ public final class GirlSettingsScreen extends Screen {
    }
 
    @Override
-   public void extractRenderState(GuiGraphicsExtractor context, int mouseX, int mouseY, float delta) {
+   public void render(GuiGraphics context, int mouseX, int mouseY, float delta) {
       int panelLeft = Math.max(16, (this.width - PANEL_WIDTH) / 2);
       int panelTop = Math.max(6, (this.height - PANEL_HEIGHT) / 2);
 
@@ -259,21 +259,21 @@ public final class GirlSettingsScreen extends Screen {
       context.fill(panelLeft + PANEL_WIDTH - 1, panelTop, panelLeft + PANEL_WIDTH, panelTop + PANEL_HEIGHT, 0xFF4A4E69);
 
       // Title
-      context.text(this.font, Component.literal(I18n.get("settings.sexmod.title")), panelLeft + PADDING, panelTop + 7, 0xFFE0E0E0);
+      context.drawString(this.font, Component.literal(I18n.get("settings.sexmod.title")), panelLeft + PADDING, panelTop + 7, 0xFFE0E0E0);
 
       // Fade duration and early start labels
       int duration = SexmodConfig.getFadeDurationTicks();
       int lead = SexmodConfig.getFadeLeadTicks();
       String durStr = I18n.get("settings.sexmod.fade_duration", duration, duration / 20.0F);
       String leadStr = I18n.get("settings.sexmod.fade_lead", lead, lead / 20.0F);
-      context.text(this.font, Component.literal(durStr), panelLeft + PADDING, panelTop + 66 + 5, 0xFFFFFFFF);
-      context.text(this.font, Component.literal(leadStr), panelLeft + PADDING, panelTop + 87 + 5, 0xFFFFFFFF);
+      context.drawString(this.font, Component.literal(durStr), panelLeft + PADDING, panelTop + 66 + 5, 0xFFFFFFFF);
+      context.drawString(this.font, Component.literal(leadStr), panelLeft + PADDING, panelTop + 87 + 5, 0xFFFFFFFF);
 
       // Notice for "All Scenes for All Girls"
       String note1 = I18n.get("settings.sexmod.all_scenes_note1");
       String note2 = I18n.get("settings.sexmod.all_scenes_note2");
-      context.text(this.font, Component.literal("§6" + note1), panelLeft + PADDING, panelTop + 129, 0xFFE0E0E0);
-      context.text(this.font, Component.literal("§6" + note2), panelLeft + PADDING, panelTop + 138, 0xFFE0E0E0);
+      context.drawString(this.font, Component.literal("§6" + note1), panelLeft + PADDING, panelTop + 129, 0xFFE0E0E0);
+      context.drawString(this.font, Component.literal("§6" + note2), panelLeft + PADDING, panelTop + 138, 0xFFE0E0E0);
 
       // Labels for current scales
       String charId = this.currentCharId();
@@ -281,11 +281,11 @@ public final class GirlSettingsScreen extends Screen {
       float btScale = SexmodConfig.getBootyScale(charId);
       float gScale = SexmodConfig.getGirlScale(charId);
 
-      context.text(this.font, Component.literal(I18n.get("settings.sexmod.breasts", bScale)), panelLeft + PADDING, panelTop + 173 + 5, 0xFFFFFFFF);
-      context.text(this.font, Component.literal(I18n.get("settings.sexmod.booty", btScale)), panelLeft + PADDING, panelTop + 194 + 5, 0xFFFFFFFF);
-      context.text(this.font, Component.literal(I18n.get("settings.sexmod.size", gScale)), panelLeft + PADDING, panelTop + 215 + 5, 0xFFFFFFFF);
+      context.drawString(this.font, Component.literal(I18n.get("settings.sexmod.breasts", bScale)), panelLeft + PADDING, panelTop + 173 + 5, 0xFFFFFFFF);
+      context.drawString(this.font, Component.literal(I18n.get("settings.sexmod.booty", btScale)), panelLeft + PADDING, panelTop + 194 + 5, 0xFFFFFFFF);
+      context.drawString(this.font, Component.literal(I18n.get("settings.sexmod.size", gScale)), panelLeft + PADDING, panelTop + 215 + 5, 0xFFFFFFFF);
 
-      super.extractRenderState(context, mouseX, mouseY, delta);
+      super.render(context, mouseX, mouseY, delta);
    }
 
    @Override

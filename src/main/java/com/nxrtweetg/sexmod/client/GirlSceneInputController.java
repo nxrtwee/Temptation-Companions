@@ -14,7 +14,7 @@ import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents.EndTick;
-import net.fabricmc.fabric.api.client.keymapping.v1.KeyMappingHelper;
+import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.resources.Identifier;
@@ -25,36 +25,36 @@ import org.lwjgl.glfw.GLFW;
 @Environment(EnvType.CLIENT)
 public final class GirlSceneInputController {
    private static final KeyMapping.Category CATEGORY = KeyMapping.Category.register(Identifier.fromNamespaceAndPath("sexmod", "main"));
-   private static final KeyMapping RESET_KEY = KeyMappingHelper.registerKeyMapping(new KeyMapping("key.sexmod.reset", Type.KEYSYM, 88, CATEGORY));
-   private static final KeyMapping CONTROL_SCREEN_KEY = KeyMappingHelper.registerKeyMapping(
+   private static final KeyMapping RESET_KEY = KeyBindingHelper.registerKeyBinding(new KeyMapping("key.sexmod.reset", Type.KEYSYM, 88, CATEGORY));
+   private static final KeyMapping CONTROL_SCREEN_KEY = KeyBindingHelper.registerKeyBinding(
       new KeyMapping("key.sexmod.scene_controls", Type.KEYSYM, 78, CATEGORY)
    );
-   private static final KeyMapping SETTINGS_KEY = KeyMappingHelper.registerKeyMapping(
+   private static final KeyMapping SETTINGS_KEY = KeyBindingHelper.registerKeyBinding(
       new KeyMapping("key.sexmod.settings", Type.KEYSYM, GLFW.GLFW_KEY_Z, CATEGORY)
    );
-   private static final KeyMapping FREECAM_TOGGLE_KEY = KeyMappingHelper.registerKeyMapping(
+   private static final KeyMapping FREECAM_TOGGLE_KEY = KeyBindingHelper.registerKeyBinding(
       new KeyMapping("key.sexmod.freecam_toggle", Type.KEYSYM, GLFW.GLFW_KEY_G, CATEGORY)
    );
-   private static final KeyMapping FREECAM_XZ_DOWN_KEY = KeyMappingHelper.registerKeyMapping(
+   private static final KeyMapping FREECAM_XZ_DOWN_KEY = KeyBindingHelper.registerKeyBinding(
       new KeyMapping("key.sexmod.freecam_speed_xz_down", Type.KEYSYM, GLFW.GLFW_KEY_LEFT_BRACKET, CATEGORY)
    );
-   private static final KeyMapping FREECAM_XZ_UP_KEY = KeyMappingHelper.registerKeyMapping(
+   private static final KeyMapping FREECAM_XZ_UP_KEY = KeyBindingHelper.registerKeyBinding(
       new KeyMapping("key.sexmod.freecam_speed_xz_up", Type.KEYSYM, GLFW.GLFW_KEY_RIGHT_BRACKET, CATEGORY)
    );
-   private static final KeyMapping FREECAM_Y_DOWN_KEY = KeyMappingHelper.registerKeyMapping(
+   private static final KeyMapping FREECAM_Y_DOWN_KEY = KeyBindingHelper.registerKeyBinding(
       new KeyMapping("key.sexmod.freecam_speed_y_down", Type.KEYSYM, GLFW.GLFW_KEY_SEMICOLON, CATEGORY)
    );
-   private static final KeyMapping FREECAM_Y_UP_KEY = KeyMappingHelper.registerKeyMapping(
+   private static final KeyMapping FREECAM_Y_UP_KEY = KeyBindingHelper.registerKeyBinding(
       new KeyMapping("key.sexmod.freecam_speed_y_up", Type.KEYSYM, GLFW.GLFW_KEY_APOSTROPHE, CATEGORY)
    );
    // Fade editor: KP4/KP6 = fadeOut-/+, KP2/KP8 = blackHold-/+, KP1/KP3 = fadeIn-/+, KP5 = preview
-   private static final KeyMapping FADE_OUT_DOWN  = KeyMappingHelper.registerKeyMapping(new KeyMapping("key.sexmod.fade_out_down",   Type.KEYSYM, GLFW.GLFW_KEY_KP_4, CATEGORY));
-   private static final KeyMapping FADE_OUT_UP    = KeyMappingHelper.registerKeyMapping(new KeyMapping("key.sexmod.fade_out_up",     Type.KEYSYM, GLFW.GLFW_KEY_KP_6, CATEGORY));
-   private static final KeyMapping FADE_HOLD_DOWN = KeyMappingHelper.registerKeyMapping(new KeyMapping("key.sexmod.fade_hold_down",  Type.KEYSYM, GLFW.GLFW_KEY_KP_2, CATEGORY));
-   private static final KeyMapping FADE_HOLD_UP   = KeyMappingHelper.registerKeyMapping(new KeyMapping("key.sexmod.fade_hold_up",    Type.KEYSYM, GLFW.GLFW_KEY_KP_8, CATEGORY));
-   private static final KeyMapping FADE_IN_DOWN   = KeyMappingHelper.registerKeyMapping(new KeyMapping("key.sexmod.fade_in_down",    Type.KEYSYM, GLFW.GLFW_KEY_KP_1, CATEGORY));
-   private static final KeyMapping FADE_IN_UP     = KeyMappingHelper.registerKeyMapping(new KeyMapping("key.sexmod.fade_in_up",      Type.KEYSYM, GLFW.GLFW_KEY_KP_3, CATEGORY));
-   private static final KeyMapping FADE_PREVIEW   = KeyMappingHelper.registerKeyMapping(new KeyMapping("key.sexmod.fade_preview",    Type.KEYSYM, GLFW.GLFW_KEY_KP_5, CATEGORY));
+   private static final KeyMapping FADE_OUT_DOWN  = KeyBindingHelper.registerKeyBinding(new KeyMapping("key.sexmod.fade_out_down",   Type.KEYSYM, GLFW.GLFW_KEY_KP_4, CATEGORY));
+   private static final KeyMapping FADE_OUT_UP    = KeyBindingHelper.registerKeyBinding(new KeyMapping("key.sexmod.fade_out_up",     Type.KEYSYM, GLFW.GLFW_KEY_KP_6, CATEGORY));
+   private static final KeyMapping FADE_HOLD_DOWN = KeyBindingHelper.registerKeyBinding(new KeyMapping("key.sexmod.fade_hold_down",  Type.KEYSYM, GLFW.GLFW_KEY_KP_2, CATEGORY));
+   private static final KeyMapping FADE_HOLD_UP   = KeyBindingHelper.registerKeyBinding(new KeyMapping("key.sexmod.fade_hold_up",    Type.KEYSYM, GLFW.GLFW_KEY_KP_8, CATEGORY));
+   private static final KeyMapping FADE_IN_DOWN   = KeyBindingHelper.registerKeyBinding(new KeyMapping("key.sexmod.fade_in_down",    Type.KEYSYM, GLFW.GLFW_KEY_KP_1, CATEGORY));
+   private static final KeyMapping FADE_IN_UP     = KeyBindingHelper.registerKeyBinding(new KeyMapping("key.sexmod.fade_in_up",      Type.KEYSYM, GLFW.GLFW_KEY_KP_3, CATEGORY));
+   private static final KeyMapping FADE_PREVIEW   = KeyBindingHelper.registerKeyBinding(new KeyMapping("key.sexmod.fade_preview",    Type.KEYSYM, GLFW.GLFW_KEY_KP_5, CATEGORY));
    private static boolean thrustHeld;
    private static boolean climaxHeld;
    private static int proneDoggyShiftTicks;

@@ -149,11 +149,11 @@ public final class SexmodWorldGen {
             if (dim != Level.OVERWORLD && dim != Level.NETHER) {
                continue;
             }
-            ChunkPos playerChunk = ChunkPos.containing(player.blockPosition());
+            ChunkPos playerChunk = new ChunkPos(player.blockPosition());
             for (int dx = -2; dx <= 2; dx++) {
                for (int dz = -2; dz <= 2; dz++) {
-                  ChunkPos targetChunk = new ChunkPos(playerChunk.x() + dx, playerChunk.z() + dz);
-                  if (level.getChunkSource().hasChunk(targetChunk.x(), targetChunk.z())) {
+                  ChunkPos targetChunk = new ChunkPos(playerChunk.x + dx, playerChunk.z + dz);
+                  if (level.getChunkSource().hasChunk(targetChunk.x, targetChunk.z)) {
                      if (dim == Level.OVERWORLD) {
                         onOverworldChunkLoad(level, targetChunk);
                      } else if (dim == Level.NETHER) {
@@ -176,7 +176,7 @@ public final class SexmodWorldGen {
 
    private static void onOverworldChunkLoad(ServerLevel level, ChunkPos chunkPos) {
       SexmodWorldGenData data = level.getDataStorage().computeIfAbsent(SexmodWorldGenData.TYPE);
-      long chunkKey = chunkPos.pack();
+      long chunkKey = chunkPos.toLong();
       if (data.isChunkProcessed(chunkKey)) {
          return;
       }
@@ -203,7 +203,7 @@ public final class SexmodWorldGen {
 
    private static void onNetherChunkLoad(ServerLevel level, ChunkPos chunkPos) {
       SexmodWorldGenData data = level.getDataStorage().computeIfAbsent(SexmodWorldGenData.TYPE);
-      long chunkKey = chunkPos.pack();
+      long chunkKey = chunkPos.toLong();
       if (data.isChunkProcessed(chunkKey)) {
          return;
       }
@@ -243,7 +243,7 @@ public final class SexmodWorldGen {
    }
 
    private static void trySpawnGoblinDungeon(ServerLevel level, ChunkPos chunkPos, SexmodWorldGenData data, RandomSource random) {
-      if (!data.canPlaceStructure("goblin", chunkPos.x(), chunkPos.z())) {
+      if (!data.canPlaceStructure("goblin", chunkPos.x, chunkPos.z)) {
          return;
       }
 
@@ -276,7 +276,7 @@ public final class SexmodWorldGen {
       }
 
       BlockPos origin = new BlockPos(startX, foundY, startZ);
-      data.addStructure("goblin", chunkPos.x(), chunkPos.z());
+      data.addStructure("goblin", chunkPos.x, chunkPos.z);
       placeStructureDirect(level, origin, "goblin", Rotation.NONE);
 
       BlockPos goblinPos = origin.offset(5, 1, 5);
@@ -291,7 +291,7 @@ public final class SexmodWorldGen {
 
    private static void trySpawnSurfaceStructures(ServerLevel level, ChunkPos chunkPos, SexmodWorldGenData data, RandomSource random) {
       for (StructureDef def : SURFACE_STRUCTURES) {
-         if (!data.canPlaceStructure(def.name(), chunkPos.x(), chunkPos.z())) {
+         if (!data.canPlaceStructure(def.name(), chunkPos.x, chunkPos.z)) {
             continue;
          }
 
@@ -349,7 +349,7 @@ public final class SexmodWorldGen {
          int placementY = def.isWater() ? 62 : maxY;
          BlockPos origin = new BlockPos(startX, placementY, startZ);
 
-         data.addStructure(def.name(), chunkPos.x(), chunkPos.z());
+         data.addStructure(def.name(), chunkPos.x, chunkPos.z);
          placeStructure(level, origin, def, Rotation.NONE);
          return; // Generate at most one structure per chunk
       }
@@ -611,7 +611,7 @@ public final class SexmodWorldGen {
                         BlockState below = level.getBlockState(probe.below());
                         if (state.isAir() && below.isSolid() && !below.liquid()) {
                            BlockPos origin = new BlockPos(startX, y, startZ);
-                           data.addStructure("goblin", cp.x(), cp.z());
+                           data.addStructure("goblin", cp.x, cp.z);
                            placeStructureDirect(level, origin, "goblin", Rotation.NONE);
                            BlockPos goblinPos = origin.offset(5, 1, 5);
                            GoblinEntity goblin = ModEntities.GOBLIN.create(level, EntitySpawnReason.STRUCTURE);
@@ -645,12 +645,12 @@ public final class SexmodWorldGen {
             );
             if (pair != null) {
                BlockPos bpos = pair.getFirst();
-               ChunkPos targetChunk = ChunkPos.containing(bpos);
+               ChunkPos targetChunk = new ChunkPos(bpos);
                int startX = targetChunk.getMinBlockX();
                int startZ = targetChunk.getMinBlockZ();
                int groundY = def.isWater() ? 62 : getActualGroundY(level, startX + def.sizeX() / 2, startZ + def.sizeZ() / 2);
                BlockPos origin = new BlockPos(startX, groundY, startZ);
-               data.addStructure(def.name(), targetChunk.x(), targetChunk.z());
+               data.addStructure(def.name(), targetChunk.x, targetChunk.z);
                placeStructure(level, origin, def, Rotation.NONE);
                return origin.offset(def.interiorOffset());
             }

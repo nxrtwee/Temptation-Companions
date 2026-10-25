@@ -8,23 +8,19 @@ import com.nxrtweetg.sexmod.client.GirlSceneFreeLook;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.client.Camera;
-import net.minecraft.client.DeltaTracker;
 import net.minecraft.util.Mth;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.phys.Vec3;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.At.Shift;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Environment(EnvType.CLIENT)
 @Mixin(Camera.class)
 abstract class CameraMixin {
-   @Shadow
-   private Vec3 position;
-
    @Shadow
    protected abstract void setPosition(Vec3 position);
 
@@ -40,18 +36,11 @@ abstract class CameraMixin {
    @Shadow
    public abstract float xRot();
 
-   // Must land before Camera#update builds the view matrix and calls prepareCullFrustum, since the
-   // frustum is prepared from the position field: overriding on TAIL left culling computed around
-   // the player, which showed up as sliced-away geometry once the scene camera moved away from him.
-   @Inject(
-      method = "update",
-      at = @At(
-         value = "INVOKE",
-         target = "Lnet/minecraft/client/Camera;getViewRotationMatrix(Lorg/joml/Matrix4f;)Lorg/joml/Matrix4f;",
-         shift = Shift.BEFORE
-      )
-   )
-   private void sexmod$anchorJennySceneCamera(DeltaTracker deltaTracker, CallbackInfo ci) {
+   // Camera#setup positions the camera for the frame and everything downstream - view matrix in
+   // GameRenderer included - reads it back afterwards, so re-anchoring on TAIL of setup is the
+   // 1.21.11 equivalent of the old pre-view-matrix hook.
+   @Inject(method = "setup", at = @At("TAIL"))
+   private void sexmod$anchorJennySceneCamera(Level level, Entity focused, boolean detached, boolean thirdPerson, float partialTick, CallbackInfo ci) {
       // the renderer refreshes the anchor every frame while the controller clears it per tick, so
       // without this gate the view alternates between the scene anchor and the player's own eyes
       if (!GirlSceneCameraController.isSceneCameraActive()) {
