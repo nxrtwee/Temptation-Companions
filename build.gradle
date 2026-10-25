@@ -20,7 +20,7 @@ dependencies {
     modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
     modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_api_version}"
 
-    modImplementation files("libs/geckolib-fabric-1.21.8-5.2.2.jar")
+    modImplementation files("libs/geckolib-fabric-1.21.7-5.2.1.jar")
 
     compileOnly "org.jetbrains:annotations:26.0.2-1"
 }
