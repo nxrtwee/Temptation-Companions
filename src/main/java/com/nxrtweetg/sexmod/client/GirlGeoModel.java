@@ -117,6 +117,39 @@ public final class GirlGeoModel extends GeoModel<SceneGirlEntity> {
       this.rigListener = renderer;
    }
 
+   // DIAGNOSTIC: temporary logging to trace the animation pipeline on GeckoLib 5.2
+   private static int diagHandle, diagCustom, diagAnimMiss;
+   private static final org.slf4j.Logger DIAG_LOG = com.nxrtweetg.sexmod.SexmodMod.LOGGER;
+
+   @Override
+   public void handleAnimations(AnimationState<SceneGirlEntity> animationState) {
+      super.handleAnimations(animationState);
+      if (diagHandle < 5) {
+         diagHandle++;
+         DIAG_LOG.info("[diag] handleAnimations #{}: registeredBones={}, rigListener={}",
+            diagHandle, this.getAnimationProcessor().getRegisteredBones().size(), this.rigListener != null);
+      }
+   }
+
+   @Override
+   public software.bernie.geckolib.animation.Animation getAnimation(SceneGirlEntity animatable, String name) {
+      try {
+         software.bernie.geckolib.animation.Animation animation = super.getAnimation(animatable, name);
+         if (animation == null && diagAnimMiss < 15) {
+            diagAnimMiss++;
+            DIAG_LOG.info("[diag] getAnimation('{}') -> null (name missing?); cachedAnimationFiles={}",
+               name, software.bernie.geckolib.cache.GeckoLibResources.getBakedAnimations().size());
+         }
+         return animation;
+      } catch (RuntimeException exception) {
+         if (diagAnimMiss < 15) {
+            diagAnimMiss++;
+            DIAG_LOG.info("[diag] getAnimation('{}') threw: {}", name, exception.toString());
+         }
+         throw exception;
+      }
+   }
+
    /**
     * GeckoLib 5.2's post-animation hook: runs at the end of every animation pass, after the processor
     * has written the final bone transforms and before the renderer walks the bones. Everything the rig
@@ -125,6 +158,10 @@ public final class GirlGeoModel extends GeoModel<SceneGirlEntity> {
     */
    @Override
    public void setCustomAnimations(AnimationState<SceneGirlEntity> animationState) {
+      if (diagCustom < 5) {
+         diagCustom++;
+         DIAG_LOG.info("[diag] setCustomAnimations #{} fired, rigListener={}", diagCustom, this.rigListener != null);
+      }
       if (this.rigListener != null) {
          GirlEntityRenderer.GirlGeoRenderState renderState = (GirlEntityRenderer.GirlGeoRenderState)animationState.renderState();
          BakedGeoModel model = this.getBakedModel(this.getModelResource(renderState));

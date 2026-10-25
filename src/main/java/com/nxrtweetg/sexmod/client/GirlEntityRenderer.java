@@ -110,6 +110,8 @@ public final class GirlEntityRenderer extends GeoEntityRenderer<SceneGirlEntity,
    private GirlScenePhase cameraAnchorPhase;
    private String cameraAnchorCharacter;
    private GirlScenePhase cameraAnchorConfigPhase;
+   // DIAGNOSTIC
+   private static int diagRig, diagAnchor;
 
    /**
     * GeckoLib 5.2 stores per-render data through a {@code GeoRenderState} interface that it mixes into
@@ -356,6 +358,18 @@ public final class GirlEntityRenderer extends GeoEntityRenderer<SceneGirlEntity,
       GirlScenePhase phase = renderState.getOrDefaultGeckolibData(GirlRenderData.SCENE_PHASE, GirlScenePhase.IDLE);
       boolean renderPlayer = renderState.getOrDefaultGeckolibData(GirlRenderData.RENDER_PLAYER, false);
       String character = renderState.getOrDefaultGeckolibData(GirlRenderData.CHARACTER, "jenny");
+
+      // DIAGNOSTIC: trace rig state and animation ticks on GeckoLib 5.2
+      if (diagRig < 8 || diagRig % 600 == 0) {
+         diagRig++;
+         Object animTicks = renderState.getGeckolibData(software.bernie.geckolib.constant.DataTickets.ANIMATION_TICKS);
+         com.nxrtweetg.sexmod.SexmodMod.LOGGER.info(
+            "[diag] rigPass #{}: char={} action={} phase={} renderPlayer={} amount={} animTicks={} model={}",
+            diagRig, character, action, phase, renderPlayer,
+            renderState.getOrDefaultGeckolibData(GirlRenderData.PAYMENT_AMOUNT, -1),
+            animTicks, model == null ? "null" : "ok"
+         );
+      }
 
       applyPlayerBoneVisibility(model, character);
       if (character.startsWith("custom")) {
@@ -691,6 +705,14 @@ public final class GirlEntityRenderer extends GeoEntityRenderer<SceneGirlEntity,
       double lateral = GirlSceneCameraConfig.lateralOffset(character, action, configPhase);
 
       Vec3 anchor = worldPos.add(forward.scale(distance)).add(right.scale(lateral)).add(0.0, vertical, 0.0);
+      // DIAGNOSTIC: trace anchor capture
+      if (diagAnchor < 12) {
+         diagAnchor++;
+         com.nxrtweetg.sexmod.SexmodMod.LOGGER.info(
+            "[diag] anchor #{}: bone={} worldPos={} anchor={} entity=({},{},{})",
+            diagAnchor, bone.getName(), worldPos, anchor, renderState.x, renderState.y, renderState.z
+         );
+      }
       if (!SexmodConfig.isBoneCamDynamic() && holdsStillPose(this.cameraAnchorPhase)) {
          GirlSceneCameraState.update(List.of(String.valueOf(character), action, distance, vertical, lateral), anchor);
       } else {
