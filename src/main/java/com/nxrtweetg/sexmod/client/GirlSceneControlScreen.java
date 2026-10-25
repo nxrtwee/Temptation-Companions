@@ -196,7 +196,7 @@ public final class GirlSceneControlScreen extends Screen {
       int textLeft = panelLeft + PADDING;
 
       context.fill(panelLeft, panelTop, panelLeft + PANEL_WIDTH, panelTop + panelHeight, -1072689130);
-      context.drawString(this.font, Component.literal("Scene Controls"), textLeft, panelTop + PADDING, 16777215);
+      context.drawString(this.font, Component.literal("Scene Controls"), textLeft, panelTop + PADDING, -1);
       context.drawString(this.font, Component.literal(action != null ? actionLabel(action) : "Head Pat"), textLeft, panelTop + 24, -4733488);
       context.drawString(
          this.font,
