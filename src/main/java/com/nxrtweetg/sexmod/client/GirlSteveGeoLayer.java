@@ -34,8 +34,8 @@ public final class GirlSteveGeoLayer extends GeoRenderLayer<SceneGirlEntity, Voi
    private static final ResourceLocation JENNY_ATLAS = ResourceLocation.fromNamespaceAndPath("sexmod", "textures/entity/jenny/jenny.png");
    private static final ResourceLocation PLAYER_SKIN = ResourceLocation.fromNamespaceAndPath("sexmod", "textures/player/steve.png");
 
-   /** Genital bones - hidden from player-skin pass, shown only in the genital pass. */
-   private static final String[] GENITAL_BONES = {"cock", "ballL", "ballR", "bone123", "bone99"};
+   /** Genital root bones under Torso2 - hidden from player-skin pass, shown only in the genital pass. */
+   private static final String[] GENITAL_ROOT_BONES = {"cock", "ballL", "ballR"};
 
    /**
     * Body bones hidden in the genital pass (self + all children).
@@ -84,23 +84,23 @@ public final class GirlSteveGeoLayer extends GeoRenderLayer<SceneGirlEntity, Voi
          RenderType skinType = this.renderer.getRenderType(renderState, this.resolveTexture(renderState));
          if (skinType != null) {
             VertexConsumer skinBuffer = bufferSource.getBuffer(skinType);
-            setBonesHidden(model, GENITAL_BONES, true);
+            setGenitalsHidden(model, true);
             GirlEntityRenderer.applyPartnerArmModel(model, partnerIsSlim);
             renderSubtree(renderState, poseStack, steve, bufferSource, skinBuffer, packedLight, packedOverlay, renderColor);
-            setBonesHidden(model, GENITAL_BONES, false);
+            setGenitalsHidden(model, false);
          }
 
          // Pass 2: steve.png - only genitals (all characters including jenny).
          RenderType steveType = this.renderer.getRenderType(renderState, PLAYER_SKIN);
          if (steveType != null) {
             VertexConsumer steveBuffer = bufferSource.getBuffer(steveType);
-            setBonesHidden(model, GENITAL_BONES, false);
+            setGenitalsHidden(model, false);
             setMeshOnly(model, "Torso2", true);
             setBonesHidden(model, BODY_BONES_TO_HIDE, true);
             renderSubtree(renderState, poseStack, steve, bufferSource, steveBuffer, packedLight, packedOverlay, renderColor);
             setBonesHidden(model, BODY_BONES_TO_HIDE, false);
             setMeshOnly(model, "Torso2", false);
-            setBonesHidden(model, GENITAL_BONES, true);
+            setGenitalsHidden(model, false);
          }
       } finally {
          steve.setHidden(true);
@@ -118,21 +118,37 @@ public final class GirlSteveGeoLayer extends GeoRenderLayer<SceneGirlEntity, Voi
       MultiBufferSource bufferSource, VertexConsumer buffer,
       int packedLight, int packedOverlay, int renderColor
    ) {
+      poseStack.pushPose();
+      RenderUtil.prepMatrixForBone(poseStack, bone);
+
       // Head2/boyCam (the scene camera anchors) hang off the steve subtree, which the main recursion
-      // never reaches while it is hidden - capture them here, before this bone's own matrix is applied.
+      // never reaches while it is hidden - capture them here, with the full bone matrix applied.
       this.girlRenderer.captureCameraAnchor(renderState, poseStack, bone);
 
       if (!bone.isHidden()) {
-         poseStack.pushPose();
-         RenderUtil.prepMatrixForBone(poseStack, bone);
          this.renderer.renderCubesOfBone(renderState, bone, poseStack, buffer, packedLight, packedOverlay, renderColor);
-         poseStack.popPose();
       }
 
       if (!bone.isHidingChildren()) {
          for (GeoBone child : bone.getChildBones()) {
             renderSubtree(renderState, poseStack, child, bufferSource, buffer, packedLight, packedOverlay, renderColor);
          }
+      }
+
+      poseStack.popPose();
+   }
+
+   private static void setGenitalsHidden(BakedGeoModel model, boolean hidden) {
+      for (String rootName : GENITAL_ROOT_BONES) {
+         model.getBone(rootName).ifPresent(bone -> setTreeHidden(bone, hidden));
+      }
+   }
+
+   private static void setTreeHidden(GeoBone bone, boolean hidden) {
+      bone.setHidden(hidden);
+      bone.setChildrenHidden(hidden);
+      for (GeoBone child : bone.getChildBones()) {
+         setTreeHidden(child, hidden);
       }
    }
 

@@ -1064,9 +1064,13 @@ public abstract class SceneGirlEntity extends GirlEntity implements GeoEntity {
                int remaining = APPROACH_GLIDE_TICKS - this.sceneTicks;
                Vec3 step = remaining <= 0 ? meetingPoint : this.position().add(meetingPoint.subtract(this.position()).scale(1.0 / remaining));
                float travelYaw = (float)(Mth.atan2(meetingPoint.z - this.getZ(), meetingPoint.x - this.getX()) * 180.0 / Math.PI) - 90.0F;
+               this.coreState().setTargetYaw(travelYaw);
                this.setYRot(travelYaw);
                this.setYBodyRot(travelYaw);
                this.setYHeadRot(travelYaw);
+               this.yRotO = travelYaw;
+               this.yBodyRotO = travelYaw;
+               this.yHeadRotO = travelYaw;
                this.setPos(step.x, step.y, step.z);
                this.setDeltaMovement(Vec3.ZERO);
             }
@@ -2269,9 +2273,13 @@ public abstract class SceneGirlEntity extends GirlEntity implements GeoEntity {
          int remaining = APPROACH_GLIDE_TICKS - this.customTicks;
          Vec3 step = remaining <= 0 ? meetingPoint : this.position().add(meetingPoint.subtract(this.position()).scale(1.0 / remaining));
          float travelYaw = (float)(Mth.atan2(meetingPoint.z - this.getZ(), meetingPoint.x - this.getX()) * 180.0 / Math.PI) - 90.0F;
+         this.coreState().setTargetYaw(travelYaw);
          this.setYRot(travelYaw);
          this.setYBodyRot(travelYaw);
          this.setYHeadRot(travelYaw);
+         this.yRotO = travelYaw;
+         this.yBodyRotO = travelYaw;
+         this.yHeadRotO = travelYaw;
          this.setPos(step.x, step.y, step.z);
          this.setDeltaMovement(Vec3.ZERO);
       }

@@ -8,6 +8,7 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import software.bernie.geckolib.animatable.processing.AnimationProcessor;
@@ -46,6 +47,22 @@ public abstract class AnimationProcessorMixin {
          bone.setScaleX(initial.getScaleX());
          bone.setScaleY(initial.getScaleY());
          bone.setScaleZ(initial.getScaleZ());
+         bone.resetStateChanges();
       }
+   }
+
+   /**
+    * The three blend-backs (rotation/position/scale of bones the new take does not animate) compute
+    * their progress as {@code min((animTime - lastResetTick) / resetTime, 1)} - but lastResetTick was
+    * recorded on the previous take's timeline while the new take restarts its clock at zero, so the
+    * numerator goes far negative and the lerp extrapolates hundreds of ticks past the saved pose.
+    * That flung cosmetics around "helicopter" style at every take switch and parked the payment
+    * item and the partner's genitals somewhere under the world. Clamp the progress at zero: hold
+    * the last pose, then settle back onto the model pose as the delta turns positive.
+    */
+   @Redirect(method = "tickAnimation", at = @At(value = "INVOKE", target = "Ljava/lang/Math;min(DD)D"), remap = false)
+   private double sexmod$clampBlendProgress(double delta, double cap) {
+      double progress = Math.min(delta, cap);
+      return progress < 0.0 ? 0.0 : progress;
    }
 }

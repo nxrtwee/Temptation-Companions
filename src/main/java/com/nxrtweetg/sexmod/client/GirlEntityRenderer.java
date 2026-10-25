@@ -38,6 +38,7 @@ import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.phys.Vec3;
 import org.joml.Matrix4f;
 import org.joml.Vector3f;
+import org.joml.Vector4f;
 
 @Environment(EnvType.CLIENT)
 public final class GirlEntityRenderer extends GeoEntityRenderer<SceneGirlEntity, GirlEntityRenderer.GirlGeoRenderState> {
@@ -225,6 +226,20 @@ public final class GirlEntityRenderer extends GeoEntityRenderer<SceneGirlEntity,
       }
       renderState.addGeckolibData(GirlRenderData.CAMERA_YAW, resolveCameraYaw(animatable));
 
+      if (animatable.hasActiveScene()) {
+         // The layout yaw only holds once she has stopped: during approach/walk the body must follow
+         // the travel rotation the server snaps, or she glides sideways facing where the scene
+         // *will* be laid out.
+         GirlScenePhase yawPhase = animatable.trackedScenePhase();
+         boolean settled = yawPhase != GirlScenePhase.APPROACH && yawPhase != GirlScenePhase.WALKING
+            && yawPhase != GirlScenePhase.POSITIONING;
+         if (settled) {
+            float sceneYaw = animatable.trackedSceneYaw();
+            renderState.addGeckolibData(software.bernie.geckolib.constant.DataTickets.ENTITY_YAW, sceneYaw);
+            renderState.addGeckolibData(software.bernie.geckolib.constant.DataTickets.ENTITY_BODY_YAW, sceneYaw);
+         }
+      }
+
       net.minecraft.world.item.ItemStack weapon = weaponFor(animatable);
       if (!weapon.isEmpty()) {
          net.minecraft.client.renderer.item.ItemStackRenderState weaponState = new net.minecraft.client.renderer.item.ItemStackRenderState();
@@ -335,7 +350,11 @@ public final class GirlEntityRenderer extends GeoEntityRenderer<SceneGirlEntity,
       GirlGeoRenderState renderState, GeoQuad quad, Matrix4f poseMatrix, Vector3f normal,
       VertexConsumer buffer, int packedLight, int packedOverlay, int color
    ) {
-      if (!ShaderCompat.isShadersActive() && SexmodConfig.isFlatLitRenderingEnabled()) {
+      // Kobold and goblin palettes live on real directional shading (the per-bone tints assume the
+      // two-light diffuse); flattening every normal to +Y floods them into a single shade.
+      String flatLitCharacter = renderState.getOrDefaultGeckolibData(GirlRenderData.CHARACTER, "jenny");
+      boolean procedurallyTinted = "kobold".equals(flatLitCharacter) || "goblin".equals(flatLitCharacter);
+      if (!ShaderCompat.isShadersActive() && SexmodConfig.isFlatLitRenderingEnabled() && !procedurallyTinted) {
          normal = new Vector3f(0.0F, 1.0F, 0.0F);
       }
       super.createVerticesOfQuad(renderState, quad, poseMatrix, normal, buffer, packedLight, packedOverlay, color);
@@ -394,8 +413,15 @@ public final class GirlEntityRenderer extends GeoEntityRenderer<SceneGirlEntity,
       }
 
       boolean blushActions = action == GirlSceneAction.KOBOLD_BLOWJOB || action == GirlSceneAction.MATING_PRESS;
-      if (blushActions && (phase == GirlScenePhase.ACTIVE || phase == GirlScenePhase.CLIMAX)) {
-         bone(model, "blush").ifPresent(b -> b.setPosZ(-1.0F));
+      boolean blushActive = blushActions && (phase == GirlScenePhase.ACTIVE || phase == GirlScenePhase.CLIMAX);
+      bone(model, "blush").ifPresent(b -> b.setPosZ(blushActive ? -1.0F : 0.0F));
+
+      boolean actionUsesHeart = action == GirlSceneAction.BLOWJOB || action == GirlSceneAction.SITTING
+            || action == GirlSceneAction.SITTING_ALT || action == GirlSceneAction.COWGIRL;
+      if (!actionUsesHeart) {
+         setBoneHidden(model, "heart", true);
+         setBoneHidden(model, "heart2", true);
+         setBoneHidden(model, "blush2", true);
       }
 
       applyBodySceneTune(model, renderState, action);
@@ -419,17 +445,11 @@ public final class GirlEntityRenderer extends GeoEntityRenderer<SceneGirlEntity,
     * keeps him out of the girl's own texture pass.
     */
    private static void applyPlayerBoneVisibility(BakedGeoModel model, String character) {
-      // steve subtree is the partner rig, rendered exclusively in GirlSteveGeoLayer during scenes
+      // steve subtree is the partner rig (including partner genitals), rendered exclusively in GirlSteveGeoLayer during scenes
       bone(model, "steve").ifPresent(b -> {
          b.setHidden(true);
          b.setChildrenHidden(true);
       });
-      for (String boneName : CUSTOM_GENITAL_BONES) {
-         bone(model, boneName).ifPresent(b -> {
-            b.setHidden(true);
-            b.setChildrenHidden(true);
-         });
-      }
    }
 
    private static void applyCustomCompanionRig(BakedGeoModel model, GirlGeoRenderState renderState) {
@@ -665,31 +685,32 @@ public final class GirlEntityRenderer extends GeoEntityRenderer<SceneGirlEntity,
          }
       }
 
-      captureCameraAnchor(renderState, poseStack, bone);
+      if (this.cameraAnchorBone != null && this.cameraAnchorBone.equals(bone.getName())) {
+         poseStack.pushPose();
+         RenderUtil.prepMatrixForBone(poseStack, bone);
+         captureCameraAnchor(renderState, poseStack, bone);
+         poseStack.popPose();
+      }
 
       super.renderRecursively(renderState, poseStack, bone, renderType, bufferSource, buffer, isReRender, packedLight, packedOverlay, renderColor);
    }
 
    /**
-    * 1.21.x equivalent of the bone position listener: the anchor bone's world position is evaluated
-    * when the recursion reaches it, from the same matrices the cubes are drawn with. Also called from
-    * {@link GirlSteveGeoLayer} - the partner's head bones live under the hidden steve subtree, which
-    * the main recursion never reaches.
+    * Evaluates the anchor bone's world position from the current camera-relative matrix.
+    * Called from {@link #renderRecursively} for main body anchors and {@link GirlSteveGeoLayer}
+    * for partner subtree anchors (Head2/boyCam).
     */
    void captureCameraAnchor(GirlGeoRenderState renderState, PoseStack poseStack, GeoBone bone) {
       if (this.cameraAnchorBone == null || !this.cameraAnchorBone.equals(bone.getName())) {
          return;
       }
 
-      poseStack.pushPose();
-      RenderUtil.prepMatrixForBone(poseStack, bone);
       Matrix4f pose = poseStack.last().pose();
-      Vector3f modelPos = new Vector3f(pose.m30(), pose.m31(), pose.m32());
-      poseStack.popPose();
-
-      Vector3f entityLocal = this.modelRenderTranslations.transformPosition(new Vector3f(modelPos));
+      Vec3 camPos = Minecraft.getInstance().gameRenderer.getMainCamera().getPosition();
+      Vector4f localPivot = new Vector4f(bone.getPivotX() / 16.0F, bone.getPivotY() / 16.0F, bone.getPivotZ() / 16.0F, 1.0F);
+      Vector4f worldPivot = pose.transform(localPivot, new Vector4f());
       Vec3 worldPos = new Vec3(
-         renderState.x + entityLocal.x(), renderState.y + entityLocal.y(), renderState.z + entityLocal.z()
+         camPos.x + worldPivot.x(), camPos.y + worldPivot.y(), camPos.z + worldPivot.z()
       );
 
       float yaw = renderState.getOrDefaultGeckolibData(GirlRenderData.CAMERA_YAW, 0.0F);
@@ -896,9 +917,13 @@ public final class GirlEntityRenderer extends GeoEntityRenderer<SceneGirlEntity,
          // Manually scale its translation so payment items land at the correct world height
          // for each character (Bia×0.84, Ellie×1.17, etc.).
          bone(model, "items").ifPresent(bone -> {
-            bone.setPosX(bone.getPosX() * scale);
-            bone.setPosY(bone.getPosY() * scale);
-            bone.setPosZ(bone.getPosZ() * scale);
+            software.bernie.geckolib.animation.state.BoneSnapshot initial = bone.getInitialSnapshot();
+            float initialX = initial != null ? initial.getOffsetX() : 0.0F;
+            float initialY = initial != null ? initial.getOffsetY() : 0.0F;
+            float initialZ = initial != null ? initial.getOffsetZ() : 0.0F;
+            bone.setPosX(initialX * scale);
+            bone.setPosY(initialY * scale);
+            bone.setPosZ(initialZ * scale);
          });
       }
    }

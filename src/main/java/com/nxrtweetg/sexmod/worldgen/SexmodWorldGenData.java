@@ -33,7 +33,7 @@ public final class SexmodWorldGenData extends SavedData {
    );
 
    public static final SavedDataType<SexmodWorldGenData> TYPE = new SavedDataType<>(
-      "sexmod:generation",
+      "sexmod_generation",
       SexmodWorldGenData::new,
       CODEC,
       DataFixTypes.SAVED_DATA_STRUCTURE_FEATURE_INDICES

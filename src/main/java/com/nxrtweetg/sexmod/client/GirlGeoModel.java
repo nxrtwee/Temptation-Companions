@@ -144,9 +144,9 @@ public final class GirlGeoModel extends GeoModel<SceneGirlEntity> {
       } catch (RuntimeException exception) {
          if (diagAnimMiss < 15) {
             diagAnimMiss++;
-            DIAG_LOG.info("[diag] getAnimation('{}') threw: {}", name, exception.toString());
+            DIAG_LOG.warn("[diag] getAnimation('{}') threw and caught: {}", name, exception.getMessage());
          }
-         throw exception;
+         return null;
       }
    }
 

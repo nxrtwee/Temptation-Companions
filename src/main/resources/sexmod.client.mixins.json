@@ -9,7 +9,8 @@
     "ItemInHandRendererMixin",
     "KeyboardInputMixin",
     "MinecraftMixin",
-    "OptionsMixin",
+    "MolangQueriesMixin",
+    "OptionsMixin"
   ],
   "injectors": {
     "defaultRequire": 1

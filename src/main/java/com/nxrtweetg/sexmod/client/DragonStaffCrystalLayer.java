@@ -63,6 +63,10 @@ public final class DragonStaffCrystalLayer extends GeoRenderLayer<DragonStaffIte
 
       poseStack.pushPose();
       RenderUtil.prepMatrixForBone(poseStack, energyBone);
+      // prepMatrixForBone leaves the origin in the bone's cube space (translated away from the
+      // pivot); anchoring the crystal on the pivot keeps it at the bone's joint instead of one
+      // bone length below it.
+      RenderUtil.translateToPivotPoint(poseStack, energyBone);
 
       // If attached to "staff" rather than "energy", shift up to staff head (Y=22.5 units = ~1.406m)
       if ("staff".equals(energyBone.getName())) {
@@ -76,19 +80,13 @@ public final class DragonStaffCrystalLayer extends GeoRenderLayer<DragonStaffIte
       // Authentic scale from donor (~0.35 total)
       poseStack.scale(0.35F, 0.35F, 0.35F);
 
+      this.crystalModel.resetPose();
       this.renderState.showsBottom = false;
-
-      this.crystalModel.outerGlass.resetPose();
-      this.crystalModel.innerGlass.resetPose();
-      this.crystalModel.cube.resetPose();
-      // 1.21.8's crystal state carries no age or light, so the spin the renderer used to read from
-      // it is applied to the parts directly, exactly as vanilla EndCrystalRenderer does.
-      float spin = animTicks * 3.0F;
-      this.crystalModel.outerGlass.yRot = spin * Mth.DEG_TO_RAD;
-      this.crystalModel.innerGlass.yRot = -spin * 0.2F * Mth.DEG_TO_RAD;
+      this.renderState.ageInTicks = animTicks;
+      this.crystalModel.setupAnim(this.renderState);
 
       VertexConsumer crystalBuffer = bufferSource.getBuffer(RenderType.entityCutoutNoCull(END_CRYSTAL_LOCATION));
-      this.crystalModel.renderToBuffer(poseStack, crystalBuffer, packedLight, OverlayTexture.NO_OVERLAY, -1);
+      this.crystalModel.renderToBuffer(poseStack, crystalBuffer, 0xF000F0, OverlayTexture.NO_OVERLAY, -1);
 
       poseStack.popPose();
    }

@@ -50,6 +50,15 @@ public final class GirlPaymentGeoLayer extends GeoRenderLayer<SceneGirlEntity, V
          return;
       }
 
+      // The tracked amount stays positive until the whole scene resets, but the offer is only on
+      // the table during the payment phase - afterwards the item would keep floating at the bone's
+      // parked position (eleven blocks below the model) for the rest of the scene.
+      com.nxrtweetg.sexmod.girls.scene.GirlScenePhase phase =
+         renderState.getOrDefaultGeckolibData(GirlRenderData.SCENE_PHASE, com.nxrtweetg.sexmod.girls.scene.GirlScenePhase.IDLE);
+      if (phase != com.nxrtweetg.sexmod.girls.scene.GirlScenePhase.PAYMENT) {
+         return;
+      }
+
       GirlPaymentItem payment = renderState.getOrDefaultGeckolibData(GirlRenderData.PAYMENT_ITEM, GirlPaymentItem.DIAMOND);
       GeoBone bone = model.getBone(BONE).orElse(null);
       if (bone == null) {
