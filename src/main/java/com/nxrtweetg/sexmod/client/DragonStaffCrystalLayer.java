@@ -82,6 +82,9 @@ public final class DragonStaffCrystalLayer extends GeoRenderLayer<DragonStaffIte
          ps.last().set(pose);
          renderPassInfo.renderPosed(() -> {
             RenderUtil.prepMatrixForBoneAndUpdateListeners(ps, crystalBone, renderPassInfo);
+            // prepMatrix ends translated away from the bone's pivot; the crystal is anchored at
+            // the pivot itself, so step back onto it before the floating offsets
+            crystalBone.translateToPivotPoint(ps);
 
             // If attached to "staff" rather than "energy", shift up to staff head (Y=22.5 units = ~1.406m)
             if ("staff".equals(crystalBone.name())) {
