@@ -49,7 +49,7 @@ public final class GirlClientBootstrap {
             && girl.trackedScenePhase() == com.nxrtweetg.sexmod.girls.scene.GirlScenePhase.IDLE
             && !girl.defersInteractionToServer(player.getItemInHand(hand))
             && !GirlSceneInputController.shouldBlockGameplayInput()) {
-            Minecraft.getInstance().gui.setScreen(new GirlInteractionScreen(girl));
+            Minecraft.getInstance().setScreen(new GirlInteractionScreen(girl));
             return InteractionResult.SUCCESS;
          } else {
             return InteractionResult.PASS;

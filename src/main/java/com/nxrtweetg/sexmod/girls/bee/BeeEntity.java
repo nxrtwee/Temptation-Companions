@@ -111,7 +111,7 @@ public final class BeeEntity extends SceneGirlEntity {
 
    public BeeEntity(EntityType<? extends BeeEntity> entityType, Level world) {
       super(entityType, world, "Bee");
-      this.moveControl = new FlyingMoveControl<>(this, 20, true);
+      this.moveControl = new FlyingMoveControl(this, 20, true);
    }
 
    @Override

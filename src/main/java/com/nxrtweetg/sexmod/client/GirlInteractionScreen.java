@@ -132,7 +132,7 @@ public final class GirlInteractionScreen extends Screen {
             if ("action.names.setnewhome".equals(key)) {
                action = () -> {
                   if (Minecraft.getInstance() != null) {
-                     Minecraft.getInstance().gui.setScreen(new GirlHomeSettingsScreen(this.girl, this));
+                     Minecraft.getInstance().setScreen(new GirlHomeSettingsScreen(this.girl, this));
                   }
                };
             } else {

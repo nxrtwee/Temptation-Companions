@@ -40,12 +40,12 @@ public final class GirlCustomMenuClientTracker {
             return;
          }
 
-         if (client.gui.screen() instanceof GirlInteractionScreen) {
+         if (client.screen instanceof GirlInteractionScreen) {
             // it is already up: count it as the prompt so closing it does not bring it back
             promptedEntityId = girl.getId();
-         } else if (client.gui.screen() == null) {
+         } else if (client.screen == null) {
             promptedEntityId = girl.getId();
-            Minecraft.getInstance().gui.setScreen(new GirlInteractionScreen(girl));
+            Minecraft.getInstance().setScreen(new GirlInteractionScreen(girl));
          }
          // any other screen (the tuning panel, a container): leave it alone and try again once it closes
       });

@@ -28,7 +28,7 @@ public final class GirlDebugHud {
 
    private static void render(GuiGraphicsExtractor context, DeltaTracker tickCounter) {
       Minecraft minecraft = Minecraft.getInstance();
-      if (minecraft.player != null && minecraft.level != null && !minecraft.gui.hud.isHidden()) {
+      if (minecraft.player != null && minecraft.level != null && !minecraft.options.hideGui) {
          Optional<SceneGirlEntity> optional = findNearestGirl(minecraft.player);
          if (!optional.isEmpty()) {
             SceneGirlEntity girl = optional.get();

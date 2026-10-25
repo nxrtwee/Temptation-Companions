@@ -171,7 +171,7 @@ public final class GirlSettingsScreen extends Screen {
       // 9.1 Home settings button
       Button homeSettingsBtn = Button.builder(Component.literal(I18n.get("gui.sexmod.home.title")), b -> {
          if (this.minecraft != null) {
-            this.minecraft.gui.setScreen(new GirlHomeSettingsScreen(null, this));
+            this.minecraft.setScreen(new GirlHomeSettingsScreen(null, this));
          }
       }).bounds(panelLeft + PADDING, y, PANEL_WIDTH - PADDING * 2, ROW_HEIGHT).build();
       this.addRenderableWidget(homeSettingsBtn);

@@ -67,18 +67,18 @@ public final class GirlSceneInputController {
          .register(
             (EndTick)client -> {
                while (CONTROL_SCREEN_KEY.consumeClick()) {
-                  if (client.gui.screen() instanceof GirlSceneControlScreen) {
-                     client.gui.setScreen(null);
+                  if (client.screen instanceof GirlSceneControlScreen) {
+                     client.setScreen(null);
                   } else if (client.player != null && client.level != null && findOwnedGirl(client.player).isPresent()) {
-                     client.gui.setScreen(new GirlSceneControlScreen());
+                     client.setScreen(new GirlSceneControlScreen());
                   }
                }
 
                while (SETTINGS_KEY.consumeClick()) {
-                  if (client.gui.screen() instanceof GirlSettingsScreen) {
-                     client.gui.setScreen(null);
+                  if (client.screen instanceof GirlSettingsScreen) {
+                     client.setScreen(null);
                   } else if (client.player != null && client.level != null) {
-                     client.gui.setScreen(new GirlSettingsScreen());
+                     client.setScreen(new GirlSettingsScreen());
                   }
                }
 
@@ -115,9 +115,9 @@ public final class GirlSceneInputController {
 
                if (client.player != null
                   && client.level != null
-                  && !(client.gui.screen() instanceof GirlInteractionScreen)
-                  && !(client.gui.screen() instanceof GirlSceneControlScreen)
-                  && !(client.gui.screen() instanceof GirlSettingsScreen)) {
+                  && !(client.screen instanceof GirlInteractionScreen)
+                  && !(client.screen instanceof GirlSceneControlScreen)
+                  && !(client.screen instanceof GirlSettingsScreen)) {
                   Optional<SceneGirlEntity> optional = findOwnedGirl(client.player);
                   if (optional.isEmpty()) {
                      thrustHeld = false;

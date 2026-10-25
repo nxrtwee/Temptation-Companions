@@ -313,7 +313,7 @@ public final class GirlHomeSettingsScreen extends Screen {
    @Override
    public void onClose() {
       if (this.parentScreen != null && this.minecraft != null) {
-         this.minecraft.gui.setScreen(this.parentScreen);
+         this.minecraft.setScreen(this.parentScreen);
       } else {
          super.onClose();
       }

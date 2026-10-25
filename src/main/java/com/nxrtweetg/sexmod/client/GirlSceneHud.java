@@ -28,7 +28,7 @@ public final class GirlSceneHud {
 
    private static void render(GuiGraphicsExtractor context, DeltaTracker tickCounter) {
       Minecraft minecraft = Minecraft.getInstance();
-      if (minecraft.player != null && minecraft.level != null && !minecraft.gui.hud.isHidden()) {
+      if (minecraft.player != null && minecraft.level != null && !minecraft.options.hideGui) {
          GirlHornyMeterHud.render(context, tickCounter);
 
          // Плавное затемнение при смене фаз — использует субтиковую интерполяцию для 60+ FPS плавности

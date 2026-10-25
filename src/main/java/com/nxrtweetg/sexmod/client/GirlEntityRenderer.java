@@ -279,8 +279,8 @@ public final class GirlEntityRenderer extends GeoEntityRenderer<SceneGirlEntity,
     * {@code NAME_TAG} attachment the extraction resolves, so the nudge belongs on that.
     */
    @Override
-   protected void extractNameTags(SceneGirlEntity entity, LivingEntityRenderState renderState, float partialTick) {
-      super.extractNameTags(entity, renderState, partialTick);
+   public void extractRenderState(SceneGirlEntity entity, LivingEntityRenderState renderState, float partialTick) {
+      super.extractRenderState(entity, renderState, partialTick);
       boolean facefuck = entity.trackedActiveAction().filter(action -> action == GirlSceneAction.FACEFUCK).isPresent();
       double offset = entity.nameplateYOffset() + (facefuck ? FACEFUCK_NAMEPLATE_Y_OFFSET : 0.0);
       if (offset != 0.0 && renderState.nameTagAttachment != null) {

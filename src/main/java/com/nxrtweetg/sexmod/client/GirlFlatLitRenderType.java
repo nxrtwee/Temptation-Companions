@@ -1,6 +1,5 @@
 package com.nxrtweetg.sexmod.client;
 
-import com.mojang.blaze3d.pipeline.BindGroupLayout;
 import com.mojang.blaze3d.pipeline.ColorTargetState;
 import com.mojang.blaze3d.pipeline.RenderPipeline;
 import com.mojang.blaze3d.shaders.ShaderType;
@@ -88,7 +87,7 @@ public final class GirlFlatLitRenderType {
          .withDepthStencilState(Optional.ofNullable(source.getDepthStencilState()))
          .withPolygonMode(source.getPolygonMode())
          .withCull(source.isCull())
-         .withPrimitiveTopology(source.getPrimitiveTopology());
+         .withVertexFormat(source.getVertexFormat(), source.getVertexFormatMode());
 
       Identifier vertexShader = source.getVertexShader();
       if (vertexShader != null) {
@@ -99,24 +98,21 @@ public final class GirlFlatLitRenderType {
          builder.withFragmentShader(fragmentShader);
       }
 
-      for (BindGroupLayout layout : source.getBindGroupLayouts()) {
-         builder.withBindGroupLayout(layout);
+      for (String sampler : source.getSamplers()) {
+         builder.withSampler(sampler);
       }
 
-      ColorTargetState[] targets = source.getColorTargetStates();
-      for (int i = 0; i < targets.length; i++) {
-         ColorTargetState target = targets[i];
-         if (target != null) {
-            builder.withColorTargetState(i, target);
+      for (RenderPipeline.UniformDescription uniform : source.getUniforms()) {
+         if (uniform.textureFormat() != null) {
+            builder.withUniform(uniform.name(), uniform.type(), uniform.textureFormat());
+         } else {
+            builder.withUniform(uniform.name(), uniform.type());
          }
       }
 
-      VertexFormat[] bindings = source.getVertexFormatBindings();
-      for (int i = 0; i < bindings.length; i++) {
-         VertexFormat binding = bindings[i];
-         if (binding != null) {
-            builder.withVertexBinding(i, binding);
-         }
+      ColorTargetState target = source.getColorTargetState();
+      if (target != null) {
+         builder.withColorTargetState(target);
       }
 
       ShaderDefines defines = source.getShaderDefines();

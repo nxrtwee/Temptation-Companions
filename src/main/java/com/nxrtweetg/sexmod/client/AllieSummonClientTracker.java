@@ -32,7 +32,7 @@ public final class AllieSummonClientTracker {
          }
 
          if (nearest != null) {
-            Minecraft.getInstance().gui.setScreen(new GirlInteractionScreen(nearest));
+            Minecraft.getInstance().setScreen(new GirlInteractionScreen(nearest));
             pendingTicks = 0;
          }
       });
