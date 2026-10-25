@@ -3,6 +3,7 @@
   "package": "com.nxrtweetg.sexmod.mixin.client",
   "compatibilityLevel": "JAVA_21",
   "client": [
+    "AnimationProcessorMixin",
     "CameraMixin",
     "EntityTurnMixin",
     "ItemInHandRendererMixin",
