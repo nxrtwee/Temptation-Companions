@@ -57,7 +57,7 @@ public final class GirlSteveGeoLayer extends GeoRenderLayer<SceneGirlEntity> {
    public void render(
       PoseStack poseStack, SceneGirlEntity animatable, BakedGeoModel model,
       RenderType renderType, MultiBufferSource bufferSource, VertexConsumer buffer,
-      float partialTick, int packedLight, int packedOverlay, int renderColor
+      float partialTick, int packedLight, int packedOverlay
    ) {
       if (!animatable.shouldRenderPlayerTracked()) {
          return;
@@ -76,7 +76,7 @@ public final class GirlSteveGeoLayer extends GeoRenderLayer<SceneGirlEntity> {
          VertexConsumer skinBuffer = bufferSource.getBuffer(skinType);
          setBonesHidden(model, GENITAL_BONES, true);
          GirlEntityRenderer.applyPartnerArmModel(model, partnerIsSlim);
-         renderSubtree(poseStack, steve, bufferSource, skinBuffer, packedLight, packedOverlay, renderColor);
+         renderSubtree(poseStack, steve, bufferSource, skinBuffer, packedLight, packedOverlay);
          setBonesHidden(model, GENITAL_BONES, false);
       }
 
@@ -87,7 +87,7 @@ public final class GirlSteveGeoLayer extends GeoRenderLayer<SceneGirlEntity> {
          setBonesHidden(model, GENITAL_BONES, false);
          setMeshOnly(model, "Torso2", true);
          setBonesHidden(model, BODY_BONES_TO_HIDE, true);
-         renderSubtree(poseStack, steve, bufferSource, steveBuffer, packedLight, packedOverlay, renderColor);
+         renderSubtree(poseStack, steve, bufferSource, steveBuffer, packedLight, packedOverlay);
          setBonesHidden(model, BODY_BONES_TO_HIDE, false);
          setMeshOnly(model, "Torso2", false);
          setBonesHidden(model, GENITAL_BONES, true);
@@ -100,18 +100,18 @@ public final class GirlSteveGeoLayer extends GeoRenderLayer<SceneGirlEntity> {
     */
    private void renderSubtree(
       PoseStack poseStack, GeoBone bone, MultiBufferSource bufferSource, VertexConsumer buffer,
-      int packedLight, int packedOverlay, int renderColor
+      int packedLight, int packedOverlay
    ) {
       if (!bone.isHidden()) {
          poseStack.pushPose();
          RenderUtil.prepMatrixForBone(poseStack, bone);
-         this.renderer.renderCubesOfBone(poseStack, bone, buffer, packedLight, packedOverlay, renderColor);
+         this.renderer.renderCubesOfBone(poseStack, bone, buffer, packedLight, packedOverlay, -1);
          poseStack.popPose();
       }
 
       if (!bone.isHidingChildren()) {
          for (GeoBone child : bone.getChildBones()) {
-            renderSubtree(poseStack, child, bufferSource, buffer, packedLight, packedOverlay, renderColor);
+            renderSubtree(poseStack, child, bufferSource, buffer, packedLight, packedOverlay);
          }
       }
    }

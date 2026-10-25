@@ -21,7 +21,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.world.entity.EntitySpawnReason;
+import net.minecraft.world.entity.MobSpawnType;
 import net.minecraft.world.entity.EntityType;
 
 public final class SexmodCommands {
@@ -231,7 +231,7 @@ public final class SexmodCommands {
       ServerPlayer player = source.getPlayerOrException();
       ServerLevel level = player.serverLevel();
       EntityType<? extends SceneGirlEntity> type = ModEntities.all().get(character);
-      SceneGirlEntity girl = type.create(level, EntitySpawnReason.COMMAND);
+      SceneGirlEntity girl = type.create(level, null, null, MobSpawnType.COMMAND, false, false);
       if (girl == null) {
          return 0;
       }
@@ -252,7 +252,7 @@ public final class SexmodCommands {
    private static int spawnCustomGirl(CommandSourceStack source, String characterName) throws CommandSyntaxException {
       ServerPlayer player = source.getPlayerOrException();
       ServerLevel level = player.serverLevel();
-      com.nxrtweetg.sexmod.girls.custom.CustomGirlEntity girl = ModEntities.CUSTOM_GIRL.create(level, EntitySpawnReason.COMMAND);
+      com.nxrtweetg.sexmod.girls.custom.CustomGirlEntity girl = ModEntities.CUSTOM_GIRL.create(level, null, null, MobSpawnType.COMMAND, false, false);
       if (girl == null) {
          return 0;
       }

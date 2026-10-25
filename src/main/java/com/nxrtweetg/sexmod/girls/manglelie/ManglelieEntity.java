@@ -103,7 +103,7 @@ public final class ManglelieEntity extends SceneGirlEntity {
 
    @Override
    public boolean hurtServer(ServerLevel level, DamageSource source, float amount) {
-      return super.hurtServer(level, source, amount);
+      return super.hurt(source, amount);
    }
 
    @Override

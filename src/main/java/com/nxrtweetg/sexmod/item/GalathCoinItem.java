@@ -12,7 +12,7 @@ import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
-import net.minecraft.world.entity.EntitySpawnReason;
+import net.minecraft.world.entity.MobSpawnType;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
@@ -50,7 +50,8 @@ public final class GalathCoinItem extends Item {
    }
 
    @Override
-   public InteractionResult use(Level level, Player player, InteractionHand hand) {
+   public net.minecraft.world.InteractionResultHolder<ItemStack> use(Level level, Player player, InteractionHand hand) {
+      ItemStack stack = player.getItemInHand(hand);
       if (!level.isClientSide() && level instanceof ServerLevel serverLevel) {
          GalathEntity existing = null;
          for (GalathEntity candidate : serverLevel.getEntitiesOfClass(GalathEntity.class, player.getBoundingBox().inflate(64.0))) {
@@ -70,10 +71,10 @@ public final class GalathCoinItem extends Item {
             net.minecraft.util.Mth.floor(player.getY() + 1.0),
             net.minecraft.util.Mth.floor(targetZ)
          );
-         while (pos.getY() > serverLevel.getMinY() && !serverLevel.getBlockState(pos.below()).isSolid()) {
+         while (pos.getY() > serverLevel.getMinBuildHeight() && !serverLevel.getBlockState(pos.below()).isSolid()) {
             pos.move(0, -1, 0);
          }
-         while (pos.getY() < serverLevel.getMaxY() && serverLevel.getBlockState(pos).isSolid()) {
+         while (pos.getY() < serverLevel.getMaxBuildHeight() && serverLevel.getBlockState(pos).isSolid()) {
             pos.move(0, 1, 0);
          }
          double targetY = pos.getY();
@@ -99,7 +100,7 @@ public final class GalathCoinItem extends Item {
                40, 0.3, 0.6, 0.3, 0.05);
             level.playSound(null, player.blockPosition(), SoundEvents.ENDERMAN_TELEPORT, SoundSource.PLAYERS, 1.0F, 1.2F);
          } else {
-            GalathEntity galath = ModEntities.GALATH.create(serverLevel, EntitySpawnReason.COMMAND);
+            GalathEntity galath = ModEntities.GALATH.create(serverLevel, null, null, MobSpawnType.COMMAND, false, false);
             if (galath != null) {
                galath.moveTo(targetX, targetY, targetZ, yaw, 0.0F);
                galath.setYRot(yaw);
@@ -111,7 +112,7 @@ public final class GalathCoinItem extends Item {
                serverLevel.addFreshEntity(galath);
 
                // Also summon Manglelie nearby on the ground
-               ManglelieEntity mang = ModEntities.MANGLELIE.create(serverLevel, EntitySpawnReason.COMMAND);
+               ManglelieEntity mang = ModEntities.MANGLELIE.create(serverLevel, null, null, MobSpawnType.COMMAND, false, false);
                if (mang != null) {
                   mang.moveTo(galath.getX() + 1.0, galath.getY(), galath.getZ(), yaw, 0.0F);
                   mang.setYRot(yaw);
@@ -130,7 +131,7 @@ public final class GalathCoinItem extends Item {
             }
          }
       }
-      return InteractionResult.SUCCESS;
+      return net.minecraft.world.InteractionResultHolder.success(stack);
    }
 
    @Override

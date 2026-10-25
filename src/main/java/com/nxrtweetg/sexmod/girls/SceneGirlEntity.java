@@ -2110,7 +2110,7 @@ public abstract class SceneGirlEntity extends GirlEntity implements GeoEntity {
          player.setDeltaMovement(Vec3.ZERO);
          // the rotation has to travel with the teleport: he is being put behind his own back, and a
          // server-side setYRot alone would leave his camera pointing the way it already was
-         player.teleportTo((ServerLevel)player.level(), spot.x, this.getY(), spot.z, Set.of(), facing, 0.0F, true);
+         player.teleportTo((ServerLevel)player.level(), spot.x, this.getY(), spot.z, Set.of(), facing, 0.0F);
          player.setYBodyRot(facing);
          player.setYHeadRot(facing);
          this.coreState().setPlayerYaw(facing);

@@ -271,13 +271,13 @@ public final class BeeEntity extends SceneGirlEntity {
    protected void dropCustomDeathLoot(ServerLevel world, DamageSource source, boolean hitByPlayer) {
       super.dropCustomDeathLoot(world, source, hitByPlayer);
       if (this.hasChest()) {
-         this.spawnAtLocation(world, new ItemStack(Items.CHEST));
+         this.spawnAtLocation(new ItemStack(Items.CHEST));
       }
 
       for (int slot = 0; slot < this.satchel.getContainerSize(); slot++) {
          ItemStack stack = this.satchel.removeItemNoUpdate(slot);
          if (!stack.isEmpty()) {
-            this.spawnAtLocation(world, stack);
+            this.spawnAtLocation(stack);
          }
       }
    }
@@ -364,7 +364,7 @@ public final class BeeEntity extends SceneGirlEntity {
 
       Vec3 from = this.position();
       BlockHitResult hit = this.level()
-         .clip(new ClipContext(from, new Vec3(from.x, this.level().getMinY(), from.z), ClipContext.Block.COLLIDER, ClipContext.Fluid.NONE, this));
+         .clip(new ClipContext(from, new Vec3(from.x, this.level().getMinBuildHeight(), from.z), ClipContext.Block.COLLIDER, ClipContext.Fluid.NONE, this));
       if (this.getY() - hit.getBlockPos().getY() > ALTITUDE_LIMIT) {
          Vec3 movement = this.getDeltaMovement();
          this.setDeltaMovement(movement.x, 0.0, movement.z);

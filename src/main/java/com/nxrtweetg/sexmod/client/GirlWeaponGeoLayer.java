@@ -12,10 +12,7 @@ import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderType;
-import net.minecraft.client.renderer.entity.EntityRendererProvider.Context;
-import net.minecraft.client.renderer.item.ItemModelResolver;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.renderer.item.ItemStackRenderState;
 import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.world.item.ItemDisplayContext;
 import net.minecraft.world.item.ItemStack;
@@ -28,18 +25,15 @@ import net.minecraft.world.item.ItemStack;
 public final class GirlWeaponGeoLayer extends GeoRenderLayer<SceneGirlEntity> {
    private static final String BONE = "weapon";
 
-   private final ItemModelResolver itemModelResolver;
-
-   public GirlWeaponGeoLayer(Context context, GeoRenderer<SceneGirlEntity> renderer) {
+   public GirlWeaponGeoLayer(GeoRenderer<SceneGirlEntity> renderer) {
       super(renderer);
-      this.itemModelResolver = context.getItemModelResolver();
    }
 
    @Override
    public void render(
       PoseStack poseStack, SceneGirlEntity animatable, BakedGeoModel model,
       RenderType renderType, MultiBufferSource bufferSource, VertexConsumer buffer,
-      float partialTick, int packedLight, int packedOverlay, int renderColor
+      float partialTick, int packedLight, int packedOverlay
    ) {
       ItemStack weapon = weaponFor(animatable);
       if (weapon.isEmpty()) {
@@ -53,11 +47,10 @@ public final class GirlWeaponGeoLayer extends GeoRenderLayer<SceneGirlEntity> {
 
       poseStack.pushPose();
       RenderUtil.prepMatrixForBone(poseStack, bone);
-      ItemStackRenderState stackState = new ItemStackRenderState();
-      this.itemModelResolver.updateForTopItem(
-         stackState, weapon, ItemDisplayContext.THIRD_PERSON_RIGHT_HAND, false, Minecraft.getInstance().level, animatable, 0
+      Minecraft.getInstance().getItemRenderer().renderStatic(
+         animatable, weapon, ItemDisplayContext.THIRD_PERSON_RIGHT_HAND, false,
+         poseStack, bufferSource, animatable.level(), packedLight, OverlayTexture.NO_OVERLAY, 0
       );
-      stackState.render(poseStack, bufferSource, packedLight, OverlayTexture.NO_OVERLAY);
       poseStack.popPose();
    }
 

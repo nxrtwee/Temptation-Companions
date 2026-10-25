@@ -19,7 +19,7 @@ import net.fabricmc.api.Environment;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
-import net.minecraft.world.entity.EntitySpawnReason;
+import net.minecraft.world.entity.MobSpawnType;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
@@ -60,10 +60,10 @@ public final class AllieLampItem extends Item implements GeoItem, software.berni
    }
 
    @Override
-   public InteractionResult use(Level level, Player player, InteractionHand hand) {
+   public net.minecraft.world.InteractionResultHolder<ItemStack> use(Level level, Player player, InteractionHand hand) {
       ItemStack stack = player.getItemInHand(hand);
       if (!level.isClientSide()) {
-         AllieEntity allie = ModEntities.ALLIE.create(level, EntitySpawnReason.COMMAND);
+         AllieEntity allie = ModEntities.ALLIE.create((net.minecraft.server.level.ServerLevel)level, null, null, MobSpawnType.COMMAND, false, false);
          if (allie != null) {
             Vec3 look = player.getLookAngle();
             double horizLen = Math.sqrt(look.x * look.x + look.z * look.z);
@@ -77,10 +77,10 @@ public final class AllieLampItem extends Item implements GeoItem, software.berni
                net.minecraft.util.Mth.floor(player.getY() + 1.0),
                net.minecraft.util.Mth.floor(targetZ)
             );
-            while (pos.getY() > level.getMinY() && !level.getBlockState(pos.below()).isSolid()) {
+            while (pos.getY() > level.getMinBuildHeight() && !level.getBlockState(pos.below()).isSolid()) {
                pos.move(0, -1, 0);
             }
-            while (pos.getY() < level.getMaxY() && level.getBlockState(pos).isSolid()) {
+            while (pos.getY() < level.getMaxBuildHeight() && level.getBlockState(pos).isSolid()) {
                pos.move(0, 1, 0);
             }
             double targetY = pos.getY();
@@ -100,7 +100,7 @@ public final class AllieLampItem extends Item implements GeoItem, software.berni
          queueAutoOpen();
       }
 
-      return InteractionResult.SUCCESS;
+      return net.minecraft.world.InteractionResultHolder.success(stack);
    }
 
    @Environment(EnvType.CLIENT)

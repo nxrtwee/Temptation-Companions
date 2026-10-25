@@ -29,7 +29,7 @@ public final class GirlInventoryScreen extends AbstractContainerScreen<GirlInven
 
    @Override
    protected void renderBg(GuiGraphics context, float delta, int mouseX, int mouseY) {
-      context.blit(RenderType::guiTextured, GIRL_INVENTORY,
+      context.blit(GIRL_INVENTORY,
          this.leftPos,
          this.topPos,
          BACKGROUND_U,

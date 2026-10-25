@@ -22,7 +22,7 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.util.RandomSource;
-import net.minecraft.world.entity.EntitySpawnReason;
+import net.minecraft.world.entity.MobSpawnType;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.Level;
@@ -231,7 +231,7 @@ public final class SexmodWorldGen {
       double[][] offsets = {{0.0, 0.0}, {1.2, 0.8}, {-1.0, 1.1}, {0.5, -1.2}};
 
       for (double[] offset : offsets) {
-         KoboldEntity kobold = ModEntities.KOBOLD.create(level, EntitySpawnReason.STRUCTURE);
+         KoboldEntity kobold = ModEntities.KOBOLD.create(level, null, null, MobSpawnType.STRUCTURE, false, false);
          if (kobold != null) {
             kobold.moveTo(x + 0.5 + offset[0], y, z + 0.5 + offset[1], random.nextFloat() * 360.0F, 0.0F);
             kobold.setTribeColorIndex(tribeColor);
@@ -280,7 +280,7 @@ public final class SexmodWorldGen {
       placeStructureDirect(level, origin, "goblin", Rotation.NONE);
 
       BlockPos goblinPos = origin.offset(5, 1, 5);
-      GoblinEntity goblin = ModEntities.GOBLIN.create(level, EntitySpawnReason.STRUCTURE);
+      GoblinEntity goblin = ModEntities.GOBLIN.create(level, null, null, MobSpawnType.STRUCTURE, false, false);
       if (goblin != null) {
          goblin.moveTo(goblinPos.getX() + 0.5, goblinPos.getY(), goblinPos.getZ() + 0.5, random.nextFloat() * 360.0F, 0.0F);
          goblin.setPersistenceRequired();
@@ -375,7 +375,7 @@ public final class SexmodWorldGen {
             int y = getActualGroundY(level, x, z);
             BlockPos ground = new BlockPos(x, y - 1, z);
             if (level.getBlockState(ground).isSolid() && !level.getBlockState(ground).liquid()) {
-               BeeEntity bee = ModEntities.BEE.create(level, EntitySpawnReason.NATURAL);
+               BeeEntity bee = ModEntities.BEE.create(level, null, null, MobSpawnType.NATURAL, false, false);
                if (bee != null) {
                   bee.moveTo(x + 0.5, y, z + 0.5, random.nextFloat() * 360.0F, 0.0F);
                   bee.setPersistenceRequired();
@@ -394,7 +394,7 @@ public final class SexmodWorldGen {
             int y = getActualGroundY(level, x, z);
             BlockPos ground = new BlockPos(x, y - 1, z);
             if (level.getBlockState(ground).isSolid() || level.getBlockState(ground).is(Blocks.WATER)) {
-               SlimeGirlEntity slime = ModEntities.SLIME.create(level, EntitySpawnReason.NATURAL);
+               SlimeGirlEntity slime = ModEntities.SLIME.create(level, null, null, MobSpawnType.NATURAL, false, false);
                if (slime != null) {
                   slime.moveTo(x + 0.5, y, z + 0.5, random.nextFloat() * 360.0F, 0.0F);
                   slime.setPersistenceRequired();
@@ -433,14 +433,14 @@ public final class SexmodWorldGen {
             }
 
             if (spawnGalath) {
-               GalathEntity galath = ModEntities.GALATH.create(level, EntitySpawnReason.NATURAL);
+               GalathEntity galath = ModEntities.GALATH.create(level, null, null, MobSpawnType.NATURAL, false, false);
                if (galath != null) {
                   galath.moveTo(x + 0.5, y, z + 0.5, random.nextFloat() * 360.0F, 0.0F);
                   galath.setPersistenceRequired();
                   level.addFreshEntity(galath);
                }
             } else {
-               ManglelieEntity manglelie = ModEntities.MANGLELIE.create(level, EntitySpawnReason.NATURAL);
+               ManglelieEntity manglelie = ModEntities.MANGLELIE.create(level, null, null, MobSpawnType.NATURAL, false, false);
                if (manglelie != null) {
                   manglelie.moveTo(x + 0.5, y, z + 0.5, random.nextFloat() * 360.0F, 0.0F);
                   manglelie.setPersistenceRequired();
@@ -455,7 +455,7 @@ public final class SexmodWorldGen {
    public static int getActualGroundY(ServerLevel level, int x, int z) {
       int top = level.getHeight(Heightmap.Types.WORLD_SURFACE, x, z);
       BlockPos.MutableBlockPos mut = new BlockPos.MutableBlockPos(x, top, z);
-      while (mut.getY() > level.getMinY()) {
+      while (mut.getY() > level.getMinBuildHeight()) {
          BlockState state = level.getBlockState(mut);
          if (state.isSolid() && !state.liquid() && !isTreeFoliageOrWood(state)) {
             return mut.getY() + 1;
@@ -491,7 +491,7 @@ public final class SexmodWorldGen {
          for (int x = startX; x <= endX; x++) {
             for (int z = startZ; z <= endZ; z++) {
                int y = topY;
-               while (y > level.getMinY()) {
+               while (y > level.getMinBuildHeight()) {
                   mut.set(x, y, z);
                   BlockState state = level.getBlockState(mut);
                   if (state.isSolid() || !state.canBeReplaced()) {
@@ -515,7 +515,7 @@ public final class SexmodWorldGen {
          );
 
          if (existing.isEmpty()) {
-            SceneGirlEntity girl = def.girlType().create(level, EntitySpawnReason.STRUCTURE);
+            SceneGirlEntity girl = def.girlType().create(level, null, null, MobSpawnType.STRUCTURE, false, false);
             if (girl != null) {
                girl.moveTo(girlPos.getX() + 0.5, girlPos.getY(), girlPos.getZ() + 0.5, 0.0F, 0.0F);
                girl.setPersistenceRequired();
@@ -614,7 +614,7 @@ public final class SexmodWorldGen {
                            data.addStructure("goblin", cp.x, cp.z);
                            placeStructureDirect(level, origin, "goblin", Rotation.NONE);
                            BlockPos goblinPos = origin.offset(5, 1, 5);
-                           GoblinEntity goblin = ModEntities.GOBLIN.create(level, EntitySpawnReason.STRUCTURE);
+                           GoblinEntity goblin = ModEntities.GOBLIN.create(level, null, null, MobSpawnType.STRUCTURE, false, false);
                            if (goblin != null) {
                               goblin.moveTo(goblinPos.getX() + 0.5, goblinPos.getY(), goblinPos.getZ() + 0.5, 0.0F, 0.0F);
                               goblin.setPersistenceRequired();

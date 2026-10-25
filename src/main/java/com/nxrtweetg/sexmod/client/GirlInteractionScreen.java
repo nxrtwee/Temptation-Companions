@@ -172,7 +172,7 @@ public final class GirlInteractionScreen extends Screen {
          // Order matters: 26.2 auto-layers each element above whatever it overlaps, so the frame has to
          // be submitted before the stacks or it would bury them.
          if (this.slideCommands > 0.0F) {
-            context.blit(RenderType::guiTextured, GIRL_INVENTORY,
+            context.blit(GIRL_INVENTORY,
                Mth.lerpInt(this.slideMain, -30, 120) - 113,
                PANEL_Y,
                0,
@@ -226,7 +226,7 @@ public final class GirlInteractionScreen extends Screen {
             Component label = Component.literal(price.getCount() + "x    ");
             int labelX = textX + TOOLTIP_OFFSET;
             int labelY = textY - TOOLTIP_OFFSET;
-            TooltipRenderUtil.renderTooltipBackground(context, labelX, labelY, this.font.width(label), TOOLTIP_LINE_HEIGHT, -267386864, null);
+            TooltipRenderUtil.renderTooltipBackground(context, labelX, labelY, this.font.width(label), TOOLTIP_LINE_HEIGHT, -267386864);
             context.drawString(this.font, label, labelX, labelY, 0xFFFFFFFF);
             context.renderItem(price, itemX, labelY - PRICE_ITEM_RISE);
          }

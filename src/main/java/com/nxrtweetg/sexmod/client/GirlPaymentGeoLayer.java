@@ -13,11 +13,7 @@ import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.MultiBufferSource;
-import net.minecraft.client.renderer.entity.EntityRendererProvider.Context;
-import net.minecraft.client.renderer.item.ItemModelResolver;
 import net.minecraft.client.renderer.RenderType;
-import net.minecraft.client.renderer.item.ItemModelResolver;
-import net.minecraft.client.renderer.item.ItemStackRenderState;
 import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.world.item.ItemDisplayContext;
 import net.minecraft.world.item.ItemStack;
@@ -32,18 +28,15 @@ public final class GirlPaymentGeoLayer extends GeoRenderLayer<SceneGirlEntity> {
    /** The original rendered the payment at 1:1 bone scale ({@code GirlEntity.n} defaults to 1.0f). */
    private static final float SCALE = 1.0F;
 
-   private final ItemModelResolver itemModelResolver;
-
-   public GirlPaymentGeoLayer(Context context, GeoRenderer<SceneGirlEntity> renderer) {
+   public GirlPaymentGeoLayer(GeoRenderer<SceneGirlEntity> renderer) {
       super(renderer);
-      this.itemModelResolver = context.getItemModelResolver();
    }
 
    @Override
    public void render(
       PoseStack poseStack, SceneGirlEntity animatable, BakedGeoModel model,
       RenderType renderType, MultiBufferSource bufferSource, VertexConsumer buffer,
-      float partialTick, int packedLight, int packedOverlay, int renderColor
+      float partialTick, int packedLight, int packedOverlay
    ) {
       int amount = animatable.trackedPaymentAmount();
       if (amount <= 0) {
@@ -56,11 +49,6 @@ public final class GirlPaymentGeoLayer extends GeoRenderLayer<SceneGirlEntity> {
          return;
       }
 
-      ItemStackRenderState stackState = new ItemStackRenderState();
-      this.itemModelResolver.updateForTopItem(
-         stackState, new ItemStack(payment.item()), ItemDisplayContext.THIRD_PERSON_RIGHT_HAND, false, Minecraft.getInstance().level, animatable, 0
-      );
-
       poseStack.pushPose();
       RenderUtil.prepMatrixForBone(poseStack, bone);
       for (int i = 0; i < amount; i++) {
@@ -69,7 +57,10 @@ public final class GirlPaymentGeoLayer extends GeoRenderLayer<SceneGirlEntity> {
          poseStack.translate(0.0F, 0.0F, (i - (amount - 1) / 2.0F) * 0.025F);
          poseStack.mulPose(com.mojang.math.Axis.ZP.rotationDegrees((i - (amount - 1) / 2.0F) * -15.0F));
          poseStack.scale(SCALE, SCALE, SCALE);
-         stackState.render(poseStack, bufferSource, packedLight, OverlayTexture.NO_OVERLAY);
+         Minecraft.getInstance().getItemRenderer().renderStatic(
+            animatable, new ItemStack(payment.item()), ItemDisplayContext.THIRD_PERSON_RIGHT_HAND, false,
+            poseStack, bufferSource, animatable.level(), packedLight, OverlayTexture.NO_OVERLAY, 0
+         );
          poseStack.popPose();
       }
       poseStack.popPose();

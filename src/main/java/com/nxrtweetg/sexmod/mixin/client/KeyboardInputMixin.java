@@ -3,7 +3,7 @@ package com.nxrtweetg.sexmod.mixin.client;
 import com.nxrtweetg.sexmod.client.GirlSceneInputController;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
-import net.minecraft.client.player.ClientInput;
+import net.minecraft.client.player.Input;
 import net.minecraft.client.player.KeyboardInput;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
@@ -17,13 +17,18 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
  */
 @Environment(EnvType.CLIENT)
 @Mixin(KeyboardInput.class)
-abstract class KeyboardInputMixin extends ClientInput {
+abstract class KeyboardInputMixin extends Input {
    @Inject(method = "tick", at = @At("TAIL"))
    private void sexmod$swallowSceneInput(CallbackInfo ci) {
       if (GirlSceneInputController.shouldSwallowMovementInput()) {
-         this.keyPresses = net.minecraft.world.entity.player.Input.EMPTY;
          this.leftImpulse = 0.0F;
          this.forwardImpulse = 0.0F;
+         this.up = false;
+         this.down = false;
+         this.left = false;
+         this.right = false;
+         this.jumping = false;
+         this.shiftKeyDown = false;
       }
    }
 }

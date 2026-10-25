@@ -101,6 +101,8 @@ public final class GirlEntityRenderer extends GeoEntityRenderer<SceneGirlEntity>
       "armSteveR", "lowerArmSteveR", "armSteveL", "lowerArmSteveL"
    };
 
+   /** GeckoLib 4.9 keeps no partial tick on the renderer, so the bone pass stores it here. */
+   private float scenePartialTick;
    /** Bone whose world position feeds the scene camera this frame, set during the bone pass. */
    private String cameraAnchorBone;
    private GirlSceneAction cameraAnchorAction;
@@ -111,8 +113,8 @@ public final class GirlEntityRenderer extends GeoEntityRenderer<SceneGirlEntity>
    public GirlEntityRenderer(Context context, GirlGeoModel model) {
       super(context, model);
       this.shadowRadius = 0.45F;
-      this.addRenderLayer(new GirlPaymentGeoLayer(context, this));
-      this.addRenderLayer(new GirlWeaponGeoLayer(context, this));
+      this.addRenderLayer(new GirlPaymentGeoLayer(this));
+      this.addRenderLayer(new GirlWeaponGeoLayer(this));
       this.addRenderLayer(new GirlSteveGeoLayer(this));
    }
 
@@ -134,7 +136,7 @@ public final class GirlEntityRenderer extends GeoEntityRenderer<SceneGirlEntity>
     * under a name tag item, and a scene hides it because the camera sits inside her head.
     */
    @Override
-   public boolean shouldShowName(SceneGirlEntity entity, double distanceToCameraSq) {
+   public boolean shouldShowName(SceneGirlEntity entity) {
       if (!entity.shouldShowName()) {
          return false;
       }
@@ -170,6 +172,7 @@ public final class GirlEntityRenderer extends GeoEntityRenderer<SceneGirlEntity>
       PoseStack poseStack, SceneGirlEntity animatable, BakedGeoModel model, MultiBufferSource bufferSource,
       VertexConsumer buffer, boolean isReRender, float partialTick, int packedLight, int packedOverlay, int renderColor
    ) {
+      this.scenePartialTick = partialTick;
       super.preRender(poseStack, animatable, model, bufferSource, buffer, isReRender, partialTick, packedLight, packedOverlay, renderColor);
 
       GirlSceneAction action = animatable.trackedActiveAction().orElse(null);
@@ -186,7 +189,7 @@ public final class GirlEntityRenderer extends GeoEntityRenderer<SceneGirlEntity>
       applySceneBodyScale(model, character, action);
       applyGirlScale(model, character, action, phase);
       if (animatable instanceof com.nxrtweetg.sexmod.girls.allie.AllieEntity allie) {
-         float allieScale = allie.getDismissScale(this.partialTick);
+         float allieScale = allie.getDismissScale(this.scenePartialTick);
          if (allieScale < 1.0F) {
             bodyRoot(model).ifPresent(bone -> {
                bone.setScaleX(bone.getScaleX() * allieScale);
@@ -479,7 +482,7 @@ public final class GirlEntityRenderer extends GeoEntityRenderer<SceneGirlEntity>
       poseStack.popPose();
 
       SceneGirlEntity animatable = this.animatable;
-      float partialTick = this.partialTick;
+      float partialTick = this.scenePartialTick;
       Vector3f entityLocal = this.modelRenderTranslations.transformPosition(new Vector3f(modelPos));
       Vec3 worldPos = new Vec3(
          Mth.lerp(partialTick, animatable.xo, animatable.getX()) + entityLocal.x(),

@@ -23,7 +23,7 @@ import net.minecraft.tags.DamageTypeTags;
 import net.minecraft.world.SimpleContainer;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.entity.EntitySpawnReason;
+import net.minecraft.world.entity.MobSpawnType;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.LivingEntity;
@@ -132,13 +132,12 @@ public abstract class GirlEntity extends PathfinderMob {
       for (int slot = 0; slot < this.equipment.getContainerSize(); slot++) {
          ItemStack stack = this.equipment.removeItemNoUpdate(slot);
          if (!stack.isEmpty()) {
-            this.spawnAtLocation(world, stack);
+            this.spawnAtLocation(stack);
          }
       }
    }
 
    /** Nothing may shove items into the typed slots past the screen's filters. */
-   @Override
    protected boolean canDispenserEquipIntoSlot(EquipmentSlot slot) {
       return false;
    }
@@ -244,7 +243,8 @@ public abstract class GirlEntity extends PathfinderMob {
 
       this.targetSelector.addGoal(1, new HurtByTargetGoal(this));
       this.targetSelector.addGoal(2, new GirlMasterHurtTargetGoal(this));
-      this.targetSelector.addGoal(3, new NearestAttackableTargetGoal<>(this, Monster.class, 10, true, false, this::isValidCombatTarget));
+      this.targetSelector.addGoal(3, new NearestAttackableTargetGoal<>(this, Monster.class, 10, true, false,
+         target -> target instanceof Monster monster && this.isValidCombatTarget(monster, (ServerLevel)target.level())));
    }
 
    /**
@@ -480,13 +480,13 @@ public abstract class GirlEntity extends PathfinderMob {
 
       if (this.isTamedByLasso()) {
          if (source.is(DamageTypeTags.BYPASSES_INVULNERABILITY)) {
-            return super.hurtServer(world, source, amount);
+            return super.hurt(source, amount);
          }
          // Immortal: health cannot drop below 1.0F, but still plays hurt animation/sound/reaction
          if (this.getHealth() - amount <= 1.0F) {
             this.setHealth(amount + 1.0F);
          }
-         boolean damaged = super.hurtServer(world, source, amount);
+         boolean damaged = super.hurt(source, amount);
          if (this.getHealth() < 1.0F) {
             this.setHealth(1.0F);
          }
@@ -494,7 +494,7 @@ public abstract class GirlEntity extends PathfinderMob {
       }
 
       if (source.is(DamageTypeTags.BYPASSES_INVULNERABILITY)) {
-         return super.hurtServer(world, source, amount);
+         return super.hurt(source, amount);
       }
 
       if (this.isDowned()) {
@@ -509,7 +509,7 @@ public abstract class GirlEntity extends PathfinderMob {
          return true;
       }
 
-      return super.hurtServer(world, source, amount);
+      return super.hurt(source, amount);
    }
 
    private java.util.UUID interactingPlayerId = null;
@@ -650,7 +650,7 @@ public abstract class GirlEntity extends PathfinderMob {
    protected void onPreloadFinished(ServerLevel serverWorld) {
    }
 
-   public boolean canSpawnForPortScaffold(ServerLevel world, EntitySpawnReason reason) {
+   public boolean canSpawnForPortScaffold(ServerLevel world, MobSpawnType reason) {
       return true;
    }
 }

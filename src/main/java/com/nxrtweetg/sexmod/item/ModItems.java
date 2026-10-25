@@ -62,9 +62,9 @@ public final class ModItems {
    private static <T extends Item> T register(String id, Function<Item.Properties, T> factory) {
       ResourceLocation identifier = ResourceLocation.fromNamespaceAndPath("sexmod", id);
       ResourceKey<Item> key = ResourceKey.create(Registries.ITEM, identifier);
-      Item.Properties properties = new Item.Properties().setId(key).useItemDescriptionPrefix();
+      Item.Properties properties = new Item.Properties();
       T item = factory.apply(properties);
-      Registry.register(BuiltInRegistries.ITEM, key, item);
+      Registry.register(BuiltInRegistries.ITEM, identifier, item);
       ALL_ITEMS.add(item);
       return item;
    }

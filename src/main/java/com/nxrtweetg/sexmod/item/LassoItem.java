@@ -19,7 +19,7 @@ import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.Entity;
-import net.minecraft.world.entity.EntitySpawnReason;
+import net.minecraft.world.entity.MobSpawnType;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
@@ -164,12 +164,10 @@ public final class LassoItem extends Item {
          String typeId = tag.getString(TAG_ENTITY_TYPE);
          CompoundTag entityTag = tag.getCompound(TAG_ENTITY_DATA);
 
-         EntityType<?> type = BuiltInRegistries.ENTITY_TYPE.get(ResourceLocation.parse(typeId))
-            .map(Holder.Reference::value)
-            .orElse(null);
+         EntityType<?> type = BuiltInRegistries.ENTITY_TYPE.get(ResourceLocation.parse(typeId));
 
          if (type != null) {
-            Entity spawned = type.create(serverLevel, EntitySpawnReason.TRIGGERED);
+            Entity spawned = type.create(serverLevel, null, null, MobSpawnType.TRIGGERED, false, false);
             if (spawned instanceof GirlEntity girl) {
                if (!entityTag.isEmpty()) {
                   TagValueInput input = TagValueInput.wrap(entityTag, serverLevel.registryAccess());

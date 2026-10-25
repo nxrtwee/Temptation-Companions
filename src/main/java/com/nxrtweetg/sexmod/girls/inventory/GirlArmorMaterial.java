@@ -2,8 +2,6 @@ package com.nxrtweetg.sexmod.girls.inventory;
 
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.equipment.EquipmentAssets;
-import net.minecraft.world.item.equipment.Equippable;
 
 /**
  * The four armour looks baked into jenny.png. The original picked one by shifting the armour UVs at
@@ -39,20 +37,19 @@ public enum GirlArmorMaterial {
          return null;
       }
 
-      Equippable equippable = stack.get(DataComponents.EQUIPPABLE);
-      if (equippable == null || equippable.assetId().isEmpty()) {
+      if (!(stack.getItem() instanceof net.minecraft.world.item.ArmorItem armorItem)) {
          return null;
       }
 
-      var asset = equippable.assetId().get();
-      if (asset == EquipmentAssets.LEATHER) {
+      net.minecraft.world.item.ArmorMaterial material = armorItem.getMaterial().value();
+      if (material == net.minecraft.world.item.ArmorMaterials.LEATHER.value()) {
          return LEATHER;
-      } else if (asset == EquipmentAssets.GOLD) {
+      } else if (material == net.minecraft.world.item.ArmorMaterials.GOLD.value()) {
          return GOLD;
-      } else if (asset == EquipmentAssets.DIAMOND) {
+      } else if (material == net.minecraft.world.item.ArmorMaterials.DIAMOND.value()) {
          return DIAMOND;
       } else {
-         // iron/chainmail/copper/netherite/scute all fall back to the plain metal look rather than
+         // iron/chainmail/copper/netherite all fall back to the plain metal look rather than
          // rendering nothing, which is what the original did for chainmail too
          return IRON;
       }

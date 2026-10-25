@@ -7,7 +7,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.InteractionResult;
-import net.minecraft.world.entity.EntitySpawnReason;
+import net.minecraft.world.entity.MobSpawnType;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
@@ -35,7 +35,7 @@ public final class TribeEggItem extends Item {
          int eyeColorArgb = KoboldColors.randomEyeArgb(random);
 
          for (double[] offset : OFFSETS) {
-            KoboldEntity kobold = ModEntities.KOBOLD.create(serverLevel, EntitySpawnReason.COMMAND);
+            KoboldEntity kobold = ModEntities.KOBOLD.create(serverLevel, null, null, MobSpawnType.COMMAND, false, false);
             if (kobold != null) {
                kobold.moveTo(center.getX() + 0.5 + offset[0], center.getY(), center.getZ() + 0.5 + offset[1], yaw, 0.0F);
                kobold.setTribeColorIndex(tribeColorIndex);

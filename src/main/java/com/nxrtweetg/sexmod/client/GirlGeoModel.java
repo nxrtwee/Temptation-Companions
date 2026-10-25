@@ -1,7 +1,6 @@
 package com.nxrtweetg.sexmod.client;
 
 import software.bernie.geckolib.model.GeoModel;
-import software.bernie.geckolib.renderer.GeoRenderer;
 import com.nxrtweetg.sexmod.girls.SceneGirlEntity;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
@@ -70,12 +69,12 @@ public final class GirlGeoModel extends GeoModel<SceneGirlEntity> {
    }
 
    @Override
-   public ResourceLocation getModelResource(SceneGirlEntity animatable, GeoRenderer<SceneGirlEntity> renderer) {
+   public ResourceLocation getModelResource(SceneGirlEntity animatable) {
       return this.modelSlots[this.resolveSlot(animatable)];
    }
 
    @Override
-   public ResourceLocation getTextureResource(SceneGirlEntity animatable, GeoRenderer<SceneGirlEntity> renderer) {
+   public ResourceLocation getTextureResource(SceneGirlEntity animatable) {
       ResourceLocation customSkin = animatable instanceof com.nxrtweetg.sexmod.girls.custom.CustomGirlEntity customGirl && customGirl.getCustomData() != null
             ? CustomSkinManager.getOrLoadSkin(customGirl.getCustomData().id(), customGirl.getCustomData().skinFileName())
             : null;
@@ -108,7 +107,7 @@ public final class GirlGeoModel extends GeoModel<SceneGirlEntity> {
    }
 
    @Override
-   public ResourceLocation[] getAnimationResourceFallbacks(SceneGirlEntity animatable, GeoRenderer<SceneGirlEntity> renderer) {
+   public ResourceLocation[] getAnimationResourceFallbacks(SceneGirlEntity animatable) {
       return this.animationFallbacks;
    }
 }

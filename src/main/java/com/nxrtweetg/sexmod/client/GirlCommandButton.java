@@ -71,21 +71,15 @@ public final class GirlCommandButton extends AbstractButton {
       }
 
       int vOffset = 46 + (this.isActive() ? 0 : 20) + (this.isHoveredOrFocused() ? 20 : 0);
-      context.blit(
-         RenderType::guiTextured,
-         WIDGETS,
+      context.blit(WIDGETS,
          this.getX(), this.getY(), 0, vOffset,
          this.getWidth() / 2, this.getHeight(), 256, 256
       );
-      context.blit(
-         RenderType::guiTextured,
-         WIDGETS,
+      context.blit(WIDGETS,
          this.getX() + this.getWidth() / 2, this.getY(), 200 - this.getWidth() / 2, vOffset,
          this.getWidth() - this.getWidth() / 2, this.getHeight(), 256, 256
       );
-      context.blit(
-         RenderType::guiTextured,
-         GIRL_INVENTORY,
+      context.blit(GIRL_INVENTORY,
          this.getX() + this.getWidth() - ICON_SIZE - ICON_MARGIN,
          this.getY() + (this.getHeight() - ICON_SIZE) / 2,
          this.iconU,

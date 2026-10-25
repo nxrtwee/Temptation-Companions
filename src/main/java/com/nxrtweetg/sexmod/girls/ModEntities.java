@@ -73,7 +73,7 @@ public final class ModEntities {
       return Registry.register(
          BuiltInRegistries.ENTITY_TYPE,
          id,
-         EntityType.Builder.of(factory, MobCategory.CREATURE).sized(width, height).eyeHeight(eyeHeight).clientTrackingRange(50).build(key)
+         EntityType.Builder.of(factory, MobCategory.CREATURE).sized(width, height).eyeHeight(eyeHeight).clientTrackingRange(50).build(id.toString())
       );
    }
 

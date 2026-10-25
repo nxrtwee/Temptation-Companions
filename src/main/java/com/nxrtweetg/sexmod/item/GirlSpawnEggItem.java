@@ -3,7 +3,7 @@ package com.nxrtweetg.sexmod.item;
 import com.nxrtweetg.sexmod.girls.SceneGirlEntity;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.InteractionResult;
-import net.minecraft.world.entity.EntitySpawnReason;
+import net.minecraft.world.entity.MobSpawnType;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
@@ -21,7 +21,7 @@ public final class GirlSpawnEggItem extends Item {
    @Override
    public InteractionResult useOn(UseOnContext context) {
       if (!context.getLevel().isClientSide()) {
-         var girl = this.entityType.create(context.getLevel(), EntitySpawnReason.SPAWN_ITEM_USE);
+         var girl = this.entityType.create((net.minecraft.server.level.ServerLevel)context.getLevel(), null, null, MobSpawnType.SPAWN_EGG, false, false);
          if (girl != null) {
             BlockPos pos = context.getClickedPos().relative(context.getClickedFace());
             float yaw = context.getPlayer() == null ? 0.0F : context.getPlayer().getYRot() + 180.0F;

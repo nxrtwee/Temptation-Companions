@@ -73,13 +73,13 @@ public final class CustomSkinManager {
             NativeImage converted = new NativeImage(64, 64, true);
             for (int x = 0; x < 64; x++) {
                 for (int y = 0; y < 32; y++) {
-                    converted.setPixel(x, y, source.getPixel(x, y));
+                    converted.setPixelRGBA(x, y, source.getPixelRGBA(x, y));
                 }
             }
             for (int x = 0; x < 16; x++) {
                 for (int y = 0; y < 16; y++) {
-                    converted.setPixel(x + 16, y + 48, source.getPixel(x, y + 16));
-                    converted.setPixel(x + 32, y + 48, source.getPixel(x + 40, y + 16));
+                    converted.setPixelRGBA(x + 16, y + 48, source.getPixelRGBA(x, y + 16));
+                    converted.setPixelRGBA(x + 32, y + 48, source.getPixelRGBA(x + 40, y + 16));
                 }
             }
             source.close();

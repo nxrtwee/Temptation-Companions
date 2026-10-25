@@ -116,7 +116,7 @@ public final class GirlSceneCameraController {
                boolean interactive = girlscenephase == GirlScenePhase.ACTIVE || girlscenephase == GirlScenePhase.CLIMAX;
                if (interactive) {
                   GirlHornyMeter.show(true);
-                  GirlHornyMeter.tickAutoFill(girl, client.getDeltaTracker().getGameTimeDeltaTicks());
+                  GirlHornyMeter.tickAutoFill(girl, client.getTimer().getGameTimeDeltaTicks());
                }
 
                localplayer.setInvisible(true);
