@@ -5,33 +5,33 @@ import software.bernie.geckolib.model.GeoModel;
 import software.bernie.geckolib.renderer.base.GeoRenderState;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.Item;
 
 @Environment(EnvType.CLIENT)
 public class SimpleGeoItemModel<T extends Item & GeoAnimatable> extends GeoModel<T> {
-   private final Identifier model;
-   private final Identifier texture;
-   private final Identifier animation;
+   private final ResourceLocation model;
+   private final ResourceLocation texture;
+   private final ResourceLocation animation;
 
-   public SimpleGeoItemModel(Identifier model, Identifier texture, Identifier animation) {
+   public SimpleGeoItemModel(ResourceLocation model, ResourceLocation texture, ResourceLocation animation) {
       this.model = model;
       this.texture = texture;
       this.animation = animation;
    }
 
    @Override
-   public Identifier getModelResource(GeoRenderState renderState) {
+   public ResourceLocation getModelResource(GeoRenderState renderState) {
       return this.model;
    }
 
    @Override
-   public Identifier getTextureResource(GeoRenderState renderState) {
+   public ResourceLocation getTextureResource(GeoRenderState renderState) {
       return this.texture;
    }
 
    @Override
-   public Identifier getAnimationResource(T animatable) {
+   public ResourceLocation getAnimationResource(T animatable) {
       return this.animation;
    }
 }

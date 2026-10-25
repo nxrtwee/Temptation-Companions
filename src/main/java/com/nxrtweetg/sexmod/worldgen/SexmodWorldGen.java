@@ -18,7 +18,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.Holder;
 import net.minecraft.core.Vec3i;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.util.RandomSource;
@@ -535,7 +535,7 @@ public final class SexmodWorldGen {
 
    public static boolean placeStructureDirect(ServerLevel level, BlockPos origin, String name, Rotation rotation) {
       StructureTemplate template = level.getStructureManager()
-         .get(Identifier.fromNamespaceAndPath("sexmod", name))
+         .get(ResourceLocation.fromNamespaceAndPath("sexmod", name))
          .orElse(null);
 
       if (template == null) {

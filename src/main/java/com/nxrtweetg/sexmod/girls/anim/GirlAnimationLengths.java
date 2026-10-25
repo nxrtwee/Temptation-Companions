@@ -12,7 +12,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.packs.resources.Resource;
 import net.minecraft.server.packs.resources.ResourceManager;
 
@@ -112,9 +112,9 @@ public final class GirlAnimationLengths {
 
    public static synchronized void reloadFromResourceManager(ResourceManager resourceManager) {
       TAKES.clear();
-      for (Map.Entry<Identifier, Resource> entry :
+      for (Map.Entry<ResourceLocation, Resource> entry :
            resourceManager.listResources("geckolib/animations", id -> id.getPath().endsWith(".animation.json")).entrySet()) {
-         Identifier id = entry.getKey();
+         ResourceLocation id = entry.getKey();
          if (!"sexmod".equals(id.getNamespace())) {
             continue;
          }

@@ -14,7 +14,7 @@ import java.util.Map;
 import java.util.Set;
 import net.minecraft.core.particles.ParticleOptions;
 import net.minecraft.core.particles.ParticleTypes;
-import net.minecraft.core.particles.SpellParticleOption;
+import net.minecraft.core.particles.ColorParticleOption;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
@@ -452,7 +452,7 @@ public final class BeeEntity extends SceneGirlEntity {
 
    /** 1.12's {@code SPELL} is the plain white swirl, which modern {@code effect} needs told its colour. */
    private static ParticleOptions spellParticle() {
-      return SpellParticleOption.create(ParticleTypes.EFFECT, 0xFFFFFF, 1.0F);
+      return ColorParticleOption.create(ParticleTypes.ENTITY_EFFECT, 1.0F, 1.0F, 1.0F);
    }
 
    /**

@@ -7,13 +7,13 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Inventory;
 
 /** Equipment screen for the girls, drawn from the original's girlinventory.png atlas. */
 @Environment(EnvType.CLIENT)
 public final class GirlInventoryScreen extends AbstractContainerScreen<GirlInventoryMenu> {
-   private static final Identifier GIRL_INVENTORY = Identifier.fromNamespaceAndPath("sexmod", "textures/gui/girlinventory.png");
+   private static final ResourceLocation GIRL_INVENTORY = ResourceLocation.fromNamespaceAndPath("sexmod", "textures/gui/girlinventory.png");
    private static final int TEXTURE_SIZE = 256;
    /** The panel sits at this offset inside the atlas (fb_class301). */
    private static final int BACKGROUND_U = 33;

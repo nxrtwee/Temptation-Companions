@@ -4,7 +4,7 @@ import com.nxrtweetg.sexmod.SexmodMod;
 import net.minecraft.core.Holder;
 import net.minecraft.core.Registry;
 import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.effect.MobEffect;
 
 /**
@@ -21,7 +21,7 @@ public final class ModEffects {
    }
 
    private static Holder<MobEffect> register(String name, MobEffect effect) {
-      return Registry.registerForHolder(BuiltInRegistries.MOB_EFFECT, Identifier.fromNamespaceAndPath(SexmodMod.MOD_ID, name), effect);
+      return Registry.registerForHolder(BuiltInRegistries.MOB_EFFECT, ResourceLocation.fromNamespaceAndPath(SexmodMod.MOD_ID, name), effect);
    }
 
    /** Touching the class is enough; the holder above is created by the static initialiser. */

@@ -3,22 +3,20 @@ package com.nxrtweetg.sexmod.client;
 import com.nxrtweetg.sexmod.girls.scene.GirlSceneAction;
 import com.nxrtweetg.sexmod.girls.scene.GirlScenePhase;
 import com.nxrtweetg.sexmod.config.SexmodConfig;
-import software.bernie.geckolib.animation.state.BoneSnapshot;
-import software.bernie.geckolib.cache.model.BakedGeoModel;
-import software.bernie.geckolib.cache.model.GeoBone;
+import software.bernie.geckolib.cache.object.BakedGeoModel;
+import software.bernie.geckolib.cache.object.GeoBone;
+import software.bernie.geckolib.cache.object.GeoQuad;
 import software.bernie.geckolib.constant.DataTickets;
+import software.bernie.geckolib.constant.dataticket.DataTicket;
 import software.bernie.geckolib.renderer.GeoEntityRenderer;
-import software.bernie.geckolib.renderer.base.BoneSnapshots;
-import software.bernie.geckolib.renderer.base.RenderPassInfo;
+import software.bernie.geckolib.renderer.base.GeoRenderState;
 import software.bernie.geckolib.util.RenderUtil;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import java.util.UUID;
 import com.nxrtweetg.sexmod.girls.goblin.GoblinColors;
 import com.nxrtweetg.sexmod.girls.inventory.GirlArmorMaterial;
 import com.nxrtweetg.sexmod.girls.kobold.KoboldColors;
@@ -28,22 +26,20 @@ import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.AbstractClientPlayer;
-import net.minecraft.client.player.LocalPlayer;
-import net.minecraft.client.renderer.OrderedSubmitNodeCollector;
-import net.minecraft.client.renderer.SubmitNodeCollector;
+import net.minecraft.client.renderer.MultiBufferSource;
+import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.culling.Frustum;
 import net.minecraft.client.renderer.entity.EntityRendererProvider.Context;
-import net.minecraft.client.renderer.rendertype.RenderType;
-import net.minecraft.client.renderer.rendertype.RenderTypes;
 import net.minecraft.client.renderer.entity.state.LivingEntityRenderState;
-import net.minecraft.client.renderer.state.CameraRenderState;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.phys.Vec3;
+import org.joml.Matrix4f;
+import org.joml.Vector3f;
 
 @Environment(EnvType.CLIENT)
-public final class GirlEntityRenderer extends GeoEntityRenderer<SceneGirlEntity, LivingEntityRenderState> {
+public final class GirlEntityRenderer extends GeoEntityRenderer<SceneGirlEntity, GirlEntityRenderer.GirlGeoRenderState> {
    private static final double FACEFUCK_STEVE_RENDER_OFFSET_Y = -0.15;
    private static final double FACEFUCK_NAMEPLATE_Y_OFFSET = 0.4;
    private static final float FACEFUCK_EYELASH_SCALE_Y = 1.1925F;
@@ -107,17 +103,53 @@ public final class GirlEntityRenderer extends GeoEntityRenderer<SceneGirlEntity,
       "armSteveR", "lowerArmSteveR", "armSteveL", "lowerArmSteveL"
    };
 
+   /** Bone whose world position feeds the scene camera this frame, set during bone adjustment. */
+   private String cameraAnchorBone;
+   private GirlSceneAction cameraAnchorAction;
+   private GirlScenePhase cameraAnchorPhase;
+   private String cameraAnchorCharacter;
+   private GirlScenePhase cameraAnchorConfigPhase;
+
+   /**
+    * GeckoLib 5.2 stores per-render data through a {@code GeoRenderState} interface that it mixes into
+    * vanilla render states at runtime; at compile time the interface is not visible on
+    * {@code LivingEntityRenderState}, so the renderer carries its own subclass that implements it.
+    */
+   public static final class GirlGeoRenderState extends LivingEntityRenderState implements GeoRenderState {
+      private final GeoRenderState.Impl geckolib$impl = new GeoRenderState.Impl();
+
+      @Override
+      public <D> void addGeckolibData(DataTicket<D> ticket, D value) {
+         this.geckolib$impl.addGeckolibData(ticket, value);
+      }
+
+      @Override
+      public boolean hasGeckolibData(DataTicket<?> ticket) {
+         return this.geckolib$impl.hasGeckolibData(ticket);
+      }
+
+      @Override
+      public <D> D getGeckolibData(DataTicket<D> ticket) {
+         return this.geckolib$impl.getGeckolibData(ticket);
+      }
+
+      @Override
+      public Map<DataTicket<?>, Object> getDataMap() {
+         return this.geckolib$impl.getDataMap();
+      }
+   }
+
    public GirlEntityRenderer(Context context, GirlGeoModel model) {
       super(context, model);
       this.shadowRadius = 0.45F;
-      this.withRenderLayer(new GirlPaymentGeoLayer(context, this));
-      this.withRenderLayer(new GirlWeaponGeoLayer(context, this));
-      this.withRenderLayer(new GirlSteveGeoLayer(this));
+      this.addRenderLayer(new GirlPaymentGeoLayer(context, this));
+      this.addRenderLayer(new GirlWeaponGeoLayer(context, this));
+      this.addRenderLayer(new GirlSteveGeoLayer(this));
    }
 
    @Override
-   public LivingEntityRenderState createRenderState(SceneGirlEntity animatable, Void relatedObject) {
-      return new LivingEntityRenderState();
+   public GirlGeoRenderState createRenderState() {
+      return new GirlGeoRenderState();
    }
 
    /**
@@ -126,14 +158,16 @@ public final class GirlEntityRenderer extends GeoEntityRenderer<SceneGirlEntity,
     * {@code ignoreFrustumCheck} for the same reason.
     */
    @Override
-   protected boolean affectedByCulling(SceneGirlEntity entity) {
-      return !entity.shouldRenderPlayerTracked();
+   public boolean shouldRender(SceneGirlEntity entity, Frustum frustum, double camX, double camY, double camZ) {
+      if (entity.shouldRenderPlayerTracked()) {
+         return true;
+      }
+      return super.shouldRender(entity, frustum, camX, camY, camZ);
    }
 
-
    @Override
-   public void addRenderData(SceneGirlEntity animatable, Void relatedObject, LivingEntityRenderState renderState, float partialTick) {
-      super.addRenderData(animatable, relatedObject, renderState, partialTick);
+   public GirlGeoRenderState fillRenderState(SceneGirlEntity animatable, Void relatedObject, GirlGeoRenderState renderState, float partialTick) {
+      super.fillRenderState(animatable, relatedObject, renderState, partialTick);
       renderState.addGeckolibData(DataTickets.IS_MOVING, isDisplacing(animatable));
       renderState.addGeckolibData(GirlRenderData.CHARACTER, animatable.characterId());
       GirlSceneAction action = animatable.trackedActiveAction().orElse(null);
@@ -172,13 +206,22 @@ public final class GirlEntityRenderer extends GeoEntityRenderer<SceneGirlEntity,
          renderState.addGeckolibData(GirlRenderData.ALLIE_DISMISS_SCALE, allie.getDismissScale(partialTick));
       }
       renderState.addGeckolibData(GirlRenderData.CAMERA_YAW, resolveCameraYaw(animatable));
+
+      net.minecraft.world.item.ItemStack weapon = weaponFor(animatable);
+      if (!weapon.isEmpty()) {
+         net.minecraft.client.renderer.item.ItemStackRenderState weaponState = new net.minecraft.client.renderer.item.ItemStackRenderState();
+         this.itemModelResolver.updateForTopItem(
+            weaponState, weapon, net.minecraft.world.item.ItemDisplayContext.THIRD_PERSON_RIGHT_HAND, animatable.level(), animatable, 0
+         );
+         renderState.addGeckolibData(GirlRenderData.WEAPON_STACK_STATE, weaponState);
+      }
       renderState.addGeckolibData(GirlRenderData.HELMET_MATERIAL, GirlArmorMaterial.indexFor(animatable.getItemBySlot(EquipmentSlot.HEAD)));
       renderState.addGeckolibData(GirlRenderData.CHESTPLATE_MATERIAL, GirlArmorMaterial.indexFor(animatable.getItemBySlot(EquipmentSlot.CHEST)));
       renderState.addGeckolibData(GirlRenderData.LEGGINGS_MATERIAL, GirlArmorMaterial.indexFor(animatable.getItemBySlot(EquipmentSlot.LEGS)));
       renderState.addGeckolibData(GirlRenderData.BOOTS_MATERIAL, GirlArmorMaterial.indexFor(animatable.getItemBySlot(EquipmentSlot.FEET)));
       // Скин партнёра резолвится один раз за сцену в tickClient (GirlSceneCameraController),
       // а не каждый кадр — это единственный способ избежать мерцания при загрузке текстуры.
-      Identifier partnerSkin = GirlSceneCameraController.getLockedPartnerSkin();
+      ResourceLocation partnerSkin = GirlSceneCameraController.getLockedPartnerSkin();
       if (partnerSkin != null) {
          renderState.addGeckolibData(GirlRenderData.PARTNER_SKIN, partnerSkin);
          renderState.addGeckolibData(GirlRenderData.PARTNER_IS_SLIM, GirlSceneCameraController.isLockedPartnerSlim());
@@ -187,7 +230,7 @@ public final class GirlEntityRenderer extends GeoEntityRenderer<SceneGirlEntity,
       if (animatable instanceof com.nxrtweetg.sexmod.girls.custom.CustomGirlEntity customGirl) {
          com.nxrtweetg.sexmod.girls.custom.TCEditorLoader.CustomCharacterData data = customGirl.getCustomData();
          if (data != null) {
-            Identifier skin = CustomSkinManager.getOrLoadSkin(data.id(), data.skinFileName());
+            ResourceLocation skin = CustomSkinManager.getOrLoadSkin(data.id(), data.skinFileName());
             renderState.addGeckolibData(GirlRenderData.CUSTOM_SKIN, skin);
             boolean isSlim = "slim".equalsIgnoreCase(data.modelType());
             renderState.addGeckolibData(GirlRenderData.CUSTOM_IS_SLIM, isSlim);
@@ -210,6 +253,7 @@ public final class GirlEntityRenderer extends GeoEntityRenderer<SceneGirlEntity,
             renderState.addGeckolibData(GirlRenderData.CUSTOM_LEG_SCALE_Z, data.legScaleZ());
          }
       }
+      return renderState;
    }
 
    /**
@@ -220,39 +264,18 @@ public final class GirlEntityRenderer extends GeoEntityRenderer<SceneGirlEntity,
     * <p>GeckoLib fills {@link DataTickets#IS_MOVING} from {@code LivingEntity.walkAnimation.speed()},
     * which is a decaying average - it stays above the threshold for several ticks after she has actually
     * stopped, and that tail is what left her marching on the spot at the bed. Overwriting the ticket here
-    * (the render state is a plain map, and {@code fillRenderState} runs
-    * {@code captureDefaultRenderState} before this hook) fixes it for every controller at once, since
-    * {@code AnimationTest.isMoving()} only reads the ticket back.
-    *
-    * <p>{@code ClientLevel.tickNonPassenger} calls {@code setOldPosAndRot} before ticking an entity, so
-    * {@code xo}/{@code zo} hold the position at the start of the tick - the same quantity 1.12.2 read out
-    * of {@code prevPosX}/{@code prevPosZ}.
+    * fixes it for every controller at once.
     */
    private static boolean isDisplacing(SceneGirlEntity animatable) {
       return Math.abs(animatable.xo - animatable.getX()) + Math.abs(animatable.zo - animatable.getZ()) > 0.005;
    }
 
-
-
    /**
     * Whether her floating name is drawn at all.
     *
-    * <p>The original draws it unconditionally: the girl renderer overrides {@code renderName} and calls
-    * {@code renderLivingLabel} for anyone within 300 blocks, with no custom-name test whatsoever. The
-    * only things that suppress it are the config's own toggle, the entity being an off-world GUI dummy,
-    * and - silly, but that is what the code does - the crosshair not happening to be on some entity.
-    * Vanilla's rule is the opposite: a mob needs a name tag item <em>and</em> the crosshair on her, which
-    * is why no girl here ever had a plate.
-    *
-    * <p>So we keep the original's "always visible" half and drop the rest, with one deliberate
-    * difference: a scene hides the plate. The original leaves it on, and since the scene camera sits
-    * inside her head that prints her name across the middle of every shot. GeckoLib widens the vanilla
-    * rule (it adds team and invisibility tests on top) but keeps the custom-name requirement, so this
-    * has to replace its version rather than delegate to it.
-    *
-    * <p>The entity's own {@code shouldShowName()} is still consulted, because that is where a character
-    * opts out entirely - the slime does, matching {@code fn.t()} returning false unconditionally - and
-    * every other girl is named in her constructor with the flag set, so it reads true for them.
+    * <p>The original draws it unconditionally; vanilla's rule is the opposite. So we keep the original's
+    * "always visible" half and drop the rest, with one deliberate difference: a scene hides the plate,
+    * because the scene camera sits inside her head and would print her name across every shot.
     */
    @Override
    public boolean shouldShowName(SceneGirlEntity entity, double distanceToCameraSq) {
@@ -264,22 +287,17 @@ public final class GirlEntityRenderer extends GeoEntityRenderer<SceneGirlEntity,
          return false;
       }
 
-      // The distance cutoff is vanilla's, applied by extractNameTags before this is consulted.
       AbstractClientPlayer player = Minecraft.getInstance().player;
       return player == null || !entity.isInvisibleTo(player);
    }
 
    /**
     * The floating name, nudged for characters whose head does not sit where the hitbox says it does.
-    *
-    * <p>The nudge cannot go through {@code extractNameTags(entity, state, tick, double, double)}: those
-    * two doubles are the distance at which the plate stops being drawn and the distance at which the
-    * score line stops, not offsets. Passing an offset as the first of them cut the draw distance to
-    * zero, which is why no girl had a name plate at all. The plate's position comes from the
-    * {@code NAME_TAG} attachment the extraction resolves, so the nudge belongs on that.
+    * The plate's position comes from the {@code NAME_TAG} attachment the extraction resolves, so the
+    * nudge belongs on that.
     */
    @Override
-   public void extractRenderState(SceneGirlEntity entity, LivingEntityRenderState renderState, float partialTick) {
+   public void extractRenderState(SceneGirlEntity entity, GirlGeoRenderState renderState, float partialTick) {
       super.extractRenderState(entity, renderState, partialTick);
       boolean facefuck = entity.trackedActiveAction().filter(action -> action == GirlSceneAction.FACEFUCK).isPresent();
       double offset = entity.nameplateYOffset() + (facefuck ? FACEFUCK_NAMEPLATE_Y_OFFSET : 0.0);
@@ -289,122 +307,120 @@ public final class GirlEntityRenderer extends GeoEntityRenderer<SceneGirlEntity,
    }
 
    /**
-    * GeckoLib does submit the plate, just not from {@code submit}: its own body only calls
-    * {@code performRenderPass}, which ends with {@code postRenderPass}, and
-    * {@code GeoEntityRenderer.postRenderPass} calls {@code EntityRenderer.submit} (by {@code invokespecial},
-    * so an override here would not be reached) after the pose stack has been popped back to entity space.
-    * That is the vanilla body, leash and name plate included, so nothing needs adding here - an extra
-    * {@code submitNameDisplay} call only drew the text twice.
+    * 1.21.x entity shading is the two-light directional diffuse the original fought as well, and
+    * GeckoLib 5.2 still exposes the {@code createVerticesOfQuad} hook the 1.12.2 renderer used to
+    * force every quad onto one flat normal - that is the whole trick, no custom render pipeline
+    * needed on this version.
     */
    @Override
-   public void adjustModelBonesForRender(RenderPassInfo<LivingEntityRenderState> renderPassInfo, BoneSnapshots snapshots) {
-      super.adjustModelBonesForRender(renderPassInfo, snapshots);
-      LivingEntityRenderState renderState = renderPassInfo.renderState();
+   public void createVerticesOfQuad(
+      GirlGeoRenderState renderState, GeoQuad quad, Matrix4f poseMatrix, Vector3f normal,
+      VertexConsumer buffer, int packedLight, int packedOverlay, int color
+   ) {
+      if (!ShaderCompat.isShadersActive() && SexmodConfig.isFlatLitRenderingEnabled()) {
+         normal = new Vector3f(0.0F, 1.0F, 0.0F);
+      }
+      super.createVerticesOfQuad(renderState, quad, poseMatrix, normal, buffer, packedLight, packedOverlay, color);
+   }
+
+   /**
+    * The per-frame bone pass: everything the 1.12.2 renderer did to the rig after the animation ran.
+    * GeckoLib 5.2 has already ticked the animation processor by the time this runs, and the bones are
+    * mutable, so every adjustment is a direct write.
+    */
+   @Override
+   public void adjustPositionForRender(GirlGeoRenderState renderState, PoseStack poseStack, BakedGeoModel model, boolean isReRender) {
+      super.adjustPositionForRender(renderState, poseStack, model, isReRender);
+
       GirlSceneAction action = renderState.getGeckolibData(GirlRenderData.ACTIVE_ACTION);
       GirlScenePhase phase = renderState.getOrDefaultGeckolibData(GirlRenderData.SCENE_PHASE, GirlScenePhase.IDLE);
       boolean renderPlayer = renderState.getOrDefaultGeckolibData(GirlRenderData.RENDER_PLAYER, false);
       String character = renderState.getOrDefaultGeckolibData(GirlRenderData.CHARACTER, "jenny");
 
-      applyPlayerBoneVisibility(renderPassInfo, snapshots, character);
+      applyPlayerBoneVisibility(model, character);
       if (character.startsWith("custom")) {
-         applyCustomCompanionRig(renderPassInfo, snapshots, renderState);
+         applyCustomCompanionRig(model, renderState);
       }
-      applyPaymentBoneVisibility(snapshots, renderState);
-      applyArmorBoneVisibility(snapshots, renderState);
-      applySceneBodyScale(snapshots, character, action);
-      applyGirlScale(snapshots, character, action, phase);
+      applyPaymentBoneVisibility(model, renderState);
+      applyArmorBoneVisibility(model, renderState);
+      applySceneBodyScale(model, character, action);
+      applyGirlScale(model, character, action, phase);
       float allieScale = renderState.getOrDefaultGeckolibData(GirlRenderData.ALLIE_DISMISS_SCALE, 1.0F);
       if (allieScale < 1.0F) {
-         bodyRoot(snapshots).ifPresent(bone -> bone.setScale(bone.getScaleX() * allieScale, bone.getScaleY() * allieScale, bone.getScaleZ() * allieScale));
+         bodyRoot(model).ifPresent(bone -> {
+            bone.setScaleX(bone.getScaleX() * allieScale);
+            bone.setScaleY(bone.getScaleY() * allieScale);
+            bone.setScaleZ(bone.getScaleZ() * allieScale);
+         });
       }
       // Arms for partner are hidden in GirlSteveGeoLayer during partner pass
 
       if (action == GirlSceneAction.FACEFUCK && (phase == GirlScenePhase.ACTIVE)) {
-         applyFacefuckFacePose(snapshots);
+         applyFacefuckFacePose(model);
       }
 
       boolean blushActions = action == GirlSceneAction.KOBOLD_BLOWJOB || action == GirlSceneAction.MATING_PRESS;
       if (blushActions && (phase == GirlScenePhase.ACTIVE || phase == GirlScenePhase.CLIMAX)) {
-         snapshots.ifPresent("blush", bone -> bone.setTranslation(0.0F, 0.0F, -1.0F));
+         bone(model, "blush").ifPresent(b -> b.setPosZ(-1.0F));
       }
 
-      applyBodySceneTune(snapshots, renderState, action);
-      applyHelperTransform(snapshots, renderState, character, action, phase);
-      applyHeadRotation(snapshots, renderState, phase);
-      applySlimeRig(snapshots, character, action);
-      applyBeeRig(snapshots, renderState, character);
-      applyGoblinRig(snapshots, renderState, character);
-      applyGalathRig(snapshots, renderState, character, action);
-      applyManglelieRig(snapshots, renderState, character, action);
+      applyBodySceneTune(model, renderState, action);
+      applyHelperTransform(model, renderState, character, action, phase);
+      applyHeadRotation(model, renderState, phase);
+      applySlimeRig(model, character, action);
+      applyBeeRig(model, renderState, character);
+      applyGoblinRig(model, renderState, character);
+      applyGalathRig(model, renderState, character, action);
+      applyManglelieRig(model, renderState, character, action);
 
+      this.cameraAnchorBone = null;
       if (renderPlayer && action != null) {
-         registerCameraAnchor(renderPassInfo, snapshots, renderState, character, action, phase);
+         registerCameraAnchor(model, character, action, phase);
       }
-   }
-
-   /**
-    * Her flesh is drawn without diffuse lighting, which is what makes the polygons invisible in the
-    * original - see {@link GirlFlatLitRenderType}. Only the ordinary opaque path is swapped: the
-    * invisible and glowing types GeckoLib picks are left alone, and since
-    * {@code RenderTypes.entityCutout} is memoized the identity test is exact.
-    *
-    * <p>{@link GirlSteveGeoLayer} asks the renderer for its type as well, so the partner's body and the
-    * genital mesh come through here too.
-    */
-   @Override
-   public RenderType getRenderType(LivingEntityRenderState renderState, Identifier texture) {
-      RenderType renderType = super.getRenderType(renderState, texture);
-      if (ShaderCompat.isShadersActive()) {
-         return renderType;
-      }
-      return renderType == RenderTypes.entityCutout(texture) ? GirlFlatLitRenderType.get(texture) : renderType;
    }
 
    /**
     * The partner is never drawn by the main pass: his bones sample a different atlas, so
     * {@link GirlSteveGeoLayer} draws that subtree separately. Hiding the whole subtree here is what
     * keeps him out of the girl's own texture pass.
-    *
-    * <p>Within the steve subtree each limb ships both a SLIM (Alex) and a WIDE (Steve) variant.
-    * Both would overlap and z-fight, so we hide whichever variant does not match the active player's
-    * skin model — read from {@link GirlRenderData#PARTNER_IS_SLIM}.
     */
-   private static void applyPlayerBoneVisibility(RenderPassInfo<LivingEntityRenderState> renderPassInfo, BoneSnapshots snapshots, String character) {
+   private static void applyPlayerBoneVisibility(BakedGeoModel model, String character) {
       // steve subtree is the partner rig, rendered exclusively in GirlSteveGeoLayer during scenes
-      snapshots.ifPresent("steve", bone -> bone.skipRender(true).skipChildrenRender(true));
-      setBoneHidden(renderPassInfo, "steve", true);
-      for (String bone : CUSTOM_GENITAL_BONES) {
-         setBoneHidden(renderPassInfo, bone, true);
+      bone(model, "steve").ifPresent(b -> {
+         b.setHidden(true);
+         b.setChildrenHidden(true);
+      });
+      for (String boneName : CUSTOM_GENITAL_BONES) {
+         bone(model, boneName).ifPresent(b -> {
+            b.setHidden(true);
+            b.setChildrenHidden(true);
+         });
       }
    }
 
-   private static void applyCustomCompanionRig(
-      RenderPassInfo<LivingEntityRenderState> renderPassInfo,
-      BoneSnapshots snapshots,
-      LivingEntityRenderState renderState
-   ) {
+   private static void applyCustomCompanionRig(BakedGeoModel model, GirlGeoRenderState renderState) {
       // 1. Arm format: Alex (Slim) vs Steve (Classic)
       boolean isSlim = renderState.getOrDefaultGeckolibData(GirlRenderData.CUSTOM_IS_SLIM, false);
-      for (String bone : CUSTOM_COMPANION_ALEX_ARMS) {
-         setBoneHidden(renderPassInfo, bone, !isSlim);
+      for (String boneName : CUSTOM_COMPANION_ALEX_ARMS) {
+         setBoneHidden(model, boneName, !isSlim);
       }
-      for (String bone : CUSTOM_COMPANION_STEVE_ARMS) {
-         setBoneHidden(renderPassInfo, bone, isSlim);
+      for (String boneName : CUSTOM_COMPANION_STEVE_ARMS) {
+         setBoneHidden(model, boneName, isSlim);
       }
 
       // 2. Cosmetics: Jenny's Boobs & Booty
       boolean hasBreasts = renderState.getOrDefaultGeckolibData(GirlRenderData.CUSTOM_HAS_BREASTS, false);
       float breastScale = renderState.getOrDefaultGeckolibData(GirlRenderData.CUSTOM_BREAST_SCALE, 1.0F);
-      setBoneHidden(renderPassInfo, "boobs", !hasBreasts);
+      setBoneHidden(model, "boobs", !hasBreasts);
       if (hasBreasts && breastScale != 1.0F) {
-         snapshots.ifPresent("boobs", b -> b.setScale(breastScale, breastScale, breastScale));
+         bone(model, "boobs").ifPresent(b -> scaleBone(b, breastScale));
       }
 
       boolean hasBooty = renderState.getOrDefaultGeckolibData(GirlRenderData.CUSTOM_HAS_BOOTY, false);
       float bootyScale = renderState.getOrDefaultGeckolibData(GirlRenderData.CUSTOM_BOOTY_SCALE, 1.0F);
-      setBoneHidden(renderPassInfo, "booty", !hasBooty);
+      setBoneHidden(model, "booty", !hasBooty);
       if (hasBooty && bootyScale != 1.0F) {
-         snapshots.ifPresent("booty", b -> b.setScale(bootyScale, bootyScale, bootyScale));
+         bone(model, "booty").ifPresent(b -> scaleBone(b, bootyScale));
       }
 
       // 3. Stretches / Dimensions
@@ -412,103 +428,85 @@ public final class GirlEntityRenderer extends GeoEntityRenderer<SceneGirlEntity,
       float hy = renderState.getOrDefaultGeckolibData(GirlRenderData.CUSTOM_HEAD_SCALE_Y, 1.0F);
       float hz = renderState.getOrDefaultGeckolibData(GirlRenderData.CUSTOM_HEAD_SCALE_Z, 1.0F);
       if (hx != 1.0F || hy != 1.0F || hz != 1.0F) {
-         snapshots.ifPresent("head", b -> b.setScale(b.getScaleX() * hx, b.getScaleY() * hy, b.getScaleZ() * hz));
-         snapshots.ifPresent("Head2", b -> b.setScale(b.getScaleX() * hx, b.getScaleY() * hy, b.getScaleZ() * hz));
+         mulScale(model, "head", hx, hy, hz);
+         mulScale(model, "Head2", hx, hy, hz);
       }
 
       float tx = renderState.getOrDefaultGeckolibData(GirlRenderData.CUSTOM_TORSO_SCALE_X, 1.0F);
       float ty = renderState.getOrDefaultGeckolibData(GirlRenderData.CUSTOM_TORSO_SCALE_Y, 1.0F);
       float tz = renderState.getOrDefaultGeckolibData(GirlRenderData.CUSTOM_TORSO_SCALE_Z, 1.0F);
       if (tx != 1.0F || ty != 1.0F || tz != 1.0F) {
-         snapshots.ifPresent("torso", b -> b.setScale(b.getScaleX() * tx, b.getScaleY() * ty, b.getScaleZ() * tz));
-         snapshots.ifPresent("Torso2", b -> b.setScale(b.getScaleX() * tx, b.getScaleY() * ty, b.getScaleZ() * tz));
+         mulScale(model, "torso", tx, ty, tz);
+         mulScale(model, "Torso2", tx, ty, tz);
       }
 
       float ax = renderState.getOrDefaultGeckolibData(GirlRenderData.CUSTOM_ARM_SCALE_X, 1.0F);
       float ay = renderState.getOrDefaultGeckolibData(GirlRenderData.CUSTOM_ARM_SCALE_Y, 1.0F);
       float az = renderState.getOrDefaultGeckolibData(GirlRenderData.CUSTOM_ARM_SCALE_Z, 1.0F);
       if (ax != 1.0F || ay != 1.0F || az != 1.0F) {
-         snapshots.ifPresent("armR", b -> b.setScale(b.getScaleX() * ax, b.getScaleY() * ay, b.getScaleZ() * az));
-         snapshots.ifPresent("armL", b -> b.setScale(b.getScaleX() * ax, b.getScaleY() * ay, b.getScaleZ() * az));
-         snapshots.ifPresent("LeftArm", b -> b.setScale(b.getScaleX() * ax, b.getScaleY() * ay, b.getScaleZ() * az));
-         snapshots.ifPresent("RightArm", b -> b.setScale(b.getScaleX() * ax, b.getScaleY() * ay, b.getScaleZ() * az));
+         mulScale(model, "armR", ax, ay, az);
+         mulScale(model, "armL", ax, ay, az);
+         mulScale(model, "LeftArm", ax, ay, az);
+         mulScale(model, "RightArm", ax, ay, az);
       }
 
       float lx = renderState.getOrDefaultGeckolibData(GirlRenderData.CUSTOM_LEG_SCALE_X, 1.0F);
       float ly = renderState.getOrDefaultGeckolibData(GirlRenderData.CUSTOM_LEG_SCALE_Y, 1.0F);
       float lz = renderState.getOrDefaultGeckolibData(GirlRenderData.CUSTOM_LEG_SCALE_Z, 1.0F);
       if (lx != 1.0F || ly != 1.0F || lz != 1.0F) {
-         snapshots.ifPresent("legR", b -> b.setScale(b.getScaleX() * lx, b.getScaleY() * ly, b.getScaleZ() * lz));
-         snapshots.ifPresent("legL", b -> b.setScale(b.getScaleX() * lx, b.getScaleY() * ly, b.getScaleZ() * lz));
-         snapshots.ifPresent("LeftLeg", b -> b.setScale(b.getScaleX() * lx, b.getScaleY() * ly, b.getScaleZ() * lz));
-         snapshots.ifPresent("RightLeg", b -> b.setScale(b.getScaleX() * lx, b.getScaleY() * ly, b.getScaleZ() * lz));
+         mulScale(model, "legR", lx, ly, lz);
+         mulScale(model, "legL", lx, ly, lz);
+         mulScale(model, "LeftLeg", lx, ly, lz);
+         mulScale(model, "RightLeg", lx, ly, lz);
       }
 
       // 4. Overall scaling
       float scale = renderState.getOrDefaultGeckolibData(GirlRenderData.CUSTOM_SCALE, 1.0F);
       if (scale != 1.0F) {
-         snapshots.ifPresent("body", b -> b.setScale(scale, scale, scale));
-         snapshots.ifPresent("steve", b -> b.setScale(scale, scale, scale));
+         bone(model, "body").ifPresent(b -> scaleBone(b, scale));
+         bone(model, "steve").ifPresent(b -> scaleBone(b, scale));
       }
    }
 
-   private static void setBoneHidden(RenderPassInfo<?> pass, String name, boolean hidden) {
-      pass.model().getBone(name).ifPresent(b -> {
-         if (hidden) {
-            if (b.frameSnapshot == null) {
-               BoneSnapshot.create(b).apply();
-            }
-            b.frameSnapshot.skipRender(true).skipChildrenRender(true);
-         } else {
-            if (b.frameSnapshot != null) {
-               b.frameSnapshot.skipRender(false).skipChildrenRender(false);
-            }
-         }
+   private static void setBoneHidden(BakedGeoModel model, String name, boolean hidden) {
+      bone(model, name).ifPresent(b -> {
+         b.setHidden(hidden);
+         b.setChildrenHidden(hidden);
       });
    }
 
    /**
     * Hides the arm-model variant that does not match the player's skin (Alex vs Steve).
-    * Must be called inside {@code renderPosed} in {@link GirlSteveGeoLayer} after the
-    * steve bone is revealed, so snapshots are the animated ones.
-    *
-    * <p>Bone pairs in the rig:
-    * <pre>
-    *   steveLeftArm  → leftArmAlex   (hide when WIDE)
-    *                 → leftArmSteve  (hide when SLIM)
-    *   LeftLowerArm  → leftLowerArmAlex   (hide when WIDE)
-    *                 → leftLowerArmSteve  (hide when SLIM)
-    *   (mirror for right arm)
-    * </pre>
+    * Called from {@link GirlSteveGeoLayer} while the steve bone is revealed for its own pass.
     */
-   static void applyPartnerArmModel(BoneSnapshots snapshots, boolean isSlim) {
+   static void applyPartnerArmModel(BakedGeoModel model, boolean isSlim) {
       // SLIM = Alex: hide Steve variants, show Alex variants
       // WIDE = Steve: hide Alex variants, show Steve variants
       String hideLeft       = isSlim ? "leftArmSteve"      : "leftArmAlex";
       String hideLowerLeft  = isSlim ? "leftLowerArmSteve" : "leftLowerArmAlex";
       String hideRight      = isSlim ? "rightArmSteve"     : "rightArmAlex";
       String hideLowerRight = isSlim ? "rightLowerArmSteve": "rightLowerArmAlex";
-      snapshots.ifPresent(hideLeft,       b -> b.skipRender(true).skipChildrenRender(true));
-      snapshots.ifPresent(hideLowerLeft,  b -> b.skipRender(true).skipChildrenRender(true));
-      snapshots.ifPresent(hideRight,      b -> b.skipRender(true).skipChildrenRender(true));
-      snapshots.ifPresent(hideLowerRight, b -> b.skipRender(true).skipChildrenRender(true));
+      for (String name : new String[] {hideLeft, hideLowerLeft, hideRight, hideLowerRight}) {
+         bone(model, name).ifPresent(b -> {
+            b.setHidden(true);
+            b.setChildrenHidden(true);
+         });
+      }
    }
 
    /**
     * Rotates the character's head bone (pitch & yaw) when looking around during idle/wandering.
     */
-   private static void applyHeadRotation(BoneSnapshots snapshots, LivingEntityRenderState renderState, GirlScenePhase phase) {
+   private static void applyHeadRotation(BakedGeoModel model, GirlGeoRenderState renderState, GirlScenePhase phase) {
       if (phase == GirlScenePhase.IDLE || phase == GirlScenePhase.WALKING || phase == GirlScenePhase.WAITING) {
          float headPitch = (float) Math.toRadians(Mth.clamp(renderState.xRot, -85.0F, 85.0F));
          float headYaw = (float) Math.toRadians(Mth.clamp(-renderState.yRot, -85.0F, 85.0F));
-         snapshots.ifPresent("head", bone -> {
-            bone.setRotX(bone.getRotX() + headPitch);
-            bone.setRotY(bone.getRotY() + headYaw);
-         });
-         snapshots.ifPresent("Head2", bone -> {
-            bone.setRotX(bone.getRotX() + headPitch);
-            bone.setRotY(bone.getRotY() + headYaw);
-         });
+         for (String name : new String[] {"head", "Head2"}) {
+            bone(model, name).ifPresent(bone -> {
+               bone.setRotX(bone.getRotX() + headPitch);
+               bone.setRotY(bone.getRotY() + headYaw);
+            });
+         }
       }
    }
 
@@ -517,7 +515,7 @@ public final class GirlEntityRenderer extends GeoEntityRenderer<SceneGirlEntity,
     * SlimeModel: the blob she sits on only exists during the doggy scene, and her hat is a top-level
     * bone that has to be driven off the head by hand.
     */
-   private static void applySlimeRig(BoneSnapshots snapshots, String character, GirlSceneAction action) {
+   private static void applySlimeRig(BakedGeoModel model, String character, GirlSceneAction action) {
       if (!"slime".equals(character)) {
          return;
       }
@@ -525,161 +523,161 @@ public final class GirlEntityRenderer extends GeoEntityRenderer<SceneGirlEntity,
       // SlimeModel.actionsWithSlime -- the blob is part of the doggy scene and nothing else
       boolean showBlob = action == GirlSceneAction.DOGGY;
       for (String name : SLIME_BLOB_BONES) {
-         snapshots.ifPresent(name, bone -> bone.skipRender(!showBlob).skipChildrenRender(!showBlob));
+         bone(model, name).ifPresent(bone -> {
+            bone.setHidden(!showBlob);
+            bone.setChildrenHidden(!showBlob);
+         });
       }
 
       // SlimeModel.a(new String[]{"head"}, "hat") -- "hat" hangs off "dress", not off the head, so
       // the animation never moves it. Copy the head's pose onto it every frame.
-      snapshots.get("head")
-         .ifPresent(
-            head -> snapshots.ifPresent(
-               "hat",
-               hat -> hat.setRotation(head.getRotX(), head.getRotY(), head.getRotZ())
-                  .setTranslation(head.getTranslateX(), head.getTranslateY(), head.getTranslateZ())
-            )
-         );
+      Optional<GeoBone> head = bone(model, "head");
+      head.ifPresent(h -> bone(model, "hat").ifPresent(hat -> {
+         hat.updateRotation(h.getRotX(), h.getRotY(), h.getRotZ());
+         hat.setPosX(h.getPosX());
+         hat.setPosY(h.getPosY());
+         hat.setPosZ(h.getPosZ());
+      }));
    }
 
    /**
     * The bee's satchel bone. The original's BeeModel hid "chest" unless the take it was playing had
-    * "chest" in its name, which amounted to "she is carrying one"; the flag says that directly, and her
-    * movement take is pinned to idle_has_chest so the two never disagree.
+    * "chest" in its name, which amounted to "she is carrying one".
     */
-   private static void applyBeeRig(BoneSnapshots snapshots, LivingEntityRenderState renderState, String character) {
+   private static void applyBeeRig(BakedGeoModel model, GirlGeoRenderState renderState, String character) {
       if (!"bee".equals(character)) {
          return;
       }
 
       boolean hasChest = renderState.getOrDefaultGeckolibData(GirlRenderData.HAS_CHEST, false);
-      snapshots.ifPresent("chest", bone -> bone.skipRender(!hasChest).skipChildrenRender(!hasChest));
+      bone(model, "chest").ifPresent(bone -> {
+         bone.setHidden(!hasChest);
+         bone.setChildrenHidden(!hasChest);
+      });
    }
 
-   private static void applyGoblinRig(BoneSnapshots snapshots, LivingEntityRenderState renderState, String character) {
+   private static void applyGoblinRig(BakedGeoModel model, GirlGeoRenderState renderState, String character) {
       if (!"goblin".equals(character)) {
          return;
       }
       int crown = renderState.getOrDefaultGeckolibData(GirlRenderData.GOBLIN_CROWN, 0);
-      snapshots.ifPresent("crown", bone -> bone.skipRender(crown == 0).skipChildrenRender(crown == 0));
+      bone(model, "crown").ifPresent(bone -> {
+         bone.setHidden(crown == 0);
+         bone.setChildrenHidden(crown == 0);
+      });
 
       int hairStyle = Math.floorMod(renderState.getOrDefaultGeckolibData(GirlRenderData.GOBLIN_HAIR_STYLE, 0), 6);
       for (int i = 0; i < 6; i++) {
          boolean hide = i != hairStyle;
-         snapshots.ifPresent("hair" + i, bone -> bone.skipRender(hide).skipChildrenRender(hide));
+         bone(model, "hair" + i).ifPresent(bone -> {
+            bone.setHidden(hide);
+            bone.setChildrenHidden(hide);
+         });
       }
    }
 
-   private static void applyGalathRig(
-      BoneSnapshots snapshots, LivingEntityRenderState renderState, String character, GirlSceneAction action
-   ) {
+   private static void applyGalathRig(BakedGeoModel model, GirlGeoRenderState renderState, String character, GirlSceneAction action) {
       if (!"galath".equals(character)) {
          return;
       }
       // Hide floating coin and summon pentagram circle during regular rendering
-      snapshots.ifPresent("coin", bone -> bone.skipRender(true).skipChildrenRender(true));
-      snapshots.ifPresent("pentagram", bone -> bone.skipRender(true).skipChildrenRender(true));
-
-      // Hide futa bones
-      snapshots.ifPresent("futa", bone -> bone.skipRender(true).skipChildrenRender(true));
-      snapshots.ifPresent("futaCock", bone -> bone.skipRender(true).skipChildrenRender(true));
-      snapshots.ifPresent("futaBallLL", bone -> bone.skipRender(true).skipChildrenRender(true));
-      snapshots.ifPresent("futaBallLR", bone -> bone.skipRender(true).skipChildrenRender(true));
+      for (String name : new String[] {"coin", "pentagram", "futa", "futaCock", "futaBallLL", "futaBallLR"}) {
+         bone(model, name).ifPresent(bone -> {
+            bone.setHidden(true);
+            bone.setChildrenHidden(true);
+         });
+      }
 
       int variant = renderState.getOrDefaultGeckolibData(GirlRenderData.MODEL_VARIANT, 1);
       boolean stripped = (variant == 0);
-      snapshots.ifPresent("braBoobL", bone -> bone.skipRender(stripped).skipChildrenRender(stripped));
-      snapshots.ifPresent("braBoobR", bone -> bone.skipRender(stripped).skipChildrenRender(stripped));
-      snapshots.ifPresent("slip", bone -> bone.skipRender(stripped).skipChildrenRender(stripped));
-      snapshots.ifPresent("nippleL", bone -> bone.skipRender(!stripped).skipChildrenRender(!stripped));
-      snapshots.ifPresent("nippleR", bone -> bone.skipRender(!stripped).skipChildrenRender(!stripped));
+      setBoneHidden(model, "braBoobL", stripped);
+      setBoneHidden(model, "braBoobR", stripped);
+      setBoneHidden(model, "slip", stripped);
+      setBoneHidden(model, "nippleL", !stripped);
+      setBoneHidden(model, "nippleR", !stripped);
    }
 
-   private static void applyManglelieRig(
-      BoneSnapshots snapshots, LivingEntityRenderState renderState, String character, GirlSceneAction action
-   ) {
+   private static void applyManglelieRig(BakedGeoModel model, GirlGeoRenderState renderState, String character, GirlSceneAction action) {
       if (!"manglelie".equals(character)) {
          return;
       }
       int variant = renderState.getOrDefaultGeckolibData(GirlRenderData.MODEL_VARIANT, 1);
       boolean hasSkirt = (variant != 0);
 
-      snapshots.ifPresent("skirt", bone -> bone.skipRender(!hasSkirt).skipChildrenRender(!hasSkirt));
-      snapshots.ifPresent("sideLSkirt", bone -> bone.skipRender(!hasSkirt).skipChildrenRender(!hasSkirt));
-      snapshots.ifPresent("sideRSkirt", bone -> bone.skipRender(!hasSkirt).skipChildrenRender(!hasSkirt));
-      snapshots.ifPresent("cheekSkirtL", bone -> bone.skipRender(!hasSkirt).skipChildrenRender(!hasSkirt));
-      snapshots.ifPresent("cheekSkirtR", bone -> bone.skipRender(!hasSkirt).skipChildrenRender(!hasSkirt));
-
-      snapshots.ifPresent("sideLNoSkirt", bone -> bone.skipRender(hasSkirt).skipChildrenRender(hasSkirt));
-      snapshots.ifPresent("sideRNoSkirt", bone -> bone.skipRender(hasSkirt).skipChildrenRender(hasSkirt));
-      snapshots.ifPresent("cheekLBelowSkirt", bone -> bone.skipRender(hasSkirt).skipChildrenRender(hasSkirt));
-      snapshots.ifPresent("cheekRBelowSkirt", bone -> bone.skipRender(hasSkirt).skipChildrenRender(hasSkirt));
+      for (String name : new String[] {"skirt", "sideLSkirt", "sideRSkirt", "cheekSkirtL", "cheekSkirtR"}) {
+         setBoneHidden(model, name, !hasSkirt);
+      }
+      for (String name : new String[] {"sideLNoSkirt", "sideRNoSkirt", "cheekLBelowSkirt", "cheekRBelowSkirt"}) {
+         setBoneHidden(model, name, hasSkirt);
+      }
    }
 
+   /**
+    * Kobold and Goblin bodies are procedurally tinted per bone, which the shared pipeline has no hook
+    * for on 5.2 - so their cubes go through a colour-forcing {@link VertexConsumer} wrapper here, and
+    * their bones keep rendering through the ordinary recursive pass.
+    */
    @Override
-   public void submitRenderTasks(
-      RenderPassInfo<LivingEntityRenderState> renderPassInfo,
-      OrderedSubmitNodeCollector renderTasks,
-      RenderType renderType
+   public void renderRecursively(
+      GirlGeoRenderState renderState, PoseStack poseStack, GeoBone bone,
+      RenderType renderType, MultiBufferSource bufferSource, VertexConsumer buffer,
+      boolean isReRender, int packedLight, int packedOverlay, int renderColor
    ) {
-      LivingEntityRenderState renderState = renderPassInfo.renderState();
       String character = renderState.getOrDefaultGeckolibData(GirlRenderData.CHARACTER, "jenny");
-      if (!"kobold".equals(character) && !"goblin".equals(character)) {
-         super.submitRenderTasks(renderPassInfo, renderTasks, renderType);
-         return;
-      }
-
-      if (renderType == null) {
-         return;
-      }
-      BakedGeoModel model = renderPassInfo.model();
-
-      int packedLight = renderPassInfo.packedLight();
-      int packedOverlay = renderPassInfo.packedOverlay();
-      int defaultColor = renderPassInfo.renderColor();
-
-      renderTasks.submitCustomGeometry(renderPassInfo.poseStack(), renderType, (pose, vc) -> {
-         PoseStack ps = renderPassInfo.poseStack();
-         ps.pushPose();
-         ps.last().set(pose);
-         renderPassInfo.renderPosed(() -> {
-            for (GeoBone root : model.topLevelBones()) {
-               renderCustomColoredBone(
-                  renderPassInfo, ps, root, vc, packedLight, packedOverlay, character, renderState, defaultColor
-               );
-            }
-         });
-         ps.popPose();
-      });
-   }
-
-   private void renderCustomColoredBone(
-      RenderPassInfo<LivingEntityRenderState> pass,
-      PoseStack ps,
-      GeoBone bone,
-      VertexConsumer vc,
-      int packedLight,
-      int packedOverlay,
-      String character,
-      LivingEntityRenderState renderState,
-      int defaultColor
-   ) {
-      ps.pushPose();
-      RenderUtil.prepMatrixForBoneAndUpdateListeners(ps, bone, pass);
-      int color = resolveCustomBoneColor(character, bone.name(), renderState, defaultColor);
-      bone.render(pass, ps, vc, packedLight, packedOverlay, color);
-
-      BoneSnapshot snap = bone.frameSnapshot;
-      if (snap == null || !snap.areChildrenHidden()) {
-         for (GeoBone child : bone.children()) {
-            renderCustomColoredBone(
-               pass, ps, child, vc, packedLight, packedOverlay, character, renderState, defaultColor
-            );
+      if ("kobold".equals(character) || "goblin".equals(character)) {
+         int boneColor = resolveCustomBoneColor(character, bone.getName(), renderState, renderColor);
+         if (boneColor != renderColor) {
+            buffer = new BoneColorVertexConsumer(buffer, boneColor);
          }
       }
-      ps.popPose();
+
+      captureCameraAnchor(renderState, poseStack, bone);
+
+      super.renderRecursively(renderState, poseStack, bone, renderType, bufferSource, buffer, isReRender, packedLight, packedOverlay, renderColor);
+   }
+
+   /**
+    * 1.21.x equivalent of the bone position listener: the anchor bone's world position is evaluated
+    * when the recursion reaches it, from the same matrices the cubes are drawn with.
+    */
+   private void captureCameraAnchor(GirlGeoRenderState renderState, PoseStack poseStack, GeoBone bone) {
+      if (this.cameraAnchorBone == null || !this.cameraAnchorBone.equals(bone.getName())) {
+         return;
+      }
+
+      poseStack.pushPose();
+      RenderUtil.prepMatrixForBone(poseStack, bone);
+      Matrix4f pose = poseStack.last().pose();
+      Vector3f modelPos = new Vector3f(pose.m30(), pose.m31(), pose.m32());
+      poseStack.popPose();
+
+      Vector3f entityLocal = this.modelRenderTranslations.transformPosition(new Vector3f(modelPos));
+      Vec3 worldPos = new Vec3(
+         renderState.x + entityLocal.x(), renderState.y + entityLocal.y(), renderState.z + entityLocal.z()
+      );
+
+      float yaw = renderState.getOrDefaultGeckolibData(GirlRenderData.CAMERA_YAW, 0.0F);
+      Vec3 forward = horizontalForward(yaw);
+      Vec3 right = horizontalRight(yaw);
+
+      GirlSceneAction action = this.cameraAnchorAction;
+      String character = this.cameraAnchorCharacter;
+      GirlScenePhase configPhase = this.cameraAnchorConfigPhase;
+
+      double distance = cameraBaseDistance(action) * GirlSceneCameraConfig.distanceMultiplier(character, action, configPhase);
+      double vertical = cameraBaseVertical(action) + GirlSceneCameraConfig.verticalOffset(character, action, configPhase);
+      double lateral = GirlSceneCameraConfig.lateralOffset(character, action, configPhase);
+
+      Vec3 anchor = worldPos.add(forward.scale(distance)).add(right.scale(lateral)).add(0.0, vertical, 0.0);
+      if (!SexmodConfig.isBoneCamDynamic() && holdsStillPose(this.cameraAnchorPhase)) {
+         GirlSceneCameraState.update(List.of(String.valueOf(character), action, distance, vertical, lateral), anchor);
+      } else {
+         GirlSceneCameraState.update(anchor);
+      }
    }
 
    private static int resolveCustomBoneColor(
-      String character, String boneName, LivingEntityRenderState renderState, int defaultColor
+      String character, String boneName, GirlGeoRenderState renderState, int defaultColor
    ) {
       if ("kobold".equals(character)) {
          return resolveKoboldBoneColor(boneName, renderState, defaultColor);
@@ -690,7 +688,7 @@ public final class GirlEntityRenderer extends GeoEntityRenderer<SceneGirlEntity,
       return defaultColor;
    }
 
-   private static int resolveKoboldBoneColor(String boneName, LivingEntityRenderState renderState, int defaultColor) {
+   private static int resolveKoboldBoneColor(String boneName, GirlGeoRenderState renderState, int defaultColor) {
       int tribeIdx = renderState.getOrDefaultGeckolibData(
          GirlRenderData.KOBOLD_TRIBE_COLOR, KoboldColors.TribeColor.PURPLE.ordinal()
       );
@@ -708,7 +706,7 @@ public final class GirlEntityRenderer extends GeoEntityRenderer<SceneGirlEntity,
       return 0xFFFFFFFF;
    }
 
-   private static int resolveGoblinBoneColor(String boneName, LivingEntityRenderState renderState, int defaultColor) {
+   private static int resolveGoblinBoneColor(String boneName, GirlGeoRenderState renderState, int defaultColor) {
       if (boneName.contains("band")) {
          return 0xFFFFFFFF;
       }
@@ -733,16 +731,19 @@ public final class GirlEntityRenderer extends GeoEntityRenderer<SceneGirlEntity,
       return defaultColor;
    }
 
-   private static void applyPaymentBoneVisibility(BoneSnapshots snapshots, LivingEntityRenderState renderState) {
+   private static void applyPaymentBoneVisibility(BakedGeoModel model, GirlGeoRenderState renderState) {
       int amount = renderState.getOrDefaultGeckolibData(GirlRenderData.PAYMENT_AMOUNT, 0);
-      snapshots.ifPresent("items", bone -> bone.skipRender(amount <= 0).skipChildrenRender(amount <= 0));
+      bone(model, "items").ifPresent(bone -> {
+         bone.setHidden(amount <= 0);
+         bone.setChildrenHidden(amount <= 0);
+      });
 
       // the baked per-currency cubes are superseded by GirlPaymentGeoLayer, which draws the real item
       for (var paymentItem : com.nxrtweetg.sexmod.girls.state.GirlPaymentItem.values()) {
          String prefix = paymentItem.name().toLowerCase();
 
          for (int i = 1; i <= 3; i++) {
-            snapshots.ifPresent(prefix + i, bone -> bone.skipRender(true).skipChildrenRender(true));
+            setBoneHidden(model, prefix + i, true);
          }
       }
    }
@@ -752,17 +753,17 @@ public final class GirlEntityRenderer extends GeoEntityRenderer<SceneGirlEntity,
     * bare body underneath. The original paired each armour bone group with the flesh it covers
     * (GirlModel.c/f/h/e); the flesh bones it listed that our model does not have are simply skipped.
     */
-   private static void applyArmorBoneVisibility(BoneSnapshots snapshots, LivingEntityRenderState renderState) {
-      applyArmorSlot(snapshots, renderState, GirlRenderData.HELMET_MATERIAL, HELMET_BONES, HELMET_FLESH);
-      applyArmorSlot(snapshots, renderState, GirlRenderData.CHESTPLATE_MATERIAL, CHESTPLATE_BONES, CHESTPLATE_FLESH);
-      applyArmorSlot(snapshots, renderState, GirlRenderData.LEGGINGS_MATERIAL, LEGGINGS_BONES, LEGGINGS_FLESH);
-      applyArmorSlot(snapshots, renderState, GirlRenderData.BOOTS_MATERIAL, BOOTS_BONES, BOOTS_FLESH);
+   private static void applyArmorBoneVisibility(BakedGeoModel model, GirlGeoRenderState renderState) {
+      applyArmorSlot(model, renderState, GirlRenderData.HELMET_MATERIAL, HELMET_BONES, HELMET_FLESH);
+      applyArmorSlot(model, renderState, GirlRenderData.CHESTPLATE_MATERIAL, CHESTPLATE_BONES, CHESTPLATE_FLESH);
+      applyArmorSlot(model, renderState, GirlRenderData.LEGGINGS_MATERIAL, LEGGINGS_BONES, LEGGINGS_FLESH);
+      applyArmorSlot(model, renderState, GirlRenderData.BOOTS_MATERIAL, BOOTS_BONES, BOOTS_FLESH);
    }
 
    private static void applyArmorSlot(
-      BoneSnapshots snapshots,
-      LivingEntityRenderState renderState,
-      software.bernie.geckolib.constant.dataticket.DataTicket<Integer> ticket,
+      BakedGeoModel model,
+      GirlGeoRenderState renderState,
+      DataTicket<Integer> ticket,
       String[] armorBones,
       String[] fleshBones
    ) {
@@ -770,49 +771,66 @@ public final class GirlEntityRenderer extends GeoEntityRenderer<SceneGirlEntity,
       GirlArmorMaterial[] materials = GirlArmorMaterial.values();
       boolean armorDrawn = false;
 
-      for (String bone : armorBones) {
+      for (String boneName : armorBones) {
          for (int i = 0; i < materials.length; i++) {
             boolean hidden = i != materialIndex;
-            String variant = bone + "_" + materials[i].suffix();
-            if (!hidden && snapshots.get(variant).isPresent()) {
+            String variant = boneName + "_" + materials[i].suffix();
+            if (!hidden && bone(model, variant).isPresent()) {
                armorDrawn = true;
             }
 
-            snapshots.ifPresent(variant, snapshot -> snapshot.skipRender(hidden).skipChildrenRender(hidden));
+            setBoneHidden(model, variant, hidden);
          }
 
          // Ellie and Bia also keep the un-suffixed container, whose children are armour pieces the
          // material duplication left behind (Jenny has no such bone). Without this they draw the
          // diamond look no matter what is equipped.
          boolean slotEmpty = materialIndex < 0;
-         snapshots.ifPresent(bone, snapshot -> snapshot.skipRender(slotEmpty).skipChildrenRender(slotEmpty));
+         setBoneHidden(model, boneName, slotEmpty);
       }
 
       // The nude model has no armour bones at all, so hiding the flesh there would just delete her body.
-      for (String bone : fleshBones) {
+      for (String boneName : fleshBones) {
          boolean covered = armorDrawn;
-         snapshots.ifPresent(bone, snapshot -> snapshot.skipRender(covered));
+         bone(model, boneName).ifPresent(bone -> bone.setHidden(covered));
       }
    }
 
-   private static void applyFacefuckFacePose(BoneSnapshots snapshots) {
-      snapshots.ifPresent("closedL", bone -> bone.setTranslateZ(-1.0F));
-      snapshots.ifPresent("openL", bone -> bone.setTranslateZ(1.0F));
-      snapshots.ifPresent("closedR", bone -> bone.setTranslateZ(-1.0F));
-      snapshots.ifPresent("openR", bone -> bone.setTranslateZ(1.0F));
-      snapshots.ifPresent("eyeLashL", bone -> bone.setTranslation(0.1F, -0.125F, 0.0F).setScale(1.0F, FACEFUCK_EYELASH_SCALE_Y, 1.0F));
-      snapshots.ifPresent("eyeLashR", bone -> bone.setTranslation(0.0F, -0.32F, 0.0F).setScale(1.0F, FACEFUCK_EYELASH_SCALE_Y, 1.0F));
-      snapshots.ifPresent("browL", bone -> bone.setRotZ(FACEFUCK_BROW_L_ROT_Z).setTranslation(0.1F, -0.125F, 0.0F));
-      snapshots.ifPresent("browR", bone -> bone.setRotZ(FACEFUCK_BROW_R_ROT_Z).setTranslation(-0.025F, -0.05F, 0.0F));
+   private static void applyFacefuckFacePose(BakedGeoModel model) {
+      bone(model, "closedL").ifPresent(b -> b.setPosZ(-1.0F));
+      bone(model, "openL").ifPresent(b -> b.setPosZ(1.0F));
+      bone(model, "closedR").ifPresent(b -> b.setPosZ(-1.0F));
+      bone(model, "openR").ifPresent(b -> b.setPosZ(1.0F));
+      bone(model, "eyeLashL").ifPresent(b -> {
+         b.setPosX(0.1F);
+         b.setPosY(-0.125F);
+         b.setPosZ(0.0F);
+         b.setScaleY(FACEFUCK_EYELASH_SCALE_Y);
+      });
+      bone(model, "eyeLashR").ifPresent(b -> {
+         b.setPosX(0.0F);
+         b.setPosY(-0.32F);
+         b.setPosZ(0.0F);
+         b.setScaleY(FACEFUCK_EYELASH_SCALE_Y);
+      });
+      bone(model, "browL").ifPresent(b -> {
+         b.setRotZ(FACEFUCK_BROW_L_ROT_Z);
+         b.setPosX(0.1F);
+         b.setPosY(-0.125F);
+      });
+      bone(model, "browR").ifPresent(b -> {
+         b.setRotZ(FACEFUCK_BROW_R_ROT_Z);
+         b.setPosX(-0.025F);
+         b.setPosY(-0.05F);
+      });
    }
 
-   private static void applySceneBodyScale(BoneSnapshots snapshots, String character, GirlSceneAction action) {
+   private static void applySceneBodyScale(BakedGeoModel model, String character, GirlSceneAction action) {
       float breastScale = (float)GirlSceneBodyConfig.breastScale(character, action);
       float bootyScale = (float)GirlSceneBodyConfig.bootyScale(character, action);
 
-      snapshots.ifPresent("boobs", bone -> bone.setScale(breastScale, breastScale, breastScale));
-
-      snapshots.ifPresent("booty", bone -> bone.setScale(bootyScale, bootyScale, bootyScale));
+      bone(model, "boobs").ifPresent(b -> scaleBone(b, breastScale));
+      bone(model, "booty").ifPresent(b -> scaleBone(b, bootyScale));
    }
 
    /**
@@ -820,22 +838,24 @@ public final class GirlEntityRenderer extends GeoEntityRenderer<SceneGirlEntity,
     * separately in {@link #applyHelperTransform}, so the two can be sized independently. Multiplied
     * into whatever the animation set, since nearly every animation drives this bone.
     */
-   private static void applyGirlScale(BoneSnapshots snapshots, String character, GirlSceneAction action, GirlScenePhase phase) {
+   private static void applyGirlScale(BakedGeoModel model, String character, GirlSceneAction action, GirlScenePhase phase) {
       float globalScale = com.nxrtweetg.sexmod.config.SexmodConfig.getGirlScale(character);
       float sceneScale = (action != null) ? (float)GirlSceneCameraConfig.girlScale(character, action, cameraConfigPhase(phase)) : 1.0F;
       float scale = globalScale * sceneScale;
       if (scale != 1.0F) {
-         bodyRoot(snapshots).ifPresent(bone -> bone.setScale(bone.getScaleX() * scale, bone.getScaleY() * scale, bone.getScaleZ() * scale));
+         bodyRoot(model).ifPresent(bone -> {
+            bone.setScaleX(bone.getScaleX() * scale);
+            bone.setScaleY(bone.getScaleY() * scale);
+            bone.setScaleZ(bone.getScaleZ() * scale);
+         });
          // `items` is a root bone (not under `body`), so body-scale doesn't propagate to it.
          // Manually scale its translation so payment items land at the correct world height
          // for each character (Bia×0.84, Ellie×1.17, etc.).
-         snapshots.ifPresent("items", bone ->
-            bone.setTranslation(
-               bone.getTranslateX() * scale,
-               bone.getTranslateY() * scale,
-               bone.getTranslateZ() * scale
-            )
-         );
+         bone(model, "items").ifPresent(bone -> {
+            bone.setPosX(bone.getPosX() * scale);
+            bone.setPosY(bone.getPosY() * scale);
+            bone.setPosZ(bone.getPosZ() * scale);
+         });
       }
    }
 
@@ -843,12 +863,30 @@ public final class GirlEntityRenderer extends GeoEntityRenderer<SceneGirlEntity,
     * The bone everything of hers hangs off. Slime's rig calls it {@code dd} instead of {@code body},
     * and the original picked between the two the same way (GirlModel.java:224).
     */
-   private static Optional<BoneSnapshot> bodyRoot(BoneSnapshots snapshots) {
-      Optional<BoneSnapshot> body = snapshots.get("body");
-      return body.isPresent() ? body : snapshots.get("dd");
+   private static Optional<GeoBone> bodyRoot(BakedGeoModel model) {
+      Optional<GeoBone> body = bone(model, "body");
+      return body.isPresent() ? body : bone(model, "dd");
    }
 
-   private static void applyBodySceneTune(BoneSnapshots snapshots, LivingEntityRenderState renderState, GirlSceneAction action) {
+   private static Optional<GeoBone> bone(BakedGeoModel model, String name) {
+      return model.getBone(name);
+   }
+
+   private static void scaleBone(GeoBone bone, float scale) {
+      bone.setScaleX(scale);
+      bone.setScaleY(scale);
+      bone.setScaleZ(scale);
+   }
+
+   private static void mulScale(BakedGeoModel model, String name, float sx, float sy, float sz) {
+      bone(model, name).ifPresent(bone -> {
+         bone.setScaleX(bone.getScaleX() * sx);
+         bone.setScaleY(bone.getScaleY() * sy);
+         bone.setScaleZ(bone.getScaleZ() * sz);
+      });
+   }
+
+   private static void applyBodySceneTune(BakedGeoModel model, GirlGeoRenderState renderState, GirlSceneAction action) {
       if (action != null) {
          double side = renderState.getOrDefaultGeckolibData(GirlRenderData.TUNE_SIDE, 0.0);
          if (action == GirlSceneAction.KOBOLD_BLOWJOB) {
@@ -858,12 +896,11 @@ public final class GirlEntityRenderer extends GeoEntityRenderer<SceneGirlEntity,
          double vertical = renderState.getOrDefaultGeckolibData(GirlRenderData.TUNE_VERTICAL, 0.0);
          double forward = renderState.getOrDefaultGeckolibData(GirlRenderData.TUNE_FORWARD, 0.0);
          float sideOffset = (float)side;
-         bodyRoot(snapshots)
-            .ifPresent(
-               bone -> bone.setTranslation(
-                  bone.getTranslateX() + sideOffset, bone.getTranslateY() + (float)vertical, bone.getTranslateZ() + (float)forward
-               )
-            );
+         bodyRoot(model).ifPresent(bone -> {
+            bone.setPosX(bone.getPosX() + sideOffset);
+            bone.setPosY(bone.getPosY() + (float)vertical);
+            bone.setPosZ(bone.getPosZ() + (float)forward);
+         });
       }
    }
 
@@ -876,7 +913,7 @@ public final class GirlEntityRenderer extends GeoEntityRenderer<SceneGirlEntity,
     * place.
     */
    private static void applyHelperTransform(
-      BoneSnapshots snapshots, LivingEntityRenderState renderState, String character, GirlSceneAction action, GirlScenePhase phase
+      BakedGeoModel model, GirlGeoRenderState renderState, String character, GirlSceneAction action, GirlScenePhase phase
    ) {
       if (action == null || (action == GirlSceneAction.MATING_PRESS && phase == GirlScenePhase.PAYMENT)) {
          return;
@@ -893,9 +930,13 @@ public final class GirlEntityRenderer extends GeoEntityRenderer<SceneGirlEntity,
       float side = (float)GirlSceneCameraConfig.helperSideOffset(character, action, configPhase);
       float scale = (float)GirlSceneCameraConfig.helperScale(character, action, configPhase);
 
-      snapshots.ifPresent("steve", bone -> {
-         bone.setTranslation(bone.getTranslateX() + side, bone.getTranslateY() + vertical, bone.getTranslateZ() + forward)
-            .setScale(bone.getScaleX() * scale, bone.getScaleY() * scale, bone.getScaleZ() * scale);
+      bone(model, "steve").ifPresent(bone -> {
+         bone.setPosX(bone.getPosX() + side);
+         bone.setPosY(bone.getPosY() + vertical);
+         bone.setPosZ(bone.getPosZ() + forward);
+         bone.setScaleX(bone.getScaleX() * scale);
+         bone.setScaleY(bone.getScaleY() * scale);
+         bone.setScaleZ(bone.getScaleZ() * scale);
       });
    }
 
@@ -910,21 +951,18 @@ public final class GirlEntityRenderer extends GeoEntityRenderer<SceneGirlEntity,
     *       {@code sexmod-camera.json} was built against, held still once the pose settles.
     * </ul>
     */
-   private static void registerCameraAnchor(
-      RenderPassInfo<LivingEntityRenderState> renderPassInfo,
-      BoneSnapshots snapshots,
-      LivingEntityRenderState renderState,
-      String character,
-      GirlSceneAction action,
-      GirlScenePhase phase
-   ) {
-      GirlScenePhase configPhase = cameraConfigPhase(phase);
+   private void registerCameraAnchor(BakedGeoModel model, String character, GirlSceneAction action, GirlScenePhase phase) {
       GirlSceneCameraState.clearRig();
       if (SexmodConfig.isBoneCamDynamic()) {
-         registerDynamicCameraAnchor(renderPassInfo, snapshots, renderState, character, action, configPhase);
+         this.cameraAnchorBone = bone(model, "Head2").isPresent() ? "Head2" :
+                          (bone(model, GirlSceneCamRig.BOY_CAM).isPresent() ? GirlSceneCamRig.BOY_CAM : GirlSceneCamRig.GIRL_CAM);
       } else {
-         registerLegacyCameraAnchor(renderPassInfo, renderState, character, action, phase, configPhase);
+         this.cameraAnchorBone = "Head2";
       }
+      this.cameraAnchorAction = action;
+      this.cameraAnchorCharacter = character;
+      this.cameraAnchorPhase = phase;
+      this.cameraAnchorConfigPhase = cameraConfigPhase(phase);
    }
 
    private static double cameraBaseDistance(GirlSceneAction action) {
@@ -955,61 +993,6 @@ public final class GirlEntityRenderer extends GeoEntityRenderer<SceneGirlEntity,
       };
    }
 
-   private static void registerDynamicCameraAnchor(
-      RenderPassInfo<LivingEntityRenderState> renderPassInfo,
-      BoneSnapshots snapshots,
-      LivingEntityRenderState renderState,
-      String character,
-      GirlSceneAction action,
-      GirlScenePhase configPhase
-   ) {
-      String headBone = snapshots.get("Head2").isPresent() ? "Head2" :
-                       (snapshots.get(GirlSceneCamRig.BOY_CAM).isPresent() ? GirlSceneCamRig.BOY_CAM : GirlSceneCamRig.GIRL_CAM);
-      renderPassInfo.addBonePositionListener(headBone, (worldPos, modelPos, localPos) -> {
-         if (worldPos != null) {
-            float yaw = renderState.getOrDefaultGeckolibData(GirlRenderData.CAMERA_YAW, 0.0F);
-            Vec3 forward = horizontalForward(yaw);
-            Vec3 right = horizontalRight(yaw);
-
-            double distance = cameraBaseDistance(action) * GirlSceneCameraConfig.distanceMultiplier(character, action, configPhase);
-            double vertical = cameraBaseVertical(action) + GirlSceneCameraConfig.verticalOffset(character, action, configPhase);
-            double lateral = GirlSceneCameraConfig.lateralOffset(character, action, configPhase);
-
-            Vec3 anchor = worldPos.add(forward.scale(distance)).add(right.scale(lateral)).add(0.0, vertical, 0.0);
-            GirlSceneCameraState.clearRig();
-            GirlSceneCameraState.update(anchor);
-         }
-      });
-   }
-
-   private static void registerLegacyCameraAnchor(
-      RenderPassInfo<LivingEntityRenderState> renderPassInfo,
-      LivingEntityRenderState renderState,
-      String character,
-      GirlSceneAction action,
-      GirlScenePhase phase,
-      GirlScenePhase configPhase
-   ) {
-      renderPassInfo.addBonePositionListener("Head2", (worldPos, modelPos, localPos) -> {
-         if (worldPos != null) {
-            float yaw = renderState.getOrDefaultGeckolibData(GirlRenderData.CAMERA_YAW, 0.0F);
-            Vec3 forward = horizontalForward(yaw);
-            Vec3 right = horizontalRight(yaw);
-
-            double distance = cameraBaseDistance(action) * GirlSceneCameraConfig.distanceMultiplier(character, action, configPhase);
-            double vertical = cameraBaseVertical(action) + GirlSceneCameraConfig.verticalOffset(character, action, configPhase);
-            double lateral = GirlSceneCameraConfig.lateralOffset(character, action, configPhase);
-
-            Vec3 anchor = worldPos.add(forward.scale(distance)).add(right.scale(lateral)).add(0.0, vertical, 0.0);
-            if (holdsStillPose(phase)) {
-               GirlSceneCameraState.update(List.of(String.valueOf(character), action, distance, vertical, lateral), anchor);
-            } else {
-               GirlSceneCameraState.update(anchor);
-            }
-         }
-      });
-   }
-
    /**
     * Which phases hold a pose that is meant to stand still.
     *
@@ -1020,6 +1003,15 @@ public final class GirlEntityRenderer extends GeoEntityRenderer<SceneGirlEntity,
       return switch (phase) {
          case INTRO, ACTIVE, CLIMAX -> true;
          default -> false;
+      };
+   }
+
+   /** The weapon she is actually fighting with, mirroring the original's {@code GirlRenderer.a} gate. */
+   private static net.minecraft.world.item.ItemStack weaponFor(SceneGirlEntity girl) {
+      return switch (girl.resolvedActivity()) {
+         case COMBAT_MELEE -> girl.getItemBySlot(EquipmentSlot.MAINHAND);
+         case COMBAT_BOW -> girl.getItemBySlot(EquipmentSlot.OFFHAND);
+         default -> net.minecraft.world.item.ItemStack.EMPTY;
       };
    }
 

@@ -1,17 +1,13 @@
 package com.nxrtweetg.sexmod.client;
 
-import software.bernie.geckolib.cache.BakedAnimationCache;
-import software.bernie.geckolib.cache.BakedModelCache;
 import software.bernie.geckolib.cache.GeckoLibResources;
-import software.bernie.geckolib.cache.animation.Animation;
-import software.bernie.geckolib.cache.model.BakedGeoModel;
+import software.bernie.geckolib.cache.object.BakedGeoModel;
 import software.bernie.geckolib.loading.json.raw.Model;
 import software.bernie.geckolib.loading.json.typeadapter.BakedAnimationsAdapter;
 import software.bernie.geckolib.loading.object.BakedAnimations;
 import software.bernie.geckolib.loading.object.BakedModelFactory;
 import software.bernie.geckolib.loading.object.GeometryTree;
 import com.google.gson.GsonBuilder;
-import com.google.gson.JsonObject;
 import com.nxrtweetg.sexmod.SexmodMod;
 import com.nxrtweetg.sexmod.girls.anim.GirlAnimationLengths;
 import java.lang.reflect.Field;
@@ -20,18 +16,18 @@ import java.util.List;
 import java.util.Map;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
-import net.fabricmc.fabric.api.resource.v1.ResourceLoader;
-import net.fabricmc.fabric.api.resource.v1.reloader.SimpleResourceReloader;
-import net.minecraft.resources.Identifier;
+import net.fabricmc.fabric.api.resource.IdentifiableResourceReloadListener;
+import net.fabricmc.fabric.api.resource.ResourceManagerHelper;
+import net.fabricmc.fabric.api.resource.SimpleSynchronousResourceReloadListener;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.packs.PackType;
-import net.minecraft.server.packs.resources.PreparableReloadListener.SharedState;
 import net.minecraft.server.packs.resources.Resource;
 import net.minecraft.server.packs.resources.ResourceManager;
 
 @Environment(EnvType.CLIENT)
 public final class LegacyGeckoLibResourceCompat {
-   private static final Identifier LISTENER_ID = Identifier.fromNamespaceAndPath("sexmod", "legacy_geckolib_resource_compat");
-   private static final Identifier GECKOLIB_LISTENER_ID = Identifier.fromNamespaceAndPath("geckolib", "geckolib_resources");
+   private static final ResourceLocation LISTENER_ID = ResourceLocation.fromNamespaceAndPath("sexmod", "legacy_geckolib_resource_compat");
+   private static final ResourceLocation GECKOLIB_LISTENER_ID = ResourceLocation.fromNamespaceAndPath("geckolib", "geckolib_resources");
    private static final String LEGACY_MODEL_ROOT = "geo";
    private static final String LEGACY_ANIMATION_ROOT = "animations";
    private static final String MODERN_MODEL_ROOT = "geckolib/models/";
@@ -48,20 +44,18 @@ public final class LegacyGeckoLibResourceCompat {
    }
 
    public static void initialize() {
-      ResourceLoader loader = ResourceLoader.get(PackType.CLIENT_RESOURCES);
-      loader.registerReloader(LISTENER_ID, new LegacyResourceReloadListener());
-      loader.addReloaderOrdering(GECKOLIB_LISTENER_ID, LISTENER_ID);
+      ResourceManagerHelper.get(PackType.CLIENT_RESOURCES).registerReloadListener(new LegacyResourceReloadListener());
    }
 
-   private static Identifier normalizeLegacyModelId(Identifier resourceId) {
+   private static ResourceLocation normalizeLegacyModelId(ResourceLocation resourceId) {
       return normalizeLegacyId(resourceId, LEGACY_MODEL_ROOT, MODEL_SUFFIX);
    }
 
-   private static Identifier normalizeLegacyAnimationId(Identifier resourceId) {
+   private static ResourceLocation normalizeLegacyAnimationId(ResourceLocation resourceId) {
       return normalizeLegacyId(resourceId, LEGACY_ANIMATION_ROOT, ANIMATION_SUFFIX);
    }
 
-   private static Identifier normalizeLegacyId(Identifier resourceId, String root, String suffix) {
+   private static ResourceLocation normalizeLegacyId(ResourceLocation resourceId, String root, String suffix) {
       String path = resourceId.getPath();
       String prefix = root + "/";
       if (!path.startsWith(prefix) || !path.endsWith(suffix)) {
@@ -71,18 +65,19 @@ public final class LegacyGeckoLibResourceCompat {
       return resourceId.withPath(path.substring(prefix.length(), path.length() - suffix.length()));
    }
 
-   private static Identifier toModernModelResourceId(Identifier cacheId) {
+   private static ResourceLocation toModernModelResourceId(ResourceLocation cacheId) {
       return cacheId.withPath(MODERN_MODEL_ROOT + cacheId.getPath() + MODEL_SUFFIX);
    }
 
-   private static Identifier toModernAnimationResourceId(Identifier cacheId) {
+   private static ResourceLocation toModernAnimationResourceId(ResourceLocation cacheId) {
       return cacheId.withPath(MODERN_ANIMATION_ROOT + cacheId.getPath() + ANIMATION_SUFFIX);
    }
 
-   private static boolean isJsonFile(Identifier resourceId) {
+   private static boolean isJsonFile(ResourceLocation resourceId) {
       return resourceId.getPath().endsWith(".json");
    }
 
+   /** GeckoLib 5.2 keeps its baked resources in two plain static maps, swapped wholesale here. */
    private static void setGeckoLibCache(String fieldName, Object value) {
       try {
          Field field = GeckoLibResources.class.getDeclaredField(fieldName);
@@ -93,34 +88,43 @@ public final class LegacyGeckoLibResourceCompat {
       }
    }
 
-   private record PreparedLegacyResources(
-      Map<Identifier, BakedGeoModel> models,
-      Map<Identifier, BakedAnimations> animations
-   ) {
-   }
-
-   private static final class LegacyResourceReloadListener extends SimpleResourceReloader<PreparedLegacyResources> {
+   private static final class LegacyResourceReloadListener
+      implements SimpleSynchronousResourceReloadListener, IdentifiableResourceReloadListener {
       @Override
-      protected PreparedLegacyResources prepare(SharedState sharedState) {
-         ResourceManager resourceManager = sharedState.resourceManager();
-         GirlAnimationLengths.reloadFromResourceManager(resourceManager);
-         com.google.gson.Gson animationGson = new GsonBuilder()
-            .registerTypeAdapter(BakedAnimations.class, BakedAnimationsAdapter.deserializer())
-            .create();
-         Map<Identifier, BakedGeoModel> models = new LinkedHashMap<>();
-         Map<Identifier, BakedAnimations> animations = new LinkedHashMap<>();
+      public ResourceLocation getFabricId() {
+         return LISTENER_ID;
+      }
 
-         for (Map.Entry<Identifier, Resource> entry : resourceManager.listResources(LEGACY_MODEL_ROOT, LegacyGeckoLibResourceCompat::isJsonFile).entrySet()) {
-            Identifier cacheId = normalizeLegacyModelId(entry.getKey());
+      @Override
+      public List<ResourceLocation> getFabricDependencies() {
+         // must re-run after geckolib's own loader, or its wholesale map swap wipes these entries again
+         return List.of(GECKOLIB_LISTENER_ID);
+      }
+
+      @Override
+      public void onResourceManagerReload(ResourceManager resourceManager) {
+         GirlAnimationLengths.reloadFromResourceManager(resourceManager);
+
+         com.google.gson.Gson modelGson = new GsonBuilder()
+            .registerTypeAdapter(Model.class, Model.deserializer())
+            .create();
+         com.google.gson.Gson animationGson = new GsonBuilder()
+            .registerTypeAdapter(BakedAnimations.class, new BakedAnimationsAdapter())
+            .create();
+
+         Map<ResourceLocation, BakedGeoModel> models = new LinkedHashMap<>();
+         Map<ResourceLocation, BakedAnimations> animations = new LinkedHashMap<>();
+
+         for (Map.Entry<ResourceLocation, Resource> entry : resourceManager.listResources(LEGACY_MODEL_ROOT, LegacyGeckoLibResourceCompat::isJsonFile).entrySet()) {
+            ResourceLocation cacheId = normalizeLegacyModelId(entry.getKey());
             if (cacheId == null) {
                continue;
             }
 
             try {
-               Identifier modernId = toModernModelResourceId(cacheId);
                Model rawModel;
                try (java.io.Reader reader = entry.getValue().openAsReader()) {
-                  rawModel = GeckoLibResources.GSON.fromJson(reader, Model.class);
+                  rawModel = modelGson.fromJson(reader, Model.class);
                }
                BakedGeoModel model = BakedModelFactory.DEFAULT_FACTORY.constructGeoModel(GeometryTree.fromModel(rawModel));
                models.put(cacheId, model);
@@ -133,14 +137,13 @@ public final class LegacyGeckoLibResourceCompat {
             }
          }
 
-         for (Map.Entry<Identifier, Resource> entry : resourceManager.listResources(LEGACY_ANIMATION_ROOT, LegacyGeckoLibResourceCompat::isJsonFile).entrySet()) {
-            Identifier cacheId = normalizeLegacyAnimationId(entry.getKey());
+         for (Map.Entry<ResourceLocation, Resource> entry : resourceManager.listResources(LEGACY_ANIMATION_ROOT, LegacyGeckoLibResourceCompat::isJsonFile).entrySet()) {
+            ResourceLocation cacheId = normalizeLegacyAnimationId(entry.getKey());
             if (cacheId == null) {
                continue;
             }
 
             try {
-               Identifier modernId = toModernAnimationResourceId(cacheId);
                BakedAnimations bakedAnimations;
                try (java.io.Reader reader = entry.getValue().openAsReader()) {
                   bakedAnimations = animationGson.fromJson(reader, BakedAnimations.class);
@@ -151,27 +154,22 @@ public final class LegacyGeckoLibResourceCompat {
             }
          }
 
-         return new PreparedLegacyResources(models, animations);
-      }
-
-      @Override
-      protected void apply(PreparedLegacyResources prepared, SharedState sharedState) {
-         if (prepared.models.isEmpty() && prepared.animations.isEmpty()) {
+         if (models.isEmpty() && animations.isEmpty()) {
             return;
          }
 
-         Map<Identifier, BakedGeoModel> mergedModels = new LinkedHashMap<>(GeckoLibResources.getBakedModels().cache());
-         mergedModels.putAll(prepared.models);
-         Map<Identifier, BakedAnimations> mergedAnimations = new LinkedHashMap<>(GeckoLibResources.getBakedAnimations().cache());
-         prepared.animations.forEach((cacheId, packed) -> mergedAnimations.merge(cacheId, packed, LegacyResourceReloadListener::overlay));
+         Map<ResourceLocation, BakedGeoModel> mergedModels = new LinkedHashMap<>(GeckoLibResources.getBakedModels());
+         mergedModels.putAll(models);
+         Map<ResourceLocation, BakedAnimations> mergedAnimations = new LinkedHashMap<>(GeckoLibResources.getBakedAnimations());
+         animations.forEach((cacheId, packed) -> mergedAnimations.merge(cacheId, packed, LegacyResourceReloadListener::overlay));
 
-         setGeckoLibCache("MODELS", new BakedModelCache(mergedModels));
-         setGeckoLibCache("ANIMATIONS", new BakedAnimationCache(mergedAnimations));
+         setGeckoLibCache("MODELS", mergedModels);
+         setGeckoLibCache("ANIMATIONS", mergedAnimations);
 
          SexmodMod.LOGGER.info(
             "Loaded legacy resource-pack compatibility entries: {} models, {} animations",
-            prepared.models.size(),
-            prepared.animations.size()
+            models.size(),
+            animations.size()
          );
       }
 
@@ -181,7 +179,7 @@ public final class LegacyGeckoLibResourceCompat {
        * missing and crash the renderer when a scene asks for one.
        */
       private static BakedAnimations overlay(BakedAnimations ours, BakedAnimations fromPack) {
-         Map<String, Animation> merged = new LinkedHashMap<>(ours.animations());
+         Map<String, software.bernie.geckolib.animation.Animation> merged = new LinkedHashMap<>(ours.animations());
          merged.putAll(fromPack.animations());
          return new BakedAnimations(merged);
       }

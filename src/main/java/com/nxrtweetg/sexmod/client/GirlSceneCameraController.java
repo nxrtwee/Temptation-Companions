@@ -13,7 +13,7 @@ import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents.J
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.AbstractClientPlayer;
 import net.minecraft.client.player.LocalPlayer;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.phys.Vec3;
 
 @Environment(EnvType.CLIENT)
@@ -27,14 +27,14 @@ public final class GirlSceneCameraController {
     * Резолвится один раз в tickClient когда скин уже загружен (не в рендер-треде).
     * null = скин ещё не резолвлен или сцены нет.
     */
-   private static Identifier lockedPartnerSkin = null;
+   private static ResourceLocation lockedPartnerSkin = null;
    private static UUID lockedForPlayerUUID = null;
    /** SLIM = Alex (narrow arms), WIDE = Steve (wide arms). Locked alongside the skin. */
    private static boolean lockedPartnerIsSlim = false;
    /** Last seen fade signal counter — triggers fade when server increments it. */
    private static int lastSeenFadeSignal = -1;
 
-   public static Identifier getLockedPartnerSkin() {
+   public static ResourceLocation getLockedPartnerSkin() {
       return lockedPartnerSkin;
    }
 
@@ -73,9 +73,9 @@ public final class GirlSceneCameraController {
             // Резолвим скин сразу как нашли девушку — до любых phase-проверок.
             // Иначе steve-слой успевает отрендериться с хардкодом на первый кадр сцены.
             if (lockedPartnerSkin == null) {
-               lockedPartnerSkin = localplayer.getSkin().body().texturePath();
+               lockedPartnerSkin = localplayer.getSkin().texture();
                lockedForPlayerUUID = localplayer.getUUID();
-               lockedPartnerIsSlim = localplayer.getSkin().model() == net.minecraft.world.entity.player.PlayerModelType.SLIM;
+               lockedPartnerIsSlim = localplayer.getSkin().model() == net.minecraft.client.resources.PlayerSkin.Model.SLIM;
             }
 
             // Fade: сервер инкрементирует TRACKED_FADE_SIGNAL за FADE_LEAD_TICKS до snapTo.

@@ -1,28 +1,29 @@
 package com.nxrtweetg.sexmod.client;
 
-import software.bernie.geckolib.cache.model.BakedGeoModel;
-import software.bernie.geckolib.cache.model.GeoBone;
+import software.bernie.geckolib.cache.object.BakedGeoModel;
+import software.bernie.geckolib.cache.object.GeoBone;
 import software.bernie.geckolib.renderer.GeoItemRenderer;
 import software.bernie.geckolib.renderer.base.GeoRenderState;
 import software.bernie.geckolib.renderer.base.GeoRenderer;
-import software.bernie.geckolib.renderer.base.PerBoneRender;
-import software.bernie.geckolib.renderer.base.RenderPassInfo;
 import software.bernie.geckolib.renderer.layer.GeoRenderLayer;
+import software.bernie.geckolib.util.RenderUtil;
 import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.nxrtweetg.sexmod.item.DragonStaffItem;
-import java.util.function.BiConsumer;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.model.object.crystal.EndCrystalModel;
-import net.minecraft.client.renderer.SubmitNodeCollector;
+import net.minecraft.client.model.EndCrystalModel;
+import net.minecraft.client.renderer.MultiBufferSource;
+import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.entity.state.EndCrystalRenderState;
 import net.minecraft.client.renderer.texture.OverlayTexture;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.util.Mth;
 
 @Environment(EnvType.CLIENT)
 public final class DragonStaffCrystalLayer extends GeoRenderLayer<DragonStaffItem, GeoItemRenderer.RenderData, GeoRenderState> {
-   private static final Identifier END_CRYSTAL_LOCATION = Identifier.fromNamespaceAndPath("minecraft", "textures/entity/end_crystal/end_crystal.png");
+   private static final ResourceLocation END_CRYSTAL_LOCATION = ResourceLocation.fromNamespaceAndPath("minecraft", "textures/entity/end_crystal/end_crystal.png");
    private EndCrystalModel crystalModel;
    private final EndCrystalRenderState renderState = new EndCrystalRenderState();
 
@@ -31,8 +32,12 @@ public final class DragonStaffCrystalLayer extends GeoRenderLayer<DragonStaffIte
    }
 
    @Override
-   public void addPerBoneRender(RenderPassInfo<GeoRenderState> renderPassInfo, BiConsumer<GeoBone, PerBoneRender<GeoRenderState>> biConsumer) {
-      BakedGeoModel bakedModel = this.getDefaultBakedModel(renderPassInfo.renderState());
+   public void render(
+      GeoRenderState renderState, PoseStack poseStack, BakedGeoModel model,
+      RenderType renderType, MultiBufferSource bufferSource, VertexConsumer buffer,
+      int packedLight, int packedOverlay, int renderColor
+   ) {
+      BakedGeoModel bakedModel = this.getDefaultBakedModel(renderState);
       if (bakedModel == null) {
          return;
       }
@@ -40,17 +45,13 @@ public final class DragonStaffCrystalLayer extends GeoRenderLayer<DragonStaffIte
       if (energyBone == null) {
          energyBone = bakedModel.getBone("staff").orElse(null);
       }
-      if (energyBone != null) {
-         biConsumer.accept(energyBone, this::renderCrystal);
+      if (energyBone == null) {
+         return;
       }
-   }
 
-   private void renderCrystal(RenderPassInfo<GeoRenderState> info, GeoBone bone, SubmitNodeCollector collector) {
       if (this.crystalModel == null) {
          this.crystalModel = new EndCrystalModel(EndCrystalModel.createBodyLayer().bakeRoot());
       }
-      PoseStack poseStack = info.poseStack();
-      poseStack.pushPose();
 
       float animTicks = 0.0F;
       Minecraft mc = Minecraft.getInstance();
@@ -60,8 +61,11 @@ public final class DragonStaffCrystalLayer extends GeoRenderLayer<DragonStaffIte
          animTicks = (System.currentTimeMillis() % 100000L) / 50.0F;
       }
 
+      poseStack.pushPose();
+      RenderUtil.prepMatrixForBone(poseStack, energyBone);
+
       // If attached to "staff" rather than "energy", shift up to staff head (Y=22.5 units = ~1.406m)
-      if ("staff".equals(bone.name())) {
+      if ("staff".equals(energyBone.getName())) {
          poseStack.translate(0.0F, 1.406F, 0.0F);
       }
 
@@ -73,24 +77,18 @@ public final class DragonStaffCrystalLayer extends GeoRenderLayer<DragonStaffIte
       poseStack.scale(0.35F, 0.35F, 0.35F);
 
       this.renderState.showsBottom = false;
-      this.renderState.ageInTicks = animTicks;
-      this.renderState.lightCoords = info.packedLight();
 
       this.crystalModel.outerGlass.resetPose();
       this.crystalModel.innerGlass.resetPose();
       this.crystalModel.cube.resetPose();
-      this.crystalModel.setupAnim(this.renderState);
+      // 1.21.8's crystal state carries no age or light, so the spin the renderer used to read from
+      // it is applied to the parts directly, exactly as vanilla EndCrystalRenderer does.
+      float spin = animTicks * 3.0F;
+      this.crystalModel.outerGlass.yRot = spin * Mth.DEG_TO_RAD;
+      this.crystalModel.innerGlass.yRot = -spin * 0.2F * Mth.DEG_TO_RAD;
 
-      collector.submitModel(
-         this.crystalModel,
-         this.renderState,
-         poseStack,
-         net.minecraft.client.renderer.rendertype.RenderTypes.entityCutoutNoCull(END_CRYSTAL_LOCATION),
-         info.packedLight(),
-         OverlayTexture.NO_OVERLAY,
-         -1,
-         null
-      );
+      VertexConsumer crystalBuffer = bufferSource.getBuffer(RenderType.entityCutoutNoCull(END_CRYSTAL_LOCATION));
+      this.crystalModel.renderToBuffer(poseStack, crystalBuffer, packedLight, OverlayTexture.NO_OVERLAY, -1);
 
       poseStack.popPose();
    }

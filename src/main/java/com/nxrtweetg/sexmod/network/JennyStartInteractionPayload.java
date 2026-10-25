@@ -5,10 +5,10 @@ import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload.Type;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 
 public record JennyStartInteractionPayload(int entityId, String actionId) implements CustomPacketPayload {
-   public static final Type<JennyStartInteractionPayload> ID = new Type(Identifier.fromNamespaceAndPath("sexmod", "jenny_start_interaction"));
+   public static final Type<JennyStartInteractionPayload> ID = new Type(ResourceLocation.fromNamespaceAndPath("sexmod", "jenny_start_interaction"));
    public static final StreamCodec<RegistryFriendlyByteBuf, JennyStartInteractionPayload> CODEC = StreamCodec.composite(
       ByteBufCodecs.INT,
       JennyStartInteractionPayload::entityId,

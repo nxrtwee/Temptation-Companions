@@ -20,7 +20,7 @@ import net.minecraft.core.Registry;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceKey;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.EntityType.EntityFactory;
 import net.minecraft.world.entity.MobCategory;
@@ -68,7 +68,7 @@ public final class ModEntities {
    }
 
    private static <T extends SceneGirlEntity> EntityType<T> register(String name, EntityFactory<T> factory, float width, float height, float eyeHeight) {
-      Identifier id = Identifier.fromNamespaceAndPath("sexmod", name);
+      ResourceLocation id = ResourceLocation.fromNamespaceAndPath("sexmod", name);
       ResourceKey<EntityType<?>> key = ResourceKey.create(Registries.ENTITY_TYPE, id);
       return Registry.register(
          BuiltInRegistries.ENTITY_TYPE,

@@ -30,10 +30,10 @@
   ],
   "depends": {
     "fabricloader": ">=0.19.3",
-    "minecraft": "~1.21.11",
+    "minecraft": "~1.21.8",
     "java": ">=21",
     "fabric-api": "*",
-    "geckolib": ">=5.4.5"
+    "geckolib": ">=5.2.2"
   }
 }
 

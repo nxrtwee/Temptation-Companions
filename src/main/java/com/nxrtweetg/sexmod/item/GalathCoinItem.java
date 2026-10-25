@@ -5,9 +5,8 @@ import com.nxrtweetg.sexmod.girls.galath.GalathEntity;
 import com.nxrtweetg.sexmod.girls.manglelie.ManglelieEntity;
 import java.util.function.Consumer;
 import net.minecraft.core.particles.ParticleTypes;
-import net.minecraft.core.particles.PowerParticleOption;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
@@ -35,12 +34,12 @@ public final class GalathCoinItem extends Item {
          if (!level.isClientSide() && level instanceof ServerLevel serverLevel) {
             ManglelieEntity mang = galath.getLinkedManglelie();
             if (mang != null) {
-               serverLevel.sendParticles(PowerParticleOption.create(ParticleTypes.DRAGON_BREATH, 1.0F),
+               serverLevel.sendParticles(ParticleTypes.DRAGON_BREATH,
                   mang.getX(), mang.getY() + 0.5, mang.getZ(),
                   30, 0.3, 0.4, 0.3, 0.05);
                mang.discard();
             }
-            serverLevel.sendParticles(PowerParticleOption.create(ParticleTypes.DRAGON_BREATH, 1.0F),
+            serverLevel.sendParticles(ParticleTypes.DRAGON_BREATH,
                galath.getX(), galath.getY() + 1.0, galath.getZ(),
                60, 0.4, 0.8, 0.4, 0.05);
             level.playSound(null, galath.blockPosition(), SoundEvents.ENDERMAN_TELEPORT, SoundSource.PLAYERS, 1.0F, 1.0F);
@@ -96,7 +95,7 @@ public final class GalathCoinItem extends Item {
                mang.setYBodyRot(yaw);
                mang.setYHeadRot(yaw);
             }
-            serverLevel.sendParticles(PowerParticleOption.create(ParticleTypes.DRAGON_BREATH, 1.0F),
+            serverLevel.sendParticles(ParticleTypes.DRAGON_BREATH,
                targetX, targetY + 1.0, targetZ,
                40, 0.3, 0.6, 0.3, 0.05);
             level.playSound(null, player.blockPosition(), SoundEvents.ENDERMAN_TELEPORT, SoundSource.PLAYERS, 1.0F, 1.2F);
@@ -125,7 +124,7 @@ public final class GalathCoinItem extends Item {
                   serverLevel.addFreshEntity(mang);
                }
 
-               serverLevel.sendParticles(PowerParticleOption.create(ParticleTypes.DRAGON_BREATH, 1.0F),
+               serverLevel.sendParticles(ParticleTypes.DRAGON_BREATH,
                   targetX, targetY + 1.0, targetZ,
                   80, 0.5, 0.8, 0.5, 0.05);
                level.playSound(null, player.blockPosition(), SoundEvents.ENDERMAN_TELEPORT, SoundSource.PLAYERS, 1.0F, 0.8F);

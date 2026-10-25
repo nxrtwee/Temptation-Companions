@@ -289,21 +289,16 @@ public final class GirlSettingsScreen extends Screen {
    }
 
    @Override
-   public boolean keyPressed(net.minecraft.client.input.KeyEvent event) {
-      if (event.key() == InputConstants.KEY_Z || event.key() == InputConstants.KEY_ESCAPE) {
+   public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+      if (keyCode == InputConstants.KEY_Z || keyCode == InputConstants.KEY_ESCAPE) {
          this.onClose();
          return true;
       }
-      return super.keyPressed(event);
+      return super.keyPressed(keyCode, scanCode, modifiers);
    }
 
    @Override
    public boolean isPauseScreen() {
       return false;
-   }
-
-   @Override
-   public boolean isInGameUi() {
-      return true;
    }
 }

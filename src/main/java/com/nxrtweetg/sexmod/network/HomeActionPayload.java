@@ -4,7 +4,7 @@ import io.netty.buffer.ByteBuf;
 import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 
 /**
  * Client -> Server payload executing home management actions (create, assign, delete, stay, query).
@@ -20,7 +20,7 @@ public record HomeActionPayload(
    int y2,
    int z2
 ) implements CustomPacketPayload {
-   public static final Type<HomeActionPayload> ID = new Type<>(Identifier.fromNamespaceAndPath("sexmod", "home_action"));
+   public static final Type<HomeActionPayload> ID = new Type<>(ResourceLocation.fromNamespaceAndPath("sexmod", "home_action"));
 
    public static final StreamCodec<ByteBuf, HomeActionPayload> CODEC = StreamCodec.of(
       (buf, p) -> {

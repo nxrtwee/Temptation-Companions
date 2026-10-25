@@ -7,7 +7,7 @@ import com.nxrtweetg.sexmod.girls.state.GirlPaymentItem;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.client.renderer.item.ItemStackRenderState;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 
 @Environment(EnvType.CLIENT)
 public final class GirlRenderData {
@@ -46,7 +46,7 @@ public final class GirlRenderData {
     * Used by {@code GirlSteveGeoLayer} so the partner wears the real player's skin.
     * Null when no active player is found — the layer falls back to the hardcoded steve.png.
     */
-   public static final DataTicket<Identifier> PARTNER_SKIN = DataTicket.create("jenny_partner_skin", Identifier.class);
+   public static final DataTicket<ResourceLocation> PARTNER_SKIN = DataTicket.create("jenny_partner_skin", ResourceLocation.class);
    /** True = partner uses Alex (SLIM) arm geometry; false = Steve (WIDE). */
    public static final DataTicket<Boolean> PARTNER_IS_SLIM = DataTicket.create("jenny_partner_is_slim", Boolean.class);
    public static final DataTicket<Integer> KOBOLD_TRIBE_COLOR = DataTicket.create("girl_kobold_tribe_color", Integer.class);
@@ -58,7 +58,7 @@ public final class GirlRenderData {
    public static final DataTicket<Integer> GOBLIN_CROWN = DataTicket.create("girl_goblin_crown", Integer.class);
    public static final DataTicket<Float> ALLIE_DISMISS_SCALE = DataTicket.create("girl_allie_dismiss_scale", Float.class);
 
-   public static final DataTicket<Identifier> CUSTOM_SKIN = DataTicket.create("girl_custom_skin", Identifier.class);
+   public static final DataTicket<ResourceLocation> CUSTOM_SKIN = DataTicket.create("girl_custom_skin", ResourceLocation.class);
    public static final DataTicket<Boolean> CUSTOM_IS_SLIM = DataTicket.create("girl_custom_is_slim", Boolean.class);
    public static final DataTicket<Float> CUSTOM_SCALE = DataTicket.create("girl_custom_scale", Float.class);
    public static final DataTicket<Boolean> CUSTOM_HAS_BREASTS = DataTicket.create("girl_custom_has_breasts", Boolean.class);

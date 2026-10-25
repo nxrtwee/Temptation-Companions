@@ -7,13 +7,13 @@ import java.util.List;
 import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 
 /**
  * Server -> Client payload synchronizing the roster of player-defined homes.
  */
 public record SyncHomesPayload(List<GirlHomeRegion> homes) implements CustomPacketPayload {
-   public static final Type<SyncHomesPayload> ID = new Type<>(Identifier.fromNamespaceAndPath("sexmod", "sync_homes"));
+   public static final Type<SyncHomesPayload> ID = new Type<>(ResourceLocation.fromNamespaceAndPath("sexmod", "sync_homes"));
 
    public static final StreamCodec<ByteBuf, GirlHomeRegion> REGION_CODEC = StreamCodec.of(
       (buf, r) -> {

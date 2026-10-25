@@ -469,7 +469,7 @@ public final class SlimeGirlEntity extends SceneGirlEntity {
       // sooner, so without this the client can be up to two ticks into the take before she visibly leaves
       // the ground. The pose change at tick 90 gets its own sync for free, being tracked data; the launch
       // itself changes nothing but her motion, which is exactly what this flag is for.
-      this.needsSync = true;
+      this.hasImpulse = true;
       this.groundTicks = 0;
       this.hopOwed = true;
       this.launchTicks = 0;

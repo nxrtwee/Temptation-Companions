@@ -127,7 +127,7 @@ public final class SexmodNetworking {
             }
             com.nxrtweetg.sexmod.home.GirlHomeRegion region = com.nxrtweetg.sexmod.home.GirlHomeRegion.create(
                payload.homeName(),
-               level.dimension().identifier().toString(),
+               level.dimension().location().toString(),
                new net.minecraft.core.BlockPos(payload.x1(), payload.y1(), payload.z1()),
                new net.minecraft.core.BlockPos(payload.x2(), payload.y2(), payload.z2())
             );

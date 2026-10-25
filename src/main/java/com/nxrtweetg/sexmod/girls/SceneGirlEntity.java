@@ -38,7 +38,7 @@ import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
 import net.minecraft.network.syncher.SynchedEntityData.Builder;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvent;
@@ -56,12 +56,12 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.Vec3;
 import software.bernie.geckolib.animatable.GeoEntity;
 import software.bernie.geckolib.animatable.instance.AnimatableInstanceCache;
-import software.bernie.geckolib.animation.AnimationController;
-import software.bernie.geckolib.animation.state.AnimationTest;
+import software.bernie.geckolib.animatable.processing.AnimationController;
+import software.bernie.geckolib.animatable.processing.AnimationState;
 import software.bernie.geckolib.animation.RawAnimation;
 import software.bernie.geckolib.animatable.manager.AnimatableManager.ControllerRegistrar;
-import software.bernie.geckolib.animation.state.KeyFrameEvent;
-import software.bernie.geckolib.cache.animation.keyframeevent.SoundKeyframeData;
+import software.bernie.geckolib.animation.keyframe.event.KeyFrameEvent;
+import software.bernie.geckolib.animation.keyframe.event.data.SoundKeyframeData;
 import software.bernie.geckolib.util.GeckoLibUtil;
 
 public abstract class SceneGirlEntity extends GirlEntity implements GeoEntity {
@@ -985,9 +985,7 @@ public abstract class SceneGirlEntity extends GirlEntity implements GeoEntity {
       }
 
       int ticks = restarted ? 0 : GirlAnimationRole.transitionTicksFor(animation.getAnimationStages().getFirst().animationName());
-      if (controller.getTransitionTicks() != ticks) {
-         controller.setTransitionTicks(ticks);
-      }
+      controller.transitionLength(ticks);
    }
 
    /**
@@ -1003,7 +1001,7 @@ public abstract class SceneGirlEntity extends GirlEntity implements GeoEntity {
          return false;
       } else {
          this.lastSeenBeatReset = signal;
-         controller.reset();
+         controller.forceAnimationReset();
          return true;
       }
    }
@@ -3191,7 +3189,7 @@ public abstract class SceneGirlEntity extends GirlEntity implements GeoEntity {
 
    protected void playSoundAt(String soundId, float volume, float pitch) {
       if (this.level().isClientSide()) {
-         SoundEvent soundevent = SoundEvent.createVariableRangeEvent(Identifier.fromNamespaceAndPath("sexmod", soundId));
+         SoundEvent soundevent = SoundEvent.createVariableRangeEvent(ResourceLocation.fromNamespaceAndPath("sexmod", soundId));
          this.level().playLocalSound(this.blockPosition(), soundevent, SoundSource.NEUTRAL, volume, pitch, false);
       }
    }

@@ -110,7 +110,7 @@ public final class SexmodCommands {
                      BlockPos pos1 = BlockPosArgument.getBlockPos(context, "pos1");
                      BlockPos pos2 = BlockPosArgument.getBlockPos(context, "pos2");
                      String name = StringArgumentType.getString(context, "name");
-                     GirlHomeRegion region = GirlHomeRegion.create(name, player.level().dimension().identifier().toString(), pos1, pos2);
+                     GirlHomeRegion region = GirlHomeRegion.create(name, player.level().dimension().location().toString(), pos1, pos2);
                      SexmodHomeData.get(player.level()).addHome(region);
                      SexmodNetworking.spawnHomeBoundaryParticles(player.level(), region);
                      SexmodNetworking.broadcastHomes(source.getServer());
@@ -128,7 +128,7 @@ public final class SexmodCommands {
                      String name = StringArgumentType.getString(context, "name");
                      BlockPos pos1 = parseCoordString(c1, player.blockPosition());
                      BlockPos pos2 = parseCoordString(c2, player.blockPosition());
-                     GirlHomeRegion region = GirlHomeRegion.create(name, player.level().dimension().identifier().toString(), pos1, pos2);
+                     GirlHomeRegion region = GirlHomeRegion.create(name, player.level().dimension().location().toString(), pos1, pos2);
                      SexmodHomeData.get(player.level()).addHome(region);
                      SexmodNetworking.spawnHomeBoundaryParticles(player.level(), region);
                      SexmodNetworking.broadcastHomes(source.getServer());

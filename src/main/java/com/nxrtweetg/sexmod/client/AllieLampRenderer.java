@@ -1,15 +1,15 @@
 package com.nxrtweetg.sexmod.client;
 
-import software.bernie.geckolib.animation.state.BoneSnapshot;
-import software.bernie.geckolib.cache.model.GeoBone;
+import software.bernie.geckolib.cache.object.BakedGeoModel;
 import software.bernie.geckolib.renderer.GeoItemRenderer;
 import software.bernie.geckolib.renderer.base.GeoRenderState;
-import software.bernie.geckolib.renderer.base.RenderPassInfo;
+import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.nxrtweetg.sexmod.item.AllieLampItem;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
-import net.minecraft.client.renderer.SubmitNodeCollector;
-import net.minecraft.resources.Identifier;
+import net.minecraft.client.renderer.MultiBufferSource;
+import net.minecraft.resources.ResourceLocation;
 
 @Environment(EnvType.CLIENT)
 public final class AllieLampRenderer extends GeoItemRenderer<AllieLampItem> {
@@ -17,26 +17,26 @@ public final class AllieLampRenderer extends GeoItemRenderer<AllieLampItem> {
 
    public AllieLampRenderer() {
       super(new SimpleGeoItemModel<>(
-         Identifier.fromNamespaceAndPath("sexmod", "allie/lamp"),
-         Identifier.fromNamespaceAndPath("sexmod", "textures/entity/allie/lamp.png"),
-         Identifier.fromNamespaceAndPath("sexmod", "allie/lamp")
+         ResourceLocation.fromNamespaceAndPath("sexmod", "allie/lamp"),
+         ResourceLocation.fromNamespaceAndPath("sexmod", "textures/entity/allie/lamp.png"),
+         ResourceLocation.fromNamespaceAndPath("sexmod", "allie/lamp")
       ));
    }
 
    @Override
-   public void preRenderPass(RenderPassInfo<GeoRenderState> renderPassInfo, SubmitNodeCollector renderTasks) {
-      super.preRenderPass(renderPassInfo, renderTasks);
+   public void preRender(
+      GeoRenderState renderState, PoseStack poseStack, BakedGeoModel model,
+      MultiBufferSource bufferSource, VertexConsumer buffer,
+      boolean isReRender, int packedLight, int packedOverlay, int renderColor
+   ) {
+      super.preRender(renderState, poseStack, model, bufferSource, buffer, isReRender, packedLight, packedOverlay, renderColor);
       // Severed arm bones from the Blockbench model are permanently hidden across all perspectives.
       // The lamp is held cleanly in the player's real hand without fake arms or looping inspection animations.
       for (String boneName : ARM_BONES) {
-         renderPassInfo.model().getBone(boneName).ifPresent(AllieLampRenderer::hideBone);
+         model.getBone(boneName).ifPresent(bone -> {
+            bone.setHidden(true);
+            bone.setChildrenHidden(true);
+         });
       }
-   }
-
-   static void hideBone(GeoBone b) {
-      if (b.frameSnapshot == null) {
-         BoneSnapshot.create(b).apply();
-      }
-      b.frameSnapshot.skipRender(true).skipChildrenRender(true);
    }
 }

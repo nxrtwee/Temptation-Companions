@@ -10,7 +10,6 @@
     "MinecraftMixin",
     "OptionsMixin",
     "RenderPassMixin",
-    "RenderTypeInvoker"
   ],
   "injectors": {
     "defaultRequire": 1

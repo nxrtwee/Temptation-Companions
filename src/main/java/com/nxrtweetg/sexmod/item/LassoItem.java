@@ -11,7 +11,7 @@ import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
@@ -166,7 +166,7 @@ public final class LassoItem extends Item {
          String typeId = tag.getStringOr(TAG_ENTITY_TYPE, "");
          CompoundTag entityTag = tag.getCompoundOrEmpty(TAG_ENTITY_DATA);
 
-         EntityType<?> type = BuiltInRegistries.ENTITY_TYPE.get(Identifier.parse(typeId))
+         EntityType<?> type = BuiltInRegistries.ENTITY_TYPE.get(ResourceLocation.parse(typeId))
             .map(Holder.Reference::value)
             .orElse(null);
 

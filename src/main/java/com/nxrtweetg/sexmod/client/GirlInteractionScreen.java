@@ -13,7 +13,6 @@ import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.ActiveTextCollector;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.Screen;
@@ -22,7 +21,7 @@ import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.client.resources.language.I18n;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.util.Mth;
@@ -35,7 +34,7 @@ import net.minecraft.world.item.ItemStack;
  */
 @Environment(EnvType.CLIENT)
 public final class GirlInteractionScreen extends Screen {
-   private static final Identifier GIRL_INVENTORY = Identifier.fromNamespaceAndPath("sexmod", "textures/gui/girlinventory.png");
+   private static final ResourceLocation GIRL_INVENTORY = ResourceLocation.fromNamespaceAndPath("sexmod", "textures/gui/girlinventory.png");
    private static final int TEXTURE_SIZE = 256;
    /** Icon column in girlinventory.png for each command, in the original's order. */
    private static final int[] COMMAND_ICON_U = {64, 80, 47, 32, 96};
@@ -92,11 +91,6 @@ public final class GirlInteractionScreen extends Screen {
    }
 
    /** The original menu draws straight over the world: no blur, no darkening. */
-   @Override
-   public boolean isInGameUi() {
-      return true;
-   }
-
    @Override
    public void renderTransparentBackground(GuiGraphics context) {
    }
@@ -226,8 +220,6 @@ public final class GirlInteractionScreen extends Screen {
       int textX = this.width - Mth.lerpInt(this.slideCommands, 115, 161);
       int itemX = this.width - Mth.lerpInt(this.slideCommands, 91, 137);
       int textY = this.height - PRICE_TEXT_BOTTOM_OFFSET;
-      ActiveTextCollector textCollector = context.textRenderer();
-
       for (GirlInteractionScreen.MenuEntry entry : this.visibleEntries(entries)) {
          ItemStack price = entry.price();
          if (!price.isEmpty()) {
@@ -237,7 +229,7 @@ public final class GirlInteractionScreen extends Screen {
             int labelX = textX + TOOLTIP_OFFSET;
             int labelY = textY - TOOLTIP_OFFSET;
             TooltipRenderUtil.renderTooltipBackground(context, labelX, labelY, this.font.width(label), TOOLTIP_LINE_HEIGHT, null);
-            textCollector.accept(labelX, labelY, label);
+            context.drawString(this.font, label, labelX, labelY, 0xFFFFFFFF);
             context.renderItem(price, itemX, labelY - PRICE_ITEM_RISE);
          }
 
@@ -346,7 +338,7 @@ public final class GirlInteractionScreen extends Screen {
          player.level()
             .playLocalSound(
                player.blockPosition(),
-               SoundEvent.createVariableRangeEvent(Identifier.fromNamespaceAndPath("sexmod", this.girl.voice("sadoh", 2) + "1")),
+               SoundEvent.createVariableRangeEvent(ResourceLocation.fromNamespaceAndPath("sexmod", this.girl.voice("sadoh", 2) + "1")),
                SoundSource.NEUTRAL,
                1.0F,
                1.0F,

@@ -5,7 +5,7 @@ import software.bernie.geckolib.renderer.base.GeoRenderState;
 import com.nxrtweetg.sexmod.girls.SceneGirlEntity;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 
 /**
  * The asset set for one girl. Her own animation file is searched first and Jenny's is the fallback,
@@ -18,27 +18,27 @@ import net.minecraft.resources.Identifier;
  */
 @Environment(EnvType.CLIENT)
 public final class GirlGeoModel extends GeoModel<SceneGirlEntity> {
-   private static final Identifier[] ALL_ANIMATION_FALLBACKS = {
-      Identifier.fromNamespaceAndPath("sexmod", "jenny/jenny"),
-      Identifier.fromNamespaceAndPath("sexmod", "ellie/ellie"),
-      Identifier.fromNamespaceAndPath("sexmod", "bia/bia"),
-      Identifier.fromNamespaceAndPath("sexmod", "slime/slime"),
-      Identifier.fromNamespaceAndPath("sexmod", "bee/bee"),
-      Identifier.fromNamespaceAndPath("sexmod", "allie/allie"),
-      Identifier.fromNamespaceAndPath("sexmod", "goblin/goblin"),
-      Identifier.fromNamespaceAndPath("sexmod", "kobold/kobold"),
-      Identifier.fromNamespaceAndPath("sexmod", "galath/galath"),
-      Identifier.fromNamespaceAndPath("sexmod", "manglelie/manglelie"),
-      Identifier.fromNamespaceAndPath("sexmod", "cat/cat")
+   private static final ResourceLocation[] ALL_ANIMATION_FALLBACKS = {
+      ResourceLocation.fromNamespaceAndPath("sexmod", "jenny/jenny"),
+      ResourceLocation.fromNamespaceAndPath("sexmod", "ellie/ellie"),
+      ResourceLocation.fromNamespaceAndPath("sexmod", "bia/bia"),
+      ResourceLocation.fromNamespaceAndPath("sexmod", "slime/slime"),
+      ResourceLocation.fromNamespaceAndPath("sexmod", "bee/bee"),
+      ResourceLocation.fromNamespaceAndPath("sexmod", "allie/allie"),
+      ResourceLocation.fromNamespaceAndPath("sexmod", "goblin/goblin"),
+      ResourceLocation.fromNamespaceAndPath("sexmod", "kobold/kobold"),
+      ResourceLocation.fromNamespaceAndPath("sexmod", "galath/galath"),
+      ResourceLocation.fromNamespaceAndPath("sexmod", "manglelie/manglelie"),
+      ResourceLocation.fromNamespaceAndPath("sexmod", "cat/cat")
    };
-   private static final Identifier GOBLIN_TEXTURE = Identifier.fromNamespaceAndPath("sexmod", "textures/entity/goblin/goblin.png");
-   private static final Identifier GOBLIN_ARMORED_TEXTURE = Identifier.fromNamespaceAndPath("sexmod", "textures/entity/goblin/goblinbk.png");
+   private static final ResourceLocation GOBLIN_TEXTURE = ResourceLocation.fromNamespaceAndPath("sexmod", "textures/entity/goblin/goblin.png");
+   private static final ResourceLocation GOBLIN_ARMORED_TEXTURE = ResourceLocation.fromNamespaceAndPath("sexmod", "textures/entity/goblin/goblinbk.png");
 
-   private final Identifier[] modelSlots;
+   private final ResourceLocation[] modelSlots;
    private final GirlModelSlotPolicy slotPolicy;
-   private final Identifier texture;
-   private final Identifier animations;
-   private final Identifier[] animationFallbacks;
+   private final ResourceLocation texture;
+   private final ResourceLocation animations;
+   private final ResourceLocation[] animationFallbacks;
    private final String character;
 
    /** The common case: two slots read straight off the variant. */
@@ -53,30 +53,30 @@ public final class GirlGeoModel extends GeoModel<SceneGirlEntity> {
 
       this.character = character;
       this.slotPolicy = slotPolicy;
-      this.modelSlots = new Identifier[modelNames.length];
+      this.modelSlots = new ResourceLocation[modelNames.length];
 
       for (int slot = 0; slot < modelNames.length; slot++) {
          String name = modelNames[slot];
          this.modelSlots[slot] = name.contains("/")
-            ? Identifier.fromNamespaceAndPath("sexmod", name)
-            : Identifier.fromNamespaceAndPath("sexmod", character + "/" + name);
+            ? ResourceLocation.fromNamespaceAndPath("sexmod", name)
+            : ResourceLocation.fromNamespaceAndPath("sexmod", character + "/" + name);
       }
 
-      this.texture = Identifier.fromNamespaceAndPath("sexmod", "textures/entity/" + character + "/" + character + ".png");
-      this.animations = Identifier.fromNamespaceAndPath("sexmod", character + "/" + character);
+      this.texture = ResourceLocation.fromNamespaceAndPath("sexmod", "textures/entity/" + character + "/" + character + ".png");
+      this.animations = ResourceLocation.fromNamespaceAndPath("sexmod", character + "/" + character);
       this.animationFallbacks = java.util.Arrays.stream(ALL_ANIMATION_FALLBACKS)
          .filter(id -> !id.equals(this.animations))
-         .toArray(Identifier[]::new);
+         .toArray(ResourceLocation[]::new);
    }
 
    @Override
-   public Identifier getModelResource(GeoRenderState renderState) {
+   public ResourceLocation getModelResource(GeoRenderState renderState) {
       return this.modelSlots[this.resolveSlot(renderState)];
    }
 
    @Override
-   public Identifier getTextureResource(GeoRenderState renderState) {
-      Identifier customSkin = renderState.getGeckolibData(GirlRenderData.CUSTOM_SKIN);
+   public ResourceLocation getTextureResource(GeoRenderState renderState) {
+      ResourceLocation customSkin = renderState.getGeckolibData(GirlRenderData.CUSTOM_SKIN);
       if (customSkin != null) {
          return customSkin;
       }
@@ -100,12 +100,12 @@ public final class GirlGeoModel extends GeoModel<SceneGirlEntity> {
    }
 
    @Override
-   public Identifier getAnimationResource(SceneGirlEntity animatable) {
+   public ResourceLocation getAnimationResource(SceneGirlEntity animatable) {
       return this.animations;
    }
 
    @Override
-   public Identifier[] getAnimationResourceFallbacks(SceneGirlEntity animatable) {
+   public ResourceLocation[] getAnimationResourceFallbacks(SceneGirlEntity animatable) {
       return this.animationFallbacks;
    }
 }

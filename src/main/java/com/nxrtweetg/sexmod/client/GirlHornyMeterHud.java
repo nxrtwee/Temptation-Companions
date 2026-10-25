@@ -6,7 +6,7 @@ import net.minecraft.client.DeltaTracker;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.renderer.RenderPipelines;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.Mth;
 
 /**
@@ -16,8 +16,8 @@ import net.minecraft.util.Mth;
  */
 @Environment(EnvType.CLIENT)
 public final class GirlHornyMeterHud {
-   private static final Identifier METER = Identifier.fromNamespaceAndPath("sexmod", "textures/gui/hornymeter.png");
-   private static final Identifier BUTTONS = Identifier.fromNamespaceAndPath("sexmod", "textures/gui/buttons.png");
+   private static final ResourceLocation METER = ResourceLocation.fromNamespaceAndPath("sexmod", "textures/gui/hornymeter.png");
+   private static final ResourceLocation BUTTONS = ResourceLocation.fromNamespaceAndPath("sexmod", "textures/gui/buttons.png");
    private static final int TEX = 256;
    private static final float METER_SCALE = 0.75F;
    private static final float BUTTON_SCALE = 0.35F;

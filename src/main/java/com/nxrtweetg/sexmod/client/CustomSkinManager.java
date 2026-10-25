@@ -7,7 +7,7 @@ import net.fabricmc.api.Environment;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.texture.DynamicTexture;
 import net.minecraft.client.renderer.texture.TextureManager;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -20,17 +20,17 @@ import java.util.concurrent.ConcurrentHashMap;
 @Environment(EnvType.CLIENT)
 public final class CustomSkinManager {
     private static final Logger LOGGER = LoggerFactory.getLogger("SexMod-CustomSkin");
-    public static final Identifier DEFAULT_SKIN = Identifier.fromNamespaceAndPath("sexmod", "textures/player/steve.png");
-    private static final Map<String, Identifier> LOADED_SKINS = new ConcurrentHashMap<>();
+    public static final ResourceLocation DEFAULT_SKIN = ResourceLocation.fromNamespaceAndPath("sexmod", "textures/player/steve.png");
+    private static final Map<String, ResourceLocation> LOADED_SKINS = new ConcurrentHashMap<>();
 
     private CustomSkinManager() {}
 
-    public static Identifier getOrLoadSkin(String customId, String skinFileName) {
+    public static ResourceLocation getOrLoadSkin(String customId, String skinFileName) {
         if (customId == null || customId.isBlank()) {
             return DEFAULT_SKIN;
         }
 
-        Identifier existing = LOADED_SKINS.get(customId);
+        ResourceLocation existing = LOADED_SKINS.get(customId);
         if (existing != null) {
             return existing;
         }
@@ -45,7 +45,7 @@ public final class CustomSkinManager {
             image = ensureStandardFormat(image);
 
             String safeId = customId.toLowerCase().replaceAll("[^a-z0-9_.-]", "_");
-            Identifier textureId = Identifier.fromNamespaceAndPath("sexmod", "textures/custom_skin_" + safeId);
+            ResourceLocation textureId = ResourceLocation.fromNamespaceAndPath("sexmod", "textures/custom_skin_" + safeId);
 
             TextureManager tm = Minecraft.getInstance().getTextureManager();
             tm.release(textureId);

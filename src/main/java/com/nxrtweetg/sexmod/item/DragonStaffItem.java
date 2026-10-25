@@ -5,8 +5,8 @@ import software.bernie.geckolib.animatable.SingletonGeoAnimatable;
 import software.bernie.geckolib.animatable.client.GeoRenderProvider;
 import software.bernie.geckolib.animatable.instance.AnimatableInstanceCache;
 import software.bernie.geckolib.animatable.manager.AnimatableManager;
-import software.bernie.geckolib.animation.AnimationController;
-import software.bernie.geckolib.animation.object.PlayState;
+import software.bernie.geckolib.animatable.processing.AnimationController;
+import software.bernie.geckolib.animation.PlayState;
 import software.bernie.geckolib.renderer.GeoItemRenderer;
 import software.bernie.geckolib.util.GeckoLibUtil;
 import com.nxrtweetg.sexmod.client.SimpleGeoItemModel;
@@ -14,7 +14,7 @@ import com.nxrtweetg.sexmod.girls.kobold.KoboldEntity;
 import java.util.function.Consumer;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
@@ -55,11 +55,11 @@ public final class DragonStaffItem extends Item implements GeoItem {
          public GeoItemRenderer<?> getGeoItemRenderer() {
             if (this.renderer == null) {
                GeoItemRenderer<DragonStaffItem> r = new GeoItemRenderer<>(new SimpleGeoItemModel<>(
-                  Identifier.fromNamespaceAndPath("sexmod", "kobold/staff"),
-                  Identifier.fromNamespaceAndPath("sexmod", "textures/entity/kobold/staff.png"),
-                  Identifier.fromNamespaceAndPath("sexmod", "kobold/staff")
+                  ResourceLocation.fromNamespaceAndPath("sexmod", "kobold/staff"),
+                  ResourceLocation.fromNamespaceAndPath("sexmod", "textures/entity/kobold/staff.png"),
+                  ResourceLocation.fromNamespaceAndPath("sexmod", "kobold/staff")
                ));
-               r.withRenderLayer(new com.nxrtweetg.sexmod.client.DragonStaffCrystalLayer(r));
+               r.addRenderLayer(new com.nxrtweetg.sexmod.client.DragonStaffCrystalLayer(r));
                this.renderer = r;
             }
             return this.renderer;

@@ -17,14 +17,14 @@ import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents.EndTic
 import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.minecraft.client.KeyMapping;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.client.Minecraft;
 import net.minecraft.world.entity.player.Player;
 import org.lwjgl.glfw.GLFW;
 
 @Environment(EnvType.CLIENT)
 public final class GirlSceneInputController {
-   private static final KeyMapping.Category CATEGORY = KeyMapping.Category.register(Identifier.fromNamespaceAndPath("sexmod", "main"));
+   private static final String CATEGORY = "key.categories.sexmod";
    private static final KeyMapping RESET_KEY = KeyBindingHelper.registerKeyBinding(new KeyMapping("key.sexmod.reset", Type.KEYSYM, 88, CATEGORY));
    private static final KeyMapping CONTROL_SCREEN_KEY = KeyBindingHelper.registerKeyBinding(
       new KeyMapping("key.sexmod.scene_controls", Type.KEYSYM, 78, CATEGORY)
