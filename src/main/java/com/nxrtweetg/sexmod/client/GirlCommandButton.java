@@ -106,7 +106,7 @@ public final class GirlCommandButton extends AbstractButton {
                this.getMessage(),
                (this.getX() + LABEL_MARGIN + labelRight) / 2,
                this.getY() + (this.getHeight() - LABEL_HEIGHT) / 2,
-               16777215
+               -1
             );
          }
       }
